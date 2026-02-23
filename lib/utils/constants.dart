@@ -20,10 +20,9 @@ const kLoading = Center(child: CircularProgressIndicator(color: primaryClr));
 /*-----------String Constants---------------*/
 // const String kKeyAccessToken = "access_token";
 const String kKeyLocationDb = "location_db";
-String? token;
+// String? token;
 String? userid;
 
 const accesstokenKey = "accessToken";
 const idKey = "Id";
-// const accesstokenKey ="accessToken";
 String? accessToken;

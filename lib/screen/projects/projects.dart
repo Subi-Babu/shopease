@@ -33,8 +33,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = Provider.of<ProjectProvider>(context, listen: false);
       reg.fetchProjectList(context: context, status: "");
-
-
     });
     super.initState();
   }
@@ -46,6 +44,9 @@ class _ProjectScreenState extends State<ProjectScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         leading: SizedBox(),
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
         title: Text(
           "Projects",
           style: TextStyle(

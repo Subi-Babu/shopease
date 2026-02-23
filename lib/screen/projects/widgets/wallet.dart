@@ -397,31 +397,35 @@ Widget _lastTransactions() {
               );
             }
 
-            return ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: transactions.length,
-              padding: EdgeInsets.all(0),
-              itemBuilder: (context, index) {
-                final transaction = transactions[index];
-                // Format the date
-                String formattedDate = "";
-                if (transaction.createdAt != null) {
-                  formattedDate = DateFormat(
-                    'dd MMM, yyyy',
-                  ).format(DateTime.parse(transaction.createdAt.toString()));
-                }
+            return project.load == true
+                ? CircularProgressIndicator(color: primaryClr)
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: transactions.length,
+                    padding: EdgeInsets.all(0),
+                    itemBuilder: (context, index) {
+                      final transaction = transactions[index];
+                      // Format the date
+                      String formattedDate = "";
+                      if (transaction.createdAt != null) {
+                        formattedDate = DateFormat('dd MMM, yyyy').format(
+                          DateTime.parse(transaction.createdAt.toString()),
+                        );
+                      }
 
-                return _transactionItem(
-                  transaction.projectName ?? "",
-                  formattedDate ?? "",
-                  transaction.amount.toString() ?? "",
-                  Colors.green,
-                  transaction.expenseCategoryName.toString() ?? "",
-                  //
-                );
-              },
-            );
+                      return _transactionItem(
+                        transaction.projectName ?? "",
+                        formattedDate ?? "",
+                        "${transaction.type == "expensemoney" ? "-" : "+"} ₹${transaction.amount ?? ""}",
+                        transaction.type == "expensemoney"
+                            ? Colors.red
+                            : Colors.green,
+                        transaction.type ?? "",
+                        //
+                      );
+                    },
+                  );
           },
         ),
       ],
@@ -837,12 +841,14 @@ Widget uploadFileBox({
               children: [
                 Image.asset("assets/uploadd.png", height: 18, width: 18),
                 const SizedBox(width: 5),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xffA3A3A3),
+                Flexible(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xffA3A3A3),
+                    ),
                   ),
                 ),
               ],

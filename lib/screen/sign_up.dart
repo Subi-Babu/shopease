@@ -23,10 +23,11 @@ class UserSignUpScreen extends StatefulWidget {
 }
 
 class _UserSignUpScreenState extends State<UserSignUpScreen> {
+  final formKey = GlobalKey<FormState>(); // ✅ Move here
+
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = Provider.of<LoginProvider>(context, listen: false);
       reg.fetchCountryCode(context: context);
@@ -35,372 +36,258 @@ class _UserSignUpScreenState extends State<UserSignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final formKey = GlobalKey<FormState>();
-
     return PopScope(
       canPop: true,
       child: Scaffold(
-        appBar: AppBar(
-          leading: SizedBox(),
-          backgroundColor: backgroundColor,
-          surfaceTintColor: Colors.transparent,
-        ),
         backgroundColor: backgroundColor,
-        body: Padding(
-          padding: const EdgeInsets.only(
-            // top: 10,
-            left: 15,
-            right: 15,
-            bottom: 20,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const FirstSection(
-                heading: "Let’s\nGet Started",
-                subheading: "Tell Us About Yourself",
-              ),
-              SizedBox(height: 8.h),
-              Expanded(
-                child: Form(
-                  key: formKey,
-                  child: Consumer<LoginProvider>(
-                    builder: (context, sign, _) {
-                      return ListView(
-                        children: [
-                          titleText(isRequired: true, title: 'Full Name'),
-                          SizedBox(height: 8.h),
-                          CustomTextField(
-                            controller: sign.nameCntrl,
-                            validator: (p0) {
-                              return ValidationUtil(
-                                context,
-                              ).nameValidation(sign.nameCntrl.text);
-                            },
-                          ),
-                          SizedBox(height: 10.h),
-                          // titleText(isRequired: false, title: 'Email'),
-                          // SizedBox(height: 8.h),
-                          // CustomTextField(
-                          //   // controller: sign.emailController,
-                          //   // validator: (p0) {
-                          //   //   return validateEmail(sign.emailController.text);
-                          //   // },
-                          //   validator: (value) {
-                          //     // // Skip if empty
-                          //     // if (value == null || value.isEmpty) {
-                          //     //   return null;
-                          //     // }
-                          //
-                          //     // Check format only if user entered something
-                          //     final emailRegex = RegExp(
-                          //       r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                          //     );
-                          //     if (!emailRegex.hasMatch(value!)) {
-                          //       return 'Enter a valid email';
-                          //     }
-                          //
-                          //     return null;
-                          //   },
-                          // ),
-                          // SizedBox(height: 10.h),
-                          titleText(isRequired: true, title: 'Phone Number'),
-                          SizedBox(height: 8.h),
-                          // CustomTextField(
-                          //   validator: (p0) {
-                          //     return ValidationUtil(
-                          //       context,
-                          //     ).phoneValidation(sign.phoneNoCntrl.text);
-                          //   },
-                          //   maxLength: 10,
-                          //   maxLine: 1,
-                          //   keyboardType: TextInputType.number,
-                          //   controller: sign.phoneNoCntrl,
-                          //   // validator: (p0) {
-                          //   //   return validateEmail(sign.emailController.text);
-                          //   // },
-                          //   // validator: (value) {
-                          //   //   // // Skip if empty
-                          //   //   // if (value == null || value.isEmpty) {
-                          //   //   //   return null;
-                          //   //   // }
-                          //   //
-                          //   //   // Check format only if user entered something
-                          //   //   final emailRegex = RegExp(
-                          //   //     r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                          //   //   );
-                          //   //   if (!emailRegex.hasMatch(value!)) {
-                          //   //     return 'Enter a valid email';
-                          //   //   }
-                          //   //
-                          //   //   return null;
-                          //   // },
-                          // ),
-                          // SizedBox(height: 10.h),
-                          Container(
-                            height: 52,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF5F5F5),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: const Color(0XFFD0DAEA),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                // COUNTRY CODE
-                                SizedBox(
-                                  width: 80,
-                                  child: sign.isLoading
-                                      ? const CountryCodeShimmer()
-                                      : CountryPickerWidget(
-                                          countries: sign
-                                              .countryCodeModel
-                                              ?.countryCode,
-                                          selectedValue:
-                                              sign.selectedCountryCode,
-                                          isLoading: sign.isLoading,
-                                          isError: sign.isError,
-                                          onChanged: (value) {
-                                            if (value != null) {
-                                              sign.setSelectedCountryCode(
-                                                value,
-                                              ); // this triggers notifyListeners()
-                                            }
-                                          },
-                                        ),
-                                ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 15, right: 15, bottom: 20),
+            child: Form(
+              key: formKey,
+              child: Consumer<LoginProvider>(
+                builder: (context, sign, _) {
+                  return ListView(
+                    // ✅ Everything inside ONE ListView
+                    padding: const EdgeInsets.only(top: 30),
+                    children: [
+                      const FirstSection(
+                        heading: "Let's\nGet Started",
+                        subheading: "Tell Us About Yourself",
+                      ),
+                      SizedBox(height: 8.h),
 
-                                // VERTICAL DIVIDER
-                                Container(
-                                  width: 1,
-                                  height: double.infinity,
-                                  color: const Color(0XFFD0DAEA),
-                                ),
+                      titleText(isRequired: true, title: 'Full Name'),
+                      SizedBox(height: 8.h),
+                      CustomTextField(
+                        controller: sign.nameCntrl,
+                        validator: (p0) {
+                          return ValidationUtil(
+                            context,
+                          ).nameValidation(sign.nameCntrl.text);
+                        },
+                      ),
+                      SizedBox(height: 10.h),
 
-                                // PHONE NUMBER FIELD
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: sign.phoneNoCntrl,
-                                    keyboardType: TextInputType.phone,
-                                    decoration: const InputDecoration(
-                                      // hintText: "Enter mobile number",
-                                      border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 14,
-                                      ),
+                      titleText(isRequired: true, title: 'Phone Number'),
+                      SizedBox(height: 8.h),
+                      Container(
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0XFFD0DAEA)),
+                        ),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 80,
+                              child: sign.isLoading
+                                  ? const CountryCodeShimmer()
+                                  : CountryPickerWidget(
+                                      countries:
+                                          sign.countryCodeModel?.countryCode,
+                                      selectedValue: sign.selectedCountryCode,
+                                      isLoading: sign.isLoading,
+                                      isError: sign.isError,
+                                      onChanged: (value) {
+                                        if (value != null) {
+                                          sign.setSelectedCountryCode(value);
+                                        }
+                                      },
                                     ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return "Mobile number required";
-                                      }
-                                      if (value.length < 10) {
-                                        return "Enter valid mobile number";
-                                      }
-                                      return null;
-                                    },
+                            ),
+                            Container(
+                              width: 1,
+                              height: double.infinity,
+                              color: const Color(0XFFD0DAEA),
+                            ),
+                            Expanded(
+                              child: TextFormField(
+                                controller: sign.phoneNoCntrl,
+                                keyboardType: TextInputType.phone,
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 14,
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 10.h),
-                          // titleText(isRequired: false, title: 'Zip Code'),
-                          // SizedBox(height: 8.h),
-                          // CustomTextField(
-                          //   // controller: sign.emailController,
-                          //   // validator: (p0) {
-                          //   //   return validateEmail(sign.emailController.text);
-                          //   // },
-                          //   validator: (value) {
-                          //     // // Skip if empty
-                          //     // if (value == null || value.isEmpty) {
-                          //     //   return null;
-                          //     // }
-                          //
-                          //     // Check format only if user entered something
-                          //     final emailRegex = RegExp(
-                          //       r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                          //     );
-                          //     if (!emailRegex.hasMatch(value!)) {
-                          //       return 'Enter a valid email';
-                          //     }
-                          //
-                          //     return null;
-                          //   },
-                          // ),
-                          titleText(isRequired: true, title: 'Password'),
-                          SizedBox(height: 8.h),
-                          CustomTextField(
-                            maxLine: 1,
-                            isPasswordType: true,
-                            controller: sign.passwdCntrl,
-                            validator: (value) {
-                              //9074212900
-                              return ValidationUtil(
-                                context,
-                              ).pwd(sign.passwdCntrl.text);
-                            },
-                          ),
-                          SizedBox(height: 10.h),
-                          titleText(
-                            isRequired: true,
-                            title: 'Confirm Password',
-                          ),
-                          SizedBox(height: 8.h),
-                          CustomTextField(
-                            maxLine: 1,
-                            isPasswordType: true,
-                            controller: sign.confirmPasswdCntrl,
-                            validator: (value) {
-                              return ValidationUtil(
-                                context,
-                              ).confirmPasswordValidation(
-                                sign.passwdCntrl.text,
-                                sign.confirmPasswdCntrl.text,
-                              );
-                            },
-                          ),
-                          SizedBox(height: 10),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Checkbox(
-                                visualDensity: VisualDensity(
-                                  horizontal: -4.0,
-                                  vertical: -4.0,
-                                ),
-                                value: sign.isTermsAccepted,
-                                activeColor: Colors.red,
-                                onChanged: (value) {
-                                  sign.toggleTerms(value ?? false);
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return "Mobile number required";
+                                  }
+                                  if (value.length < 10) {
+                                    return "Enter valid mobile number";
+                                  }
+                                  return null;
                                 },
                               ),
-                              Expanded(
-                                child: RichText(
-                                  text: TextSpan(
-                                    style: const TextStyle(
-                                      fontFamily: "Manrope",
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xff9F9F9F),
-                                    ),
-                                    children: [
-                                      const TextSpan(
-                                        text: "By continuing you agree to our ",
-                                      ),
-                                      TextSpan(
-                                        text: "Terms & Conditions",
-                                        style: const TextStyle(
-                                          color: Colors.red,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        recognizer: TapGestureRecognizer()
-                                          ..onTap = () {
-                                            // Navigate to Terms & Conditions
-                                          },
-                                      ),
-                                      const TextSpan(text: " and "),
-                                      TextSpan(
-                                        text: "Privacy Policy",
-                                        style: const TextStyle(
-                                          color: Colors.red,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        recognizer: TapGestureRecognizer()
-                                          ..onTap = () {
-                                            // Navigate to Privacy Policy
-                                          },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8, top: 8),
-                            child: CustomButton(
-                              text: "Submit",
-                              isLoading: sign.signUpLoading,
-                              onPress: () {
-                                if (!sign.isTermsAccepted) {
-                                  ToastUtil.show(
-                                    "Please accept Terms & Conditions",
-                                  );
-                                  return;
-                                }
-
-                                if (formKey.currentState!.validate()) {
-                                  // sign.signupForm(
-                                  //   context: context,
-                                  //   code: "91",
-                                  //   phone: sign.phoneNoCntrl.text,
-                                  //   name: sign.nameCntrl.text,
-                                  //   password: sign.passwdCntrl.text,
-                                  // );
-                                  sign.otpSend(
-                                    context: context,
-                                    code: sign.selectedCountryCode ?? "+91",
-                                    phone: sign.phoneNoCntrl.text,
-                                  );
-                                }
-                              },
-                              // disables button
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (sign.otpErrorMessage2 != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            sign.otpErrorMessage2!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 13,
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 30),
+                        ),
+                      SizedBox(height: 10.h),
 
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "Already have an account?",
-                                  style: const TextStyle(
-                                    fontFamily: "Manrope",
+                      titleText(isRequired: true, title: 'Password'),
+                      SizedBox(height: 8.h),
+                      CustomTextField(
+                        maxLine: 1,
+                        isPasswordType: true,
+                        controller: sign.passwdCntrl,
+                        validator: (value) {
+                          return ValidationUtil(
+                            context,
+                          ).pwd(sign.passwdCntrl.text);
+                        },
+                      ),
+                      SizedBox(height: 10.h),
 
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xff9F9F9F),
-                                  ),
+                      titleText(isRequired: true, title: 'Confirm Password'),
+                      SizedBox(height: 8.h),
+                      CustomTextField(
+                        maxLine: 1,
+                        isPasswordType: true,
+                        controller: sign.confirmPasswdCntrl,
+                        validator: (value) {
+                          return ValidationUtil(
+                            context,
+                          ).confirmPasswordValidation(
+                            sign.passwdCntrl.text,
+                            sign.confirmPasswdCntrl.text,
+                          );
+                        },
+                      ),
+                      SizedBox(height: 12),
+
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Checkbox(
+                            visualDensity: const VisualDensity(
+                              horizontal: -4.0,
+                              vertical: -4.0,
+                            ),
+                            value: sign.isTermsAccepted,
+                            activeColor: Colors.red,
+                            onChanged: (value) {
+                              sign.toggleTerms(value ?? false);
+                            },
+                          ),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: const TextStyle(
+                                  fontFamily: "Manrope",
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xff9F9F9F),
                                 ),
-                                InkWell(
-                                  onTap: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const LoginScreen(),
-                                      ),
-                                    );
-                                  },
-                                  child: const Text(
-                                    " Login",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 14,
-                                      fontFamily: "Manrope",
-
+                                children: [
+                                  const TextSpan(
+                                    text: "By continuing you agree to our ",
+                                  ),
+                                  TextSpan(
+                                    text: "Terms & Conditions",
+                                    style: const TextStyle(
                                       color: Colors.red,
+                                      fontWeight: FontWeight.w700,
                                     ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {},
                                   ),
-                                ),
-                              ],
+                                  const TextSpan(text: " and "),
+                                  TextSpan(
+                                    text: "Privacy Policy",
+                                    style: const TextStyle(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {},
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
-                      );
-                    },
-                  ),
+                      ),
 
-                  // }),
-                ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8, top: 10),
+                        child: CustomButton(
+                          text: "Submit",
+                          isLoading: sign.signUpLoading,
+                          onPress: () {
+                            if (!sign.isTermsAccepted) {
+                              ToastUtil.show(
+                                "Please accept Terms & Conditions",
+                              );
+                              return;
+                            }
+                            if (formKey.currentState!.validate()) {
+                              sign.otpSend(
+                                context: context,
+                                code: sign.selectedCountryCode ?? "+91",
+                                phone: sign.phoneNoCntrl.text,
+                              );
+                            }
+                          },
+                        ),
+                      ),
+
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 30),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "Already have an account?",
+                              style: TextStyle(
+                                fontFamily: "Manrope",
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xff9F9F9F),
+                              ),
+                            ),
+                            InkWell(
+                              onTap: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const LoginScreen(),
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                " Login",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  fontFamily: "Manrope",
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
-              // Consumer<CustommerLoginProvider>(builder: (context, sign, _) {
-              // })
-            ],
+            ),
           ),
         ),
       ),

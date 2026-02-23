@@ -105,6 +105,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             //       .pwd(sign.passwordController.text);
                             // },
                           ),
+                          if (sign.loginErrorMessage != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                sign.loginErrorMessage!,
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
                           SizedBox(height: 20.h),
 
                           Padding(

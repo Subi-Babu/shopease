@@ -21,4 +21,24 @@ class Urls {
   static String addFundUrl = "$kBaseUrl/users/addMoney";
   static String exCategoryUrl = "$kBaseUrl/users/expenseCategoryDropDown";
   static String walletUrl = "$kBaseUrl/users/getMoneyandExpenses";
+  static String stageCategoryUrl = "$kBaseUrl/users/getstageCategory";
+  static String activityUrl = "$kBaseUrl/users/projectActivity";
+  static String projectFolderUrl = "$kBaseUrl/users/projectFolder";
+  static String projectFolderListUrl = "$kBaseUrl/users/projectFoldersDropDown";
+  static String projectFileUploadUrl = "$kBaseUrl/users/projectFiles";
+  static String projectFileListUrl = "$kBaseUrl/users/getProjectFiles";
+  static String profileUrl = "$kBaseUrl/users/getprofile";
+  static String estimationUrl = "$kBaseUrl/users/estimation";
+  static String quotesUrl = "$kBaseUrl/users/quatation";
+  static String projectTypeUrl = "$kBaseUrl/users/projectTypeDropDown";
+  static String estimationnRequestUrl = "$kBaseUrl/users/estimation";
+  static String quoteRequestUrl = "$kBaseUrl/users/requestQuatation";
+  static String categoryListUrl = "$kBaseUrl/users/categoryList";
+  static String itemUrl = "$kBaseUrl/users/itemList";
+  static String itemVaraiationUrl = "$kBaseUrl/users/itemListByVariation";
+  static String itemDetailsUrl = "$kBaseUrl/users/itembyId";
+  static String subCatUrl = "$kBaseUrl/users/subCategoryList";
+  static String brandUrl = "$kBaseUrl/users/brandsList";
+  static String addAddressUrl = "$kBaseUrl/users/address";
+
 }

@@ -17,78 +17,60 @@ class LoginProvider with ChangeNotifier {
   TextEditingController phoneCntrl = TextEditingController();
   TextEditingController pwdCntrl = TextEditingController();
   TextEditingController otpContrl = TextEditingController();
+  String? loginErrorMessage; // 👈 Add this in your provider
+
   Future<void> loginForm({
     required BuildContext context,
-
     String? phone,
     String? password,
   }) async {
     signInLoading = true;
+    loginErrorMessage = null;
     notifyListeners();
 
     try {
-      var responseData = await NetworkHelper().login(
+      var response = await NetworkHelper().login(
         context: context,
         phonenumber: phone ?? "",
         pwd: password ?? "",
       );
 
-      log("LOG MESSAGE222222:");
+      if (response == null) {
+        loginErrorMessage = "No response from server.";
+        return;
+      }
 
-      if (responseData["status"] == true) {
-        print("Status code 12345678909876543");
+      if (response["status"] == 200) {
+        var data = response["data"];
 
-        accessToken = responseData["accessToken"];
-        // refreshToken = responseData["refreshToken"];
+        accessToken = data["accessToken"];
 
         if (accessToken != null) {
           await SharedPrefUtil.writeString(accesstokenKey, accessToken!);
         }
 
-        ToastUtil.show("Login Successfully!");
-
         if (!context.mounted) return;
-
-        log("Navigating to LoginSuccessfulScreen...");
 
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => BottomNavScreen()),
         );
       } else {
-        String errorMessage =
-            responseData["message"] ??
-            responseData["error"] ??
-            "SignIn failed. Please try again.";
-        log("SignIn failed: $errorMessage");
+        // ✅ Correct error extraction
+        loginErrorMessage =
+            response["data"]?["error"] ?? "Login failed. Please try again.";
 
-        // if (!context.mounted) return;
-        //
-        // showDialog(
-        //   context: context,
-        //   builder: (BuildContext ctx) {
-        //     return AlertDialog(
-        //       title: const Text("Login Failed"),
-        //       content: Text(errorMessage),
-        //       actions: [
-        //         TextButton(
-        //           onPressed: () {
-        //             Navigator.of(ctx).pop();
-        //           },
-        //           child: const Text("OK"),
-        //         ),
-        //       ],
-        //     );
-        //   },
-        // );
+        notifyListeners();
       }
     } catch (e, stack) {
       log("❌ Login exception: $e\n$stack");
-      log("Error: $e");
-      // ToastUtil.show("An error occurred. Please try again.");
-      ToastUtil.show("An error occurred. Please try again.");
+
+      loginErrorMessage = "Something went wrong. Please try again.";
     } finally {
       signInLoading = false;
+      pwdCntrl.clear();
+      phoneCntrl.clear();
+      loginErrorMessage = null;
       notifyListeners();
     }
   }
@@ -160,12 +142,15 @@ class LoginProvider with ChangeNotifier {
     }
   }
 
+  String? otpErrorMessage2;
+
   Future<void> otpSend({
     required BuildContext context,
     String? code,
     String? phone,
   }) async {
     signUpLoading = true;
+    otpErrorMessage2 = null; // ✅ clear old error
     notifyListeners();
 
     try {
@@ -177,37 +162,53 @@ class LoginProvider with ChangeNotifier {
 
       log("LOG MESSAGE222222:");
 
-      if (responseData["status"] == true) {
+      if (responseData == null) {
+        otpErrorMessage2 = "Something went wrong. Please try again.";
+        ToastUtil.show(otpErrorMessage!);
+        return;
+      }
+
+      // ✅ SUCCESS
+      if (responseData["status"] == 200 || responseData["status"] == true) {
+        otpErrorMessage2 = null; // clear error
+
         ToastUtil.show("Otp Send Successfully!");
 
         if (!context.mounted) return;
 
-        log("Navigating to LoginSuccessfulScreen...");
-
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => UserOtpScreeen()),
+          MaterialPageRoute(builder: (_) => UserOtpScreeen()),
         );
-      } else {
-        String errorMessage =
+      }
+      // ✅ PHONE ALREADY USED
+      else if (responseData["status"] == 404) {
+        otpErrorMessage2 =
+            responseData["error"] ?? "Phone Number is already used";
+        // ToastUtil.show(otpErrorMessage2!);
+      }
+      // ✅ OTHER ERRORS
+      else {
+        otpErrorMessage2 =
             responseData["message"] ??
             responseData["error"] ??
             "SignIn failed. Please try again.";
-        log("SignIn failed: $errorMessage");
 
-        if (!context.mounted) return;
-        ToastUtil.show("An error occurred. Please try again.");
+        ToastUtil.show(otpErrorMessage2!);
+        log("SignIn failed: $otpErrorMessage2");
       }
     } catch (e, stack) {
       log("❌ Login exception: $e\n$stack");
-      log("Error: $e");
-      // ToastUtil.show("An error occurred. Please try again.");
-      ToastUtil.show("An error occurred. Please try again.");
+
+      otpErrorMessage2 = "An error occurred. Please try again.";
+      ToastUtil.show(otpErrorMessage!);
     } finally {
       signUpLoading = false;
-      notifyListeners();
+      notifyListeners(); // ✅ notify after updating error
     }
   }
+
+  String? otpErrorMessage;
 
   Future<void> otpVerify({
     required BuildContext context,
@@ -216,6 +217,7 @@ class LoginProvider with ChangeNotifier {
     String? otp,
   }) async {
     signUpLoading = true;
+    otpErrorMessage = null; // Reset previous error
     notifyListeners();
 
     try {
@@ -226,10 +228,10 @@ class LoginProvider with ChangeNotifier {
         otp: otp ?? "",
       );
 
-      log("OTP Verify Response: $responseData");
+      log("OTP Verify Response: ${responseData?["error"]}");
 
-      if (responseData["status"] == 200) {
-        // Call signup only after OTP success
+      if (responseData?["status"] == 200 || responseData?["status"] == true) {
+        // OTP Success → Call signup
         await signupForm(
           context: context,
           phone: phoneNoCntrl.text,
@@ -242,27 +244,26 @@ class LoginProvider with ChangeNotifier {
 
         log("Navigating to UserOtpScreen...");
       } else {
-        final String errorMessage =
-            responseData["message"] ??
-            responseData["error"] ??
-            "OTP verification failed. Please try again.";
-
-        log("OTP verification failed: $errorMessage");
-
-        if (!context.mounted) return;
-        ToastUtil.show(errorMessage);
+        otpErrorMessage =
+            responseData?["error"] ??
+            "Otp not match" ?? // ← unreachable
+            "OTP verification failed";
+        log("OTP verification failed: $otpErrorMessage");
+        notifyListeners();
       }
     } catch (e, stackTrace) {
       log("❌ OTP Verify Exception: $e");
       log(stackTrace.toString());
 
-      if (!context.mounted) return;
-      ToastUtil.show("An error occurred. Please try again.");
+      otpErrorMessage = "An error occurred. Please try again.";
+      notifyListeners();
     } finally {
       signUpLoading = false;
       notifyListeners();
     }
   }
+
+  String? otpErroresend;
 
   Future<void> otpResend({
     required BuildContext context,
@@ -270,6 +271,8 @@ class LoginProvider with ChangeNotifier {
     String? phone,
   }) async {
     signUpLoading = true;
+    otpErrorMessage == null;
+    otpErrorMessage2 == null;
     notifyListeners();
 
     try {
@@ -281,31 +284,16 @@ class LoginProvider with ChangeNotifier {
       );
 
       log("OTP Verify Response: $responseData");
-
-      if (responseData["status"] == 200) {
-        // Call signup only after OTP success
-        // await signupForm(
-        //   context: context,
-        //   phone: phoneNoCntrl.text,
-        //   code: selectedCountryCode ?? "+91",
-        //   name: nameCntrl.text,
-        //   password: passwdCntrl.text,
-        // );
-        ToastUtil.show("Otp Send Successfully");
-
-        if (!context.mounted) return;
-
-        log("Navigating to UserOtpScreen...");
-      } else {
-        final String errorMessage =
-            responseData["message"] ??
-            responseData["error"] ??
-            "OTP verification failed. Please try again.";
-
-        log("OTP verification failed: $errorMessage");
-
-        if (!context.mounted) return;
-        ToastUtil.show(errorMessage);
+      if (!context.mounted)
+        return;
+      // log("Navigating to UserOtpScreen...");
+      else {
+        otpErroresend =
+            responseData?["error"] ??
+            "Otp not match" ?? // ← unreachable
+            "OTP verification failed";
+        log("OTP verification failed: $otpErrorMessage");
+        notifyListeners();
       }
     } catch (e, stackTrace) {
       log("❌ OTP Verify Exception: $e");

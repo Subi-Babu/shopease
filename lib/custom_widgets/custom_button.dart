@@ -50,13 +50,15 @@ class CustomButton extends StatelessWidget {
                   visible: icon1 != null,
                   child: const SizedBox(width: 8),
                 ),
-                Text(
-                  text,
-                  style: TextStyle(
-                    fontFamily: "Manrope",
-                    fontSize: 17,
-                    color: textColor ?? backgroundColor,
-                    fontWeight: FontWeight.w600,
+                Flexible(
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      fontFamily: "Manrope",
+                      fontSize: 17,
+                      color: textColor ?? backgroundColor,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 Visibility(

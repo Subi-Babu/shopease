@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
+import 'package:youbuilt/screen/projects/widgets/approval.dart';
 import 'package:youbuilt/screen/projects/widgets/filess.dart';
 import 'package:youbuilt/screen/projects/widgets/overview.dart';
 import 'package:youbuilt/screen/projects/widgets/snaglist.dart';
@@ -76,11 +77,11 @@ class _ProjectViewState extends State<ProjectView> {
         ),
         body: TabBarView(
           children: [
-            OverviewTab(),
+            OverviewTab(projectId: widget.projectId),
             Snaglist(projectId: widget.projectId),
             WalletPage(projectId: widget.projectId),
-            Center(child: Text("Appprovals")),
-            ProjectFilesPage(),
+            ApprovalsPage(),
+            ProjectFilesPage(pid: widget.projectId),
           ],
         ),
       ),
