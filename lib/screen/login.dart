@@ -139,6 +139,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                     password: sign.pwdCntrl.text,
                                   );
+
+                                  // loginErrorMessage = null;
                                 }
                               },
                             ),

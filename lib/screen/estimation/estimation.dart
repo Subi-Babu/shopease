@@ -8,9 +8,12 @@ import 'package:youbuilt/screen/projects/widgets/wallet.dart';
 import 'package:youbuilt/screen/sign_up.dart';
 import 'package:youbuilt/utils/colors.dart';
 
+import '../../model/category_dropdown.dart';
 import '../../model/expense_model.dart';
 import '../../model/project_type_model.dart';
 import '../../utils/toast_util.dart';
+
+final _formKey = GlobalKey<FormState>();
 
 class EstimationPage extends StatefulWidget {
   const EstimationPage({super.key});
@@ -31,6 +34,7 @@ class _EstimationPageState extends State<EstimationPage>
       reg.fetchEstimation(context: context);
       reg.fetchQuatation(context: context);
       reg.fetchProjectType(context: context);
+      reg.fetchCategoryDropdown(context: context);
     });
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
@@ -378,201 +382,242 @@ void _openQuatationBottomSheet(BuildContext context) {
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Quatation Request",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontFamily: "Manrope",
-                      fontSize: 18,
-                      color: primaryClr,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  InkWell(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.close, color: Colors.grey),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Quotation Request",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontFamily: "Manrope",
+                        fontSize: 18,
+                        color: primaryClr,
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(Icons.close, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
 
-              // Content
-              Consumer<ProjectProvider>(
-                builder: (context, project, _) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomTextField(
-                        hintText: "Client Full Name",
-                        keyboardType: TextInputType.number,
-                        fillColor: Colors.white,
-                        controller: project.qnameClientCntrl,
-                      ),
-                      const SizedBox(height: 10),
-                      CustomTextField(
-                        hintText: "Email",
-                        fillColor: Colors.white,
-                        controller: project.qemailCntrl,
-                      ),
-                      const SizedBox(height: 10),
-
-                      CustomTextField(
-                        hintText: "Phone Number",
-                        fillColor: Colors.white,
-                        keyboardType: TextInputType.number,
-                        controller: project.qphoneClientCntrl,
-                      ),
-                      const SizedBox(height: 10),
-                      CustomTextField(
-                        hintText: "Pin Code",
-                        fillColor: Colors.white,
-                        keyboardType: TextInputType.number,
-
-                        controller: project.qpincodeCntrl,
-                      ),
-                      const SizedBox(height: 10),
-                      CustomTextField(
-                        hintText: "Address",
-                        fillColor: Colors.white,
-                        controller: project.qaddressCntrl,
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        height: 48,
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(6),
-                          color: Colors.white,
-                          border: Border.all(color: Colors.grey.shade300),
+                // Content
+                Consumer<ProjectProvider>(
+                  builder: (context, project, _) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomTextField(
+                          hintText: "Client Full Name",
+                          fillColor: Colors.white,
+                          controller: project.qnameClientCntrl,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return "Client name is required";
+                            }
+                            return null;
+                          },
                         ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<ProjectTypeDropDown>(
-                            value: project.selectedqProjectType,
-                            hint: const Text(
-                              "Project Type",
-                              style: TextStyle(
-                                color: Color(0xFFCACACA),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                        const SizedBox(height: 10),
+                        CustomTextField(
+                          hintText: "Email",
+                          fillColor: Colors.white,
+                          controller: project.qemailCntrl,
+                        ),
+                        const SizedBox(height: 10),
+
+                        CustomTextField(
+                          hintText: "Phone Number",
+                          fillColor: Colors.white,
+                          keyboardType: TextInputType.number,
+                          controller: project.qphoneClientCntrl,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return "phone number is required";
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        CustomTextField(
+                          hintText: "Pin Code",
+                          fillColor: Colors.white,
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return "pincode is required";
+                            }
+                            return null;
+                          },
+
+                          controller: project.qpincodeCntrl,
+                        ),
+                        const SizedBox(height: 10),
+                        CustomTextField(
+                          hintText: "Address",
+                          fillColor: Colors.white,
+                          controller: project.qaddressCntrl,
+                        ),
+                        const SizedBox(height: 10),
+                        Container(
+                          height: 48,
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(6),
+                            color: Colors.white,
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<ProjectTypeDropDown>(
+                              value: project.selectedqProjectType,
+                              hint: const Text(
+                                "Project Type",
+                                style: TextStyle(
+                                  color: Color(0xFFCACACA),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                            icon: const Icon(
-                              Icons.keyboard_arrow_down,
-                              size: 20,
-                            ),
-                            isExpanded: true,
-                            items:
-                                project.projectTypeModel?.projectTypeDropDown
-                                    ?.map((e) {
-                                      return DropdownMenuItem<
-                                        ProjectTypeDropDown
-                                      >(
-                                        value: e,
-                                        child: Text(
-                                          e.label ?? "",
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.black,
+                              icon: const Icon(
+                                Icons.keyboard_arrow_down,
+                                size: 20,
+                              ),
+                              isExpanded: true,
+                              items:
+                                  project.projectTypeModel?.projectTypeDropDown
+                                      ?.map((e) {
+                                        return DropdownMenuItem<
+                                          ProjectTypeDropDown
+                                        >(
+                                          value: e,
+                                          child: Text(
+                                            e.label ?? "",
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black,
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    })
-                                    .toList() ??
-                                [],
-                            onChanged: (value) {
-                              if (value != null) {
-                                project.setQuoteProjectType(value);
-                              }
-                            },
+                                        );
+                                      })
+                                      .toList() ??
+                                  [],
+
+                              onChanged: (value) {
+                                if (value != null) {
+                                  project.setQuoteProjectType(value);
+                                }
+                              },
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      CustomTextField(
-                        hintText: "Built-up Area (sqm)",
-                        fillColor: Colors.white,
-                        controller: project.qbuildareaCntrl,
-                      ),
-                      const SizedBox(height: 10),
-                      CustomTextField(
-                        hintText: "Plot Area (sqm)",
-                        fillColor: Colors.white,
-                        controller: project.qplotCntrl,
-                      ),
-                      const SizedBox(height: 10),
-                      CustomTextField(
-                        hintText: "Budget Amount",
-                        fillColor: Colors.white,
-                        controller: project.qbudgetAmountCntrl,
-                      ),
-                      const SizedBox(height: 10),
+                        const SizedBox(height: 10),
+                        CustomTextField(
+                          hintText: "Built-up Area (sqm)",
+                          fillColor: Colors.white,
+                          controller: project.qbuildareaCntrl,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return "built-up area is required";
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        CustomTextField(
+                          hintText: "Plot Area (sqm)",
+                          fillColor: Colors.white,
+                          controller: project.qplotCntrl,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return "plot area is required";
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        CustomTextField(
+                          hintText: "Budget Amount",
+                          fillColor: Colors.white,
+                          controller: project.qbudgetAmountCntrl,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return "budget amount is required";
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 10),
 
-                      // Text(
-                      //   "Upload Documents / Drawings",
-                      //   style: TextStyle(
-                      //     fontFamily: "Manrope",
-                      //     fontWeight: FontWeight.w500,
-                      //     fontSize: 14,
-                      //     height: 2,
-                      //     color: Color(0xff737373),
-                      //   ),
-                      // ),
-                      //
-                      // uploadFileBox(
-                      //   title: project.fundFile == null
-                      //       ? "Upload file"
-                      //       : project.fundFile!.path.split('/').last,
-                      //   onTap: () {
-                      //     // project.pickFundFile();
-                      //   },
-                      // ),
-                      // const SizedBox(height: 10),
-                      CustomTextField(
-                        hintText: "Description",
-                        fillColor: Colors.white,
-                        maxLine: 4,
-                        controller: project.qdescriptionCntrl,
-                      ),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 10),
+                        // Text(
+                        //   "Upload Documents / Drawings",
+                        //   style: TextStyle(
+                        //     fontFamily: "Manrope",
+                        //     fontWeight: FontWeight.w500,
+                        //     fontSize: 14,
+                        //     height: 2,
+                        //     color: Color(0xff737373),
+                        //   ),
+                        // ),
+                        //
+                        // uploadFileBox(
+                        //   title: project.fundFile == null
+                        //       ? "Upload file"
+                        //       : project.fundFile!.path.split('/').last,
+                        //   onTap: () {
+                        //     // project.pickFundFile();
+                        //   },
+                        // ),
+                        // const SizedBox(height: 10),
+                        CustomTextField(
+                          hintText: "Description",
+                          fillColor: Colors.white,
+                          maxLine: 4,
+                          controller: project.qdescriptionCntrl,
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
 
-              CustomButton(
-                text: "Next",
-                borderSide: BorderSide(color: primaryClr),
-                bgColor: Colors.white,
-                textColor: primaryClr,
-                onPress: () {
-                  Navigator.pop(context); // Close first bottom sheet
-                  // Future.delayed(Duration(milliseconds: 300), () {
-                  _openQuatationBottomSheet2(
-                    context,
-                  ); // Open second bottom sheet
-                  // });
-                },
-              ),
-            ],
+                CustomButton(
+                  text: "Next",
+                  borderSide: BorderSide(color: primaryClr),
+                  bgColor: Colors.white,
+                  textColor: primaryClr,
+                  onPress: () {
+                    if (_formKey.currentState!.validate()) {
+                      // Navigator.pop(context); // close first sheet
+                      Future.delayed(Duration(milliseconds: 200), () {
+                        _openQuatationBottomSheet2(
+                          context,
+                        ); // open second sheet
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -617,7 +662,7 @@ void _openQuatationBottomSheet2(BuildContext context) {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    "Estimation Request",
+                    "Quotation Request",
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontFamily: "Manrope",
@@ -660,31 +705,178 @@ void _openQuatationBottomSheet2(BuildContext context) {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                CustomTextField(
-                                  hintText: "Category Type",
-                                  fillColor: Colors.white,
-                                  // controller: project.detailsFundCtrl,
+                                Container(
+                                  height: 48,
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(6),
+                                    color: Colors.white,
+                                    border: Border.all(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<CategoryDropDown>(
+                                      value: project.selectedCategory,
+                                      hint: const Text(
+                                        "Category Type",
+                                        style: TextStyle(
+                                          color: Color(0xFFCACACA),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      icon: const Icon(
+                                        Icons.keyboard_arrow_down,
+                                        size: 20,
+                                      ),
+                                      isExpanded: true,
+                                      items:
+                                          project
+                                              .categoryDropDown
+                                              ?.categoryDropDown
+                                              ?.map((e) {
+                                                return DropdownMenuItem<
+                                                  CategoryDropDown
+                                                >(
+                                                  value: e,
+                                                  child: Text(
+                                                    e.label ?? "",
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                );
+                                              })
+                                              .toList() ??
+                                          [],
+                                      onChanged: (value) {
+                                        if (value != null) {
+                                          project.setSelectedCategoryQuotes(
+                                            value,
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(height: 10),
-                                _countAddRow(),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: CustomTextField(
+                                        hintText: "Enter Count",
+                                        fillColor: Colors.white,
+                                        keyboardType: TextInputType.number,
+                                        controller: project.numberCtrl,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    SizedBox(
+                                      height: 45,
+                                      child: OutlinedButton.icon(
+                                        onPressed: () {
+                                          project.addCategoryItem();
+                                        },
+                                        icon: const Icon(Icons.add),
+                                        label: const Text(
+                                          "Add",
+                                          style: TextStyle(color: primaryClr),
+                                        ),
+                                        style: OutlinedButton.styleFrom(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          side: const BorderSide(
+                                            color: Colors.black,
+                                          ), // optional
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
                           ),
                           const SizedBox(height: 10),
                           Container(
-                            padding: EdgeInsets.all(8),
-
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Color(0xffF4F4F4),
+                              color: const Color(0xffF4F4F4),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _addedItem("Master Bedroom", "x2"),
-                                _addedItem("Kitchen", "x1"),
-                              ],
-                            ),
+                            child: project.addedCategoryItems.isEmpty
+                                ? const Text(
+                                    "No items added",
+                                    style: TextStyle(color: Colors.grey),
+                                  )
+                                : Column(
+                                    children: List.generate(
+                                      project.addedCategoryItems.length,
+                                      (index) {
+                                        final item =
+                                            project.addedCategoryItems[index];
+                                        return Container(
+                                          margin: const EdgeInsets.only(
+                                            bottom: 8,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 10,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                item.category.label ?? "",
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              Row(
+                                                children: [
+                                                  Text(
+                                                    "x${item.count}",
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                      project
+                                                          .removeCategoryItem(
+                                                            index,
+                                                          );
+                                                    },
+                                                    child: const Icon(
+                                                      Icons.delete,
+                                                      color: Colors.red,
+                                                      size: 20,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
                           ),
 
                           const SizedBox(height: 10),
@@ -700,11 +892,11 @@ void _openQuatationBottomSheet2(BuildContext context) {
                           ),
 
                           uploadFileBox(
-                            title: project.fundFile == null
+                            title: project.govtPaper == null
                                 ? "Upload file"
-                                : project.fundFile!.path.split('/').last,
+                                : project.govtPaper!.path.split('/').last,
                             onTap: () {
-                              // project.pickFundFile();
+                              project.pickGovtFile();
                             },
                           ),
                           const SizedBox(height: 10),
@@ -720,11 +912,11 @@ void _openQuatationBottomSheet2(BuildContext context) {
                           ),
 
                           uploadFileBox(
-                            title: project.fundFile == null
+                            title: project.boqFile == null
                                 ? "Upload file"
-                                : project.fundFile!.path.split('/').last,
+                                : project.boqFile!.path.split('/').last,
                             onTap: () {
-                              // project.pickFundFile();
+                              project.pickBOQFile();
                             },
                           ),
                           const SizedBox(height: 10),
@@ -740,11 +932,11 @@ void _openQuatationBottomSheet2(BuildContext context) {
                           ),
 
                           uploadFileBox(
-                            title: project.fundFile == null
+                            title: project.drwaings == null
                                 ? "Upload file"
-                                : project.fundFile!.path.split('/').last,
+                                : project.drwaings!.path.split('/').last,
                             onTap: () {
-                              // project.pickFundFile();
+                              project.pickDrawingsFile();
                             },
                           ),
                           const SizedBox(height: 10),
@@ -760,11 +952,11 @@ void _openQuatationBottomSheet2(BuildContext context) {
                           ),
 
                           uploadFileBox(
-                            title: project.fundFile == null
+                            title: project.sitePlan == null
                                 ? "Upload file"
-                                : project.fundFile!.path.split('/').last,
+                                : project.sitePlan!.path.split('/').last,
                             onTap: () {
-                              // project.pickFundFile();
+                              project.pickSitePlanFile();
                             },
                           ),
                           const SizedBox(height: 10),
@@ -784,12 +976,50 @@ void _openQuatationBottomSheet2(BuildContext context) {
                       borderSide: BorderSide(color: primaryClr),
                       bgColor: Colors.white,
                       textColor: primaryClr,
-                      onPress: () {},
+                      onPress: () {
+                        Future.delayed(Duration(milliseconds: 200), () {
+                          _openQuatationBottomSheet(
+                            context,
+                          ); // reopen first sheet
+                        });
+                      },
                     ),
                   ),
                   SizedBox(width: 5),
                   Expanded(
-                    child: CustomButton(text: "Request", onPress: () {}),
+                    child: Consumer<ProjectProvider>(
+                      builder: (context, project, _) {
+                        return CustomButton(
+                          text: "Request",
+                          onPress: () async {
+                            await project.addQuatationReq(
+                              context: context,
+                              amount: project.qbudgetAmountCntrl.text ?? "",
+                              email: project.qemailCntrl.text ?? "",
+                              phoneNo: project.qphoneClientCntrl.text ?? "",
+                              pinCode: project.qpincodeCntrl.text ?? "",
+                              address: project.qaddressCntrl.text ?? "",
+                              buildarea: project.qbuildareaCntrl.text ?? "",
+                              clientName: project.qnameClientCntrl.text ?? "",
+                              file: project.drwaings,
+                              sitePlan: project.sitePlan,
+                              boq: project.boqFile,
+                              govtaper: project.govtPaper,
+                              projectTypeNAme: project.qprojectTypeName
+                                  .toString(),
+                              description: project.qdescriptionCntrl.text ?? "",
+                              date: DateFormat(
+                                'dd-MM-yyyy',
+                              ).format(DateTime.now()),
+                              ploatArea: project.qplotCntrl.text,
+
+                              categoryType: project.getCategoryTypeForApi(),
+                            );
+                            project.clearQuotationForm();
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -846,35 +1076,6 @@ Widget _addedItem(String title, String count) {
         ),
       ],
     ),
-  );
-}
-
-Widget _countAddRow() {
-  return Row(
-    children: [
-      Expanded(
-        child: CustomTextField(
-          hintText: "Enter Count",
-          fillColor: Colors.white,
-          // controller: project.detailsFundCtrl,
-        ),
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        height: 45,
-        child: OutlinedButton.icon(
-          onPressed: () {},
-          icon: const Icon(Icons.add),
-          label: const Text("Add"),
-          style: OutlinedButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            side: const BorderSide(color: Colors.black), // optional
-          ),
-        ),
-      ),
-    ],
   );
 }
 
@@ -1063,7 +1264,7 @@ class EstimationCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                SizedBox(width: 40),
+                SizedBox(width: 30),
                 Flexible(
                   child: SizedBox(
                     height: 38,

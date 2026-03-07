@@ -1,7 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_bottom_bar/liquid_glass_bottom_bar.dart';
-import 'package:youbuilt/screen/cart/cart.dart';
+import 'package:youbuilt/screen/cart/addcart.dart';
+import 'package:youbuilt/screen/cart/all_product.dart';
 import 'package:youbuilt/screen/profile/profile.dart';
 import 'package:youbuilt/screen/projects/projects.dart';
 
@@ -19,7 +20,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
 
   final List<Widget> _pages = const [
     HomeScreen(),
-    AllProductsPage(),
+    MyCartPage(),
     ProjectScreen(),
     ProfileMenuPage(),
   ];

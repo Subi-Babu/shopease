@@ -50,7 +50,8 @@ class LoginProvider with ChangeNotifier {
         }
 
         if (!context.mounted) return;
-
+        pwdCntrl.clear();
+        phoneCntrl.clear();
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => BottomNavScreen()),
@@ -68,9 +69,7 @@ class LoginProvider with ChangeNotifier {
       loginErrorMessage = "Something went wrong. Please try again.";
     } finally {
       signInLoading = false;
-      pwdCntrl.clear();
-      phoneCntrl.clear();
-      loginErrorMessage = null;
+
       notifyListeners();
     }
   }

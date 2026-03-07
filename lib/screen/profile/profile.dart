@@ -4,9 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:youbuilt/screen/onborading.dart';
 import 'package:youbuilt/screen/profile/address.dart';
 import 'package:youbuilt/screen/profile/edit_profile.dart';
+import 'package:youbuilt/screen/profile/orders.dart';
+import 'package:youbuilt/screen/profile/service_booking.dart';
 import 'package:youbuilt/utils/colors.dart';
 import 'package:youbuilt/utils/constants.dart';
 import 'package:youbuilt/utils/sharedpref_util.dart';
@@ -26,6 +29,8 @@ class _ProfileMenuPageState extends State<ProfileMenuPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = Provider.of<ProjectProvider>(context, listen: false);
       await reg.fetchProfile(context: context);
+      await reg.fetchOrderList(context: context, keyword: "");
+      await reg.fetchServiceBooking(context: context);
     });
     // TODO: implement initState
     super.initState();
@@ -74,37 +79,39 @@ class _ProfileMenuPageState extends State<ProfileMenuPage> {
                                 CircleAvatar(
                                   radius: 30,
                                   backgroundColor: const Color(0xffC1C1C1),
-                                  child: CachedNetworkImage(
-                                    imageUrl:
-                                        project
-                                            .profileModel
-                                            ?.data
-                                            ?.profileImage ??
-                                        '',
-                                    height: 30,
-                                    width: 30,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) =>
-                                        const CircleAvatar(
-                                          radius: 15,
-                                          backgroundColor: Color(0xffE0E0E0),
-                                        ),
-                                    errorWidget: (context, url, error) =>
-                                        CircleAvatar(
-                                          radius: 30,
-                                          backgroundColor: const Color(
-                                            0xffC1C1C1,
+                                  child: ClipOval(
+                                    child: CachedNetworkImage(
+                                      imageUrl:
+                                          project
+                                              .profileModel
+                                              ?.data
+                                              ?.profileImage ??
+                                          '',
+                                      width: 60,
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) =>
+                                          const CircleAvatar(
+                                            radius: 15,
+                                            backgroundColor: Color(0xffE0E0E0),
                                           ),
-                                          child: Text(
-                                            project?.profileModel?.data?.name
-                                                    ?.substring(0, 1)
-                                                    .toUpperCase() ??
-                                                "",
-                                            style: const TextStyle(
-                                              color: primaryClr,
+                                      errorWidget: (context, url, error) =>
+                                          CircleAvatar(
+                                            radius: 30,
+                                            backgroundColor: const Color(
+                                              0xffC1C1C1,
+                                            ),
+                                            child: Text(
+                                              project?.profileModel?.data?.name
+                                                      ?.substring(0, 1)
+                                                      .toUpperCase() ??
+                                                  "",
+                                              style: const TextStyle(
+                                                color: primaryClr,
+                                              ),
                                             ),
                                           ),
-                                        ),
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -182,34 +189,59 @@ class _ProfileMenuPageState extends State<ProfileMenuPage> {
                         ),
                         _divider(),
                         _menuTile(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MyOrdersPage(),
+                              ),
+                            );
+                          },
                           assetPath: "assets/10768855_4503794 1.png",
                           title: "My Orders",
                         ),
                         _divider(),
                         _menuTile(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MyServicePage(),
+                              ),
+                            );
+                          },
                           assetPath:
                               "assets/fluent_clipboard-task-24-regular.png",
                           title:
                               // Icons.calendar_today_outlined,
                               "Service Bookings",
                         ),
-                        _divider(),
-                        _menuTile(
-                          assetPath: "assets/proicons_info.png",
-                          title: "About Us",
-                        ),
+                        // _divider(),
+                        // _menuTile(
+                        //   assetPath: "assets/proicons_info.png",
+                        //   title: "About Us",
+                        // ),
                         _divider(),
                         _menuTile(
                           assetPath: "assets/stash_shield-duotone.png",
                           title: "Privacy Policy",
+                          onTap: () {
+                            launchPrivacyPolicy();
+                          },
                         ),
                         _divider(),
                         _menuTile(
+                          onTap: () {
+                            launchContactUs();
+                          },
                           assetPath: "assets/solar_phone-linear.png",
                           title: "Contact Us",
                         ),
                         _divider(),
                         _menuTile(
+                          onTap: () {
+                            launchTerms();
+                          },
                           assetPath: "assets/basil_document-outline.png",
                           title: "Terms & Conditions",
                         ),
@@ -370,4 +402,36 @@ Future<void> _logoutUser(BuildContext context) async {
   //   MaterialPageRoute(builder: (_) => const OnBoardingScreen()),
   //   (route) => false,
   // );
+}
+
+Future<void> launchPrivacyPolicy() async {
+  final Uri url = Uri.parse("https://www.youbuilt.biz/privacy-policy");
+
+  if (!await launchUrl(
+    url,
+    mode: LaunchMode.externalApplication, // Opens in browser
+  )) {
+    throw Exception('Could not launch $url');
+  }
+}
+
+Future<void> launchTerms() async {
+  final Uri url = Uri.parse("https://www.youbuilt.biz/term-conditions");
+
+  if (!await launchUrl(
+    url,
+    mode: LaunchMode.externalApplication, // Opens in browser
+  )) {
+    throw Exception('Could not launch $url');
+  }
+}
+
+Future<void> launchContactUs() async {
+  final Uri url = Uri.parse(
+    "https://tawk.to/chat/6986d3629501661c38bbc8b4/1jgrajf8v",
+  );
+
+  if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+    throw Exception('Could not launch $url');
+  }
 }

@@ -427,17 +427,21 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                         Row(
                                           // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                              project
-                                                      .projectListModel
-                                                      ?.projectList?[index]
-                                                      .name ??
-                                                  "",
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                color: primaryClr,
-                                                fontWeight: FontWeight.w600,
-                                                fontFamily: "Manrope",
+                                            SizedBox(
+                                              width: 200.w,
+                                              child: Text(
+                                                project
+                                                        .projectListModel
+                                                        ?.projectList?[index]
+                                                        .name ??
+                                                    "",
+                                                maxLines: 2,
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  color: primaryClr,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontFamily: "Manrope",
+                                                ),
                                               ),
                                             ),
                                             Spacer(),

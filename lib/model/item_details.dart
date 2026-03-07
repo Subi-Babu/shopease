@@ -33,16 +33,19 @@ class ItemListDetailsModel {
 
 class Data {
   int? storeId;
+  String? clusterName;
+  int? storeItemId;
   int? id;
   String? name;
   String? description;
   String? itemId;
   bool? isTopSelling;
-  num? gst;
-  num? commision;
-  num? mrp;
-  num? basePrice;
-  num? yourPrice;
+  dynamic gst;
+  String? units;
+  dynamic commision;
+  dynamic mrp;
+  dynamic basePrice;
+  dynamic yourPrice;
   dynamic barCode;
   bool? isFeatured;
   bool? isActive;
@@ -53,16 +56,19 @@ class Data {
   List<ItemAttributeCategory>? itemAttributeCategories;
   List<ItemStageCategory>? itemStageCategories;
   List<ItemImage>? itemImages;
-  List<StoreItem>? storeItems;
+  List<dynamic>? itemFiles;
 
   Data({
     this.storeId,
+    this.clusterName,
+    this.storeItemId,
     this.id,
     this.name,
     this.description,
     this.itemId,
     this.isTopSelling,
     this.gst,
+    this.units,
     this.commision,
     this.mrp,
     this.basePrice,
@@ -77,21 +83,24 @@ class Data {
     this.itemAttributeCategories,
     this.itemStageCategories,
     this.itemImages,
-    this.storeItems,
+    this.itemFiles,
   });
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
     storeId: json["storeId"],
+    clusterName: json["clusterName"],
+    storeItemId: json["storeItemId"],
     id: json["id"],
     name: json["name"],
     description: json["description"],
     itemId: json["itemId"],
     isTopSelling: json["isTopSelling"],
-    gst: json["gst"]?.toInt(),
-    commision: json["commision"]?.toInt(),
-    mrp: json["mrp"]?.toInt(),
-    basePrice: json["basePrice"]?.toInt(),
-    yourPrice: json["yourPrice"]?.toInt(),
+    gst: json["gst"],
+    units: json["units"],
+    commision: json["commision"],
+    mrp: json["mrp"],
+    basePrice: json["basePrice"],
+    yourPrice: json["yourPrice"],
     barCode: json["barCode"],
     isFeatured: json["isFeatured"],
     isActive: json["isActive"],
@@ -126,21 +135,22 @@ class Data {
         : List<ItemImage>.from(
             json["itemImages"]!.map((x) => ItemImage.fromJson(x)),
           ),
-    storeItems: json["storeItems"] == null
+    itemFiles: json["itemFiles"] == null
         ? []
-        : List<StoreItem>.from(
-            json["storeItems"]!.map((x) => StoreItem.fromJson(x)),
-          ),
+        : List<dynamic>.from(json["itemFiles"]!.map((x) => x)),
   );
 
   Map<String, dynamic> toJson() => {
     "storeId": storeId,
+    "clusterName": clusterName,
+    "storeItemId": storeItemId,
     "id": id,
     "name": name,
     "description": description,
     "itemId": itemId,
     "isTopSelling": isTopSelling,
     "gst": gst,
+    "units": units,
     "commision": commision,
     "mrp": mrp,
     "basePrice": basePrice,
@@ -163,9 +173,9 @@ class Data {
     "itemImages": itemImages == null
         ? []
         : List<dynamic>.from(itemImages!.map((x) => x.toJson())),
-    "storeItems": storeItems == null
+    "itemFiles": itemFiles == null
         ? []
-        : List<dynamic>.from(storeItems!.map((x) => x.toJson())),
+        : List<dynamic>.from(itemFiles!.map((x) => x)),
   };
 }
 
@@ -326,25 +336,5 @@ class ItemStageCategory {
     "id": id,
     "stageCategoryId": stageCategoryId,
     "stageCategory": stageCategory?.toJson(),
-  };
-}
-
-class StoreItem {
-  int? id;
-  int? storeId;
-  int? itemId;
-
-  StoreItem({this.id, this.storeId, this.itemId});
-
-  factory StoreItem.fromJson(Map<String, dynamic> json) => StoreItem(
-    id: json["id"],
-    storeId: json["storeId"],
-    itemId: json["itemId"],
-  );
-
-  Map<String, dynamic> toJson() => {
-    "id": id,
-    "storeId": storeId,
-    "itemId": itemId,
   };
 }

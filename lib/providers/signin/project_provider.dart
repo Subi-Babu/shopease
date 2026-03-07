@@ -6,32 +6,47 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:youbuilt/model/activity_model.dart';
+import 'package:youbuilt/model/addressListModel.dart' hide Datum;
+import 'package:youbuilt/model/assign_project_model.dart';
 import 'package:youbuilt/model/brandmodel.dart';
+import 'package:youbuilt/model/category_dropdown.dart';
 import 'package:youbuilt/model/category_list_model.dart';
 import 'package:youbuilt/model/countrycode.dart';
-import 'package:youbuilt/model/estimaton.dart';
+import 'package:youbuilt/model/estimaton.dart' hide Datum;
 import 'package:youbuilt/model/expense_model.dart';
 import 'package:youbuilt/model/item_list_model.dart';
+import 'package:youbuilt/model/oder_details.dart';
+import 'package:youbuilt/model/orderlist_model.dart';
 import 'package:youbuilt/model/profile_model.dart';
 import 'package:youbuilt/model/project_file_list_model.dart';
 import 'package:youbuilt/model/project_list_model.dart';
 import 'package:youbuilt/model/project_members.dart';
 import 'package:youbuilt/model/project_view_model.dart';
 import 'package:youbuilt/model/projectfolder_model.dart';
-import 'package:youbuilt/model/quatation.dart';
+import 'package:youbuilt/model/quatation.dart' hide Datum;
 import 'package:youbuilt/model/sanp_drop_model.dart';
+import 'package:youbuilt/model/seller_model.dart.dart' as seller;
+import 'package:youbuilt/model/serviceCatmodel.dart';
+import 'package:youbuilt/model/service_booking_model.dart';
+import 'package:youbuilt/model/servicemodel.dart';
+import 'package:youbuilt/model/serviceviewmodel.dart';
 import 'package:youbuilt/model/snaglist_model.dart';
-import 'package:youbuilt/model/stage_model.dart';
+import 'package:youbuilt/model/stage_model.dart' hide Datum;
 import 'package:youbuilt/model/subcatgeory_model.dart';
 import 'package:youbuilt/model/variation_model.dart';
-import 'package:youbuilt/model/wallet_model.dart';
+import 'package:youbuilt/model/wallet_model.dart' hide Datum;
 import 'package:youbuilt/screen/bottom_nav.dart';
+import 'package:youbuilt/screen/cart/cart_success.dart';
+import 'package:youbuilt/screen/cart/payementPage.dart';
 import 'package:youbuilt/screen/cart/view_cart.dart';
 import 'package:youbuilt/screen/otp.dart';
+import 'package:youbuilt/screen/profile/order_detail_page.dart';
+import 'package:youbuilt/screen/service/service_view.dart';
 import 'package:youbuilt/utils/constants.dart';
-
+import '../../model/cart_list_model.dart' as cart;
 import '../../model/item_details.dart';
 import '../../model/project_type_model.dart';
+// import '../../screen/cart/payementPage.dart';
 import '../../services/api.dart';
 import '../../utils/sharedpref_util.dart';
 import '../../utils/toast_util.dart';
@@ -119,6 +134,12 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  bool addToCartLoading = false;
+
+  // void setAddToCartLoading(bool value) {
+  //   addToCartLoading = value;
+  //   notifyListeners();
+  // }
   bool? memberLoads = false;
   TextEditingController phController = TextEditingController();
   Future<void> inviteMembers({
@@ -126,7 +147,7 @@ class ProjectProvider extends ChangeNotifier {
     String? phone,
     String? id,
   }) async {
-    memberLoads = true;
+    addToCartLoading = true;
     notifyListeners();
 
     try {
@@ -163,7 +184,7 @@ class ProjectProvider extends ChangeNotifier {
       // ToastUtil.show("An error occurred. Please try again.");
       ToastUtil.show("An error occurred. Please try again.");
     } finally {
-      loading = false;
+      addToCartLoading = false;
       notifyListeners();
     }
   }
@@ -564,6 +585,45 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> deleteCart({
+    required BuildContext context,
+    required String cartid,
+  }) async {
+    memberLoads = true;
+    notifyListeners();
+
+    try {
+      var responseData = await NetworkHelper().cartDelete(
+        context: context,
+        cartId: cartid ?? "",
+      );
+
+      log("LOG MESSAGE222222:");
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(responseData["message"]);
+        fetchCartList(context: context);
+      } else {
+        String errorMessage =
+            responseData["message"] ??
+            responseData["error"] ??
+            "Please try again.";
+        log("Sign$errorMessage");
+
+        if (!context.mounted) return;
+        ToastUtil.show("An error occurred. Please try again.");
+      }
+    } catch (e, stack) {
+      log("❌ exception: $e\n$stack");
+      log("Error: $e");
+      // ToastUtil.show("An error occurred. Please try again.");
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+  }
+
   SnagListModel? snagListModel;
   bool loading1 = false;
   Future fetchSnagList({
@@ -659,6 +719,7 @@ class ProjectProvider extends ChangeNotifier {
   Future<void> addExpenses({
     required BuildContext context,
     required String amount,
+    required String date,
     required String amountDetails,
     required String catId,
     required File? file, // ✅ change here
@@ -673,6 +734,7 @@ class ProjectProvider extends ChangeNotifier {
         projectId: projectId,
         amount: amount,
         catId: catId,
+        date: date,
         amountDetails: amountDetails,
         file: file, // ✅ pass File
       );
@@ -683,6 +745,7 @@ class ProjectProvider extends ChangeNotifier {
         ToastUtil.show(
           responseData["message"] ?? "Expenses added successfully",
         );
+        fetchWallet(context: context, id: projectId);
 
         if (!context.mounted) return;
         Navigator.pop(context);
@@ -706,12 +769,23 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  void addLocalCartItem(String itemId) {
+    cartListModel ??= cart.CartListModel();
+    cartListModel!.data ??= [];
+
+    cartListModel!.data!.add(cart.Datum(itemId: int.tryParse(itemId), qty: 1));
+
+    notifyListeners();
+  }
+
   TextEditingController amountFundCtrl = TextEditingController();
   TextEditingController detailsFundCtrl = TextEditingController();
+  TextEditingController numberCtrl = TextEditingController();
 
   Future<void> addFund({
     required BuildContext context,
     required String fund,
+    required String date,
     required String fundDetails,
     required File? file, // ✅ change here
     required String projectId,
@@ -724,6 +798,7 @@ class ProjectProvider extends ChangeNotifier {
         context: context,
         projectId: projectId,
         amount: fund,
+        date: date,
         // catId: catId,
         details: fundDetails,
         file: file, // ✅ pass File
@@ -735,7 +810,7 @@ class ProjectProvider extends ChangeNotifier {
         ToastUtil.show(
           responseData["message"] ?? "Expenses added successfully",
         );
-
+        fetchWallet(context: context, id: projectId);
         if (!context.mounted) return;
         Navigator.pop(context);
       } else {
@@ -885,6 +960,39 @@ class ProjectProvider extends ChangeNotifier {
     amountFundCtrl.clear();
     detailsFundCtrl.clear();
     // notifyListeners();
+    _fundDate = null; // ✅ reset the backing field
+    _expenseDate = null;
+    formattedFundDate == "";
+    formattedExpenseDate == "";
+    notifyListeners();
+  }
+
+  List<AddedCategoryItem> addedCategoryItems = [];
+
+  void addCategoryItem() {
+    if (selectedCategory == null || numberCtrl.text.isEmpty) return;
+
+    addedCategoryItems.add(
+      AddedCategoryItem(category: selectedCategory!, count: numberCtrl.text),
+    );
+
+    numberCtrl.clear();
+    selectedCategory = null;
+
+    notifyListeners();
+  }
+
+  List<Map<String, dynamic>> getCategoryTypeForApi() {
+    return addedCategoryItems.map((item) {
+      return {
+        "type": item.category.label ?? "",
+        "count": int.parse(item.count.toString()), // ensure int
+      };
+    }).toList();
+  }
+
+  void removeCategoryItem(int index) {
+    addedCategoryItems.removeAt(index);
     notifyListeners();
   }
 
@@ -1346,6 +1454,9 @@ class ProjectProvider extends ChangeNotifier {
     required String buildarea,
     required String clientName,
     required File? file,
+    required File? sitePlan,
+    required File? boq,
+    required File? govtaper,
     required String projectTypeNAme,
     required String description,
     required String date,
@@ -1366,6 +1477,9 @@ class ProjectProvider extends ChangeNotifier {
         email: email ?? "",
         buildarea: buildarea ?? "",
         file: file,
+        siteplan: sitePlan,
+        boq: boq,
+        govtaper: govtaper,
         phoneNo: phoneNo ?? "",
         pinCode: pinCode ?? "",
         projectTypeNAme: projectTypeNAme ?? "",
@@ -1403,6 +1517,28 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  void clearQuotationForm() {
+    qbudgetAmountCntrl.clear();
+    qemailCntrl.clear();
+    qphoneClientCntrl.clear();
+    qpincodeCntrl.clear();
+    qaddressCntrl.clear();
+    qbuildareaCntrl.clear();
+    qnameClientCntrl.clear();
+    qdescriptionCntrl.clear();
+    qplotCntrl.clear();
+
+    drwaings = null;
+    sitePlan = null;
+    boqFile = null;
+    govtPaper = null;
+
+    qprojectTypeName = null;
+    // selectedCategoryType = null;
+
+    notifyListeners();
+  }
+
   ItemListModel? itemListModel;
   bool itemLoading = false;
   Future fetchItemLists({
@@ -1435,12 +1571,19 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  String? selectedSort;
+  void setSelectedSort(String value) {
+    selectedSort = value;
+    notifyListeners();
+  }
+
   Future fetchItemLists2({
     required BuildContext context,
     String? catid,
     String? endPrice,
     String? startPrice,
     String? brandiid,
+    required String? sort,
   }) async {
     itemLoading = true;
     notifyListeners();
@@ -1452,6 +1595,7 @@ class ProjectProvider extends ChangeNotifier {
         endPrice,
         startPrice,
         brandiid,
+        sort,
       );
 
       if (response != null) {
@@ -1493,12 +1637,44 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  CategoryQoutesListModel? categoryDropDown;
+
+  Future fetchCategoryDropdown({required BuildContext context}) async {
+    itemLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getCategoryQuotes(context);
+
+      if (response != null) {
+        categoryDropDown = response; // Store fetched subcategories
+
+        log("Fetched items successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      itemLoading = false;
+      notifyListeners();
+    }
+  }
+
+  String selectedCategoryId1 = "";
   String selectedCategoryId = "";
   // ✅ Store selected subcategory IDs & names
   List<String> selectedSubIds = [];
   List<String> selectedSubNames = [];
   void setSelectedCategory(String id) {
     selectedCategoryId = id;
+    notifyListeners();
+  }
+
+  CategoryDropDown? selectedCategory;
+  // CategoryQoutesListModel? categoryDropDown;
+  void setSelectedCategoryQuotes(CategoryDropDown value) {
+    selectedCategory = value;
     notifyListeners();
   }
 
@@ -1534,7 +1710,7 @@ class ProjectProvider extends ChangeNotifier {
 
   VariationModelModel? variationModel;
   // bool itemLoadingSub = false;
-  Future fetchVariationLists({
+  Future<void> fetchVariationLists({
     required BuildContext context,
     required String? catId,
     required Map<String, dynamic> attributeMap,
@@ -1543,21 +1719,21 @@ class ProjectProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await NetworkHelper().getItemVaraition(
+      final response = await NetworkHelper().getItemVariation(
         context,
         catId,
         attributeMap,
       );
-
+      log("-----------------------${attributeMap}");
       if (response != null) {
-        variationModel = response; // Store fetched subcategories
+        variationModel = response;
 
-        log("Fetched items successfully.");
+        log("Fetched variation successfully.");
       } else {
-        log("Failed to fetch.");
+        log("Failed to fetch variation.");
       }
     } catch (e) {
-      log("Error fetching : $e");
+      log("Error fetching variation: $e");
     } finally {
       itemLoadingSub = false;
       notifyListeners();
@@ -1580,8 +1756,12 @@ class ProjectProvider extends ChangeNotifier {
         itemListDetailsModel = response; // Store fetched subcategories
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ProductViewPage()),
+          MaterialPageRoute(
+            builder: (context) => ProductViewPage(pid: id ?? ""),
+          ),
         );
+        // fetchSeller(context: context, id: id ?? "", atttributeMap: "");
+        //
         log("Fetched items successfully.");
       } else {
         log("Failed to fetch.");
@@ -1620,6 +1800,33 @@ class ProjectProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  AddressListModel? addressListModel;
+  Future fetchAddressList({
+    required BuildContext context,
+    // String? id,
+  }) async {
+    brand = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getAddressList(context);
+
+      if (response != null) {
+        addressListModel = response; // Store fetched subcategories
+
+        log("Fetched items successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      brand = false;
+      notifyListeners();
+    }
+  }
+
   TextEditingController titleAddressController = TextEditingController();
   TextEditingController addressController = TextEditingController();
   TextEditingController pincodeAddressController = TextEditingController();
@@ -1633,7 +1840,6 @@ class ProjectProvider extends ChangeNotifier {
     required String? lat,
     required String? lng,
     required String? name,
-    required String? location,
     required String? phone,
   }) async {
     memberLoads = true;
@@ -1642,34 +1848,532 @@ class ProjectProvider extends ChangeNotifier {
     try {
       var responseData = await NetworkHelper().addAddress(
         context: context,
-        title: title ?? "",
-       address: address??"",
-        phone: phone??"",
-        name: name??"",
-        lng: lng??"",
+        title: title,
+        address: address,
+        phone: phone,
+        name: name,
+        lng: lng,
+        lat: lat,
+        pincode: pincode,
+      );
+      print("object$title,$lat,$lng");
+      if (responseData["status"] == true) {
+        ToastUtil.show(responseData["message"] ?? "Address added");
+        fetchAddressList(context: context);
+        if (!context.mounted) return;
 
-          lat: lat??"",
-        pincode: pincode??"",
-        location:location
+        Navigator.pop(context);
+      } else {
+        ToastUtil.show(
+          responseData["message"] ??
+              responseData["error"] ??
+              "Please try again.",
+        );
+      }
+    } catch (e) {
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      memberLoads = false; // ✅ FIXED
+      notifyListeners();
+    }
+  }
+
+  Map<int, int> selectedAttributeIndex = {};
+  List<Map<String, dynamic>> selectedAttributeCategoryList = [];
+  Map<String, dynamic> selectedAttributeNameMap = {};
+  Map<String, bool> cartLoadingMap = {};
+  Future<void> addtoCart({
+    required BuildContext context,
+    required String projectId,
+    required String storeId,
+    required String itemId,
+    required String mrp,
+    required String calPrice,
+    required String qty,
+    required String categoryId,
+    required List<Map<String, dynamic>> attributeCategory,
+    required Map<String, dynamic> attributeName,
+  }) async {
+    cartLoadingMap[itemId] = true;
+    notifyListeners();
+
+    try {
+      var responseData = await NetworkHelper().addToCart(
+        context: context,
+        projectId: projectId,
+        attributeCategory: attributeCategory,
+        attributeName: attributeName,
+        categoryId: categoryId,
+        itemId: itemId,
+        mrp: mrp,
+        qty: qty,
+        calPrice: calPrice,
+        storeId: storeId,
+      );
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(responseData["message"] ?? "Cart added");
+        fetchProjectList(context: context, status: "");
+        fetchCartList(context: context);
+        if (!context.mounted) return;
+
+        // Navigator.pop(context);
+      } else {
+        ToastUtil.show(
+          responseData["message"] ??
+              responseData["error"] ??
+              "Please try again.",
+        );
+      }
+    } catch (e) {
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      cartLoadingMap[itemId] = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> checkOut({
+    required BuildContext context,
+    required String projectId,
+    required String addressId,
+    required String totalprice,
+    required String grandTotal,
+    required String calPrice,
+    required List<Map<String, dynamic>> cart,
+  }) async {
+    memberLoads = true;
+    notifyListeners();
+
+    try {
+      var responseData = await NetworkHelper().checkOut(
+        context: context,
+        projectId: projectId,
+        addressId: addressId,
+        calPrice: calPrice,
+        totalprice: totalprice,
+        grandprice: grandTotal,
+        cart: cart,
+      );
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(responseData["message"] ?? "");
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PaymentMethodPage(
+              total: totalprice ?? "",
+              orderId: responseData["OrderId"].toString(),
+              pid: projectId ?? "",
+            ),
+          ),
+        );
+      } else {
+        ToastUtil.show(
+          responseData["message"] ??
+              responseData["error"] ??
+              "Please try again.",
+        );
+      }
+    } catch (e) {
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      memberLoads = false; // ✅ FIXED
+      notifyListeners();
+    }
+  }
+
+  File? govtPaper;
+  Future<void> pickGovtFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+    );
+
+    if (result != null && result.files.single.path != null) {
+      govtPaper = File(result.files.single.path!);
+      notifyListeners();
+    }
+  }
+
+  File? boqFile;
+  Future<void> pickBOQFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+    );
+
+    if (result != null && result.files.single.path != null) {
+      boqFile = File(result.files.single.path!);
+      notifyListeners();
+    }
+  }
+
+  File? sitePlan;
+  Future<void> pickSitePlanFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+    );
+
+    if (result != null && result.files.single.path != null) {
+      sitePlan = File(result.files.single.path!);
+      notifyListeners();
+    }
+  }
+
+  File? drwaings;
+  Future<void> pickDrawingsFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+    );
+
+    if (result != null && result.files.single.path != null) {
+      drwaings = File(result.files.single.path!);
+      notifyListeners();
+    }
+  }
+
+  Future<void> editProfile({
+    required BuildContext context,
+    required String number,
+    required String name,
+    required File? file,
+    required String gender,
+    required String email,
+  }) async {
+    expense = true;
+    notifyListeners();
+
+    try {
+      final responseData = await NetworkHelper().addProfile(
+        context: context,
+        name: name,
+        email: email,
+        gender: gender,
+        number: number,
+        file: file,
+      );
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(
+          responseData["message"] ?? "Profile updated successfully",
+        );
+        fetchProfile(context: context);
+      } else {
+        ToastUtil.show(
+          responseData["message"] ??
+              responseData["error"] ??
+              "Please try again.",
+        );
+      }
+    } catch (e) {
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      expense = false;
+      notifyListeners();
+    }
+  }
+
+  cart.CartListModel? cartListModel;
+
+  Future fetchCartList({required BuildContext context}) async {
+    itemLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getCartList(context);
+
+      if (response != null) {
+        cartListModel = response; // Store fetched subcategories
+
+        log("Fetched items successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      itemLoading = false;
+      notifyListeners();
+    }
+  }
+
+  AssignProjectModel? assignProjectModel;
+
+  Future fetchAssignProjectList({required BuildContext context}) async {
+    itemLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getAssignProject(context);
+
+      if (response != null) {
+        assignProjectModel = response; // Store fetched subcategories
+
+        log("Fetched items successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      itemLoading = false;
+      notifyListeners();
+    }
+  }
+
+  ServiceModel? serviceModel;
+
+  Future fetchServiceList({
+    required BuildContext context,
+    required String? id,
+  }) async {
+    itemLoading = true;
+    selectedCategoryId1 = id!;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getServiceList(context, id);
+
+      if (response != null) {
+        serviceModel = response; // Store fetched subcategories
+
+        log("Fetched items successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      itemLoading = false;
+      notifyListeners();
+    }
+  }
+
+  ServiceViewModel? serviceViewModel;
+
+  Future fetchServiceView({
+    required BuildContext context,
+    required String? id,
+  }) async {
+    itemLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getServiceView(context, id);
+
+      if (response != null) {
+        serviceViewModel = response; // Store fetched subcategories
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ProductViewSectionPage()),
+        );
+        log("Fetched items successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      itemLoading = false;
+      notifyListeners();
+    }
+  }
+
+  OrderListModel? orderListModel;
+
+  Future fetchOrderList({
+    required BuildContext context,
+    required String? keyword,
+  }) async {
+    itemLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getOrderList(context, keyword);
+
+      if (response != null) {
+        orderListModel = response; // Store fetched subcategories
+
+        log("Fetched items successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      itemLoading = false;
+      notifyListeners();
+    }
+  }
+
+  OrderViewModel? orderViewModel;
+
+  Future fetchOrderView({
+    required BuildContext context,
+    required String? id,
+  }) async {
+    itemLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getOrderView(context, id);
+
+      if (response != null) {
+        orderViewModel = response; // Store fetched subcategories
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => OrderDetailsPage()),
+        );
+        log("Fetched items successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      itemLoading = false;
+      notifyListeners();
+    }
+  }
+
+  ServiceBookingModel? serviceBookingModel;
+
+  Future fetchServiceBooking({
+    required BuildContext context,
+    // required String? id,
+  }) async {
+    itemLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getServiceBookingList(context);
+
+      if (response != null) {
+        serviceBookingModel = response; // Store fetched subcategories
+
+        log("Fetched items successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      itemLoading = false;
+      notifyListeners();
+    }
+  }
+
+  seller.SellerModel? sellerModel;
+  int? selectedSellerStoreId;
+  int? selectedSellerPrice;
+  String? selectedSellerCluster;
+
+  void setSelectedSeller(seller.Datum seller) {
+    selectedSellerStoreId = seller.storeId;
+    selectedSellerPrice = seller.yourPrice;
+    selectedSellerCluster = seller.store?.cluster?.name;
+    notifyListeners();
+  }
+
+  Future fetchSeller({
+    required BuildContext context,
+    required String? id,
+    required Map<String, dynamic> attributeMap,
+  }) async {
+    itemLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getSellerList(
+        context,
+        id,
+        attributeMap,
+      );
+
+      if (response != null) {
+        sellerModel = response; // Store fetched subcategories
+
+        log("Fetched items successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      itemLoading = false;
+      notifyListeners();
+    }
+  }
+
+  int? selectedProjectId; // ADD THIS
+
+  void setSelectedProject(int? id) {
+    selectedProjectId = id;
+    notifyListeners();
+  }
+
+  void incrementQty(int cartId) {
+    final index = cartListModel?.data?.indexWhere((e) => e.id == cartId);
+    if (index != null && index != -1) {
+      cartListModel!.data![index].qty =
+          (cartListModel!.data![index].qty ?? 1) + 1;
+      notifyListeners();
+    }
+  }
+
+  void decrementQty(int cartId) {
+    final index = cartListModel?.data?.indexWhere((e) => e.id == cartId);
+    if (index != null && index != -1) {
+      if ((cartListModel!.data![index].qty ?? 1) > 1) {
+        cartListModel!.data![index].qty =
+            (cartListModel!.data![index].qty ?? 1) - 1;
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> placeOrdeer({
+    required BuildContext context,
+    required String? pid,
+    required String? orderId,
+    required String? adddressId,
+    required String? methodPay,
+  }) async {
+    memberLoads = true;
+    notifyListeners();
+
+    try {
+      var responseData = await NetworkHelper().placeOrder(
+        context: context,
+        addressId: adddressId ?? "",
+        pid: pid ?? "",
+        orderId: orderId ?? "",
+        pMethod: methodPay ?? "",
       );
 
       log("LOG MESSAGE222222:");
 
       if (responseData["status"] == true) {
         ToastUtil.show(responseData["message"]);
-        // fetchSnagList(id: pid ?? "", context: context);
 
         if (!context.mounted) return;
-
-        log("Navigating...");
-
-        Navigator.pop(context);
+        fetchCartList(
+          context: context,
+        ); // log("Navigating to LoginSuccessfulScreen...");
+        //
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => OrderSuccessPage()),
+        );
         // fetchProjectMember(context: context, id: );
       } else {
         String errorMessage =
             responseData["message"] ??
-                responseData["error"] ??
-                "Please try again.";
+            responseData["error"] ??
+            "Please try again.";
         log("Sign$errorMessage");
 
         if (!context.mounted) return;
@@ -1686,4 +2390,279 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  TextEditingController bNameCntrl = TextEditingController();
+  TextEditingController bphoneCntrl = TextEditingController();
+  TextEditingController bMsgCntrl = TextEditingController();
+  Future<void> bookNow({
+    required BuildContext context,
+    required String name,
+    required String phoneNumber,
+    required File? file,
+    required String serviceId,
+    required String addressid,
+    required String code,
+    required String message,
+    required String date,
+  }) async {
+    expense = true;
+    notifyListeners();
+
+    try {
+      final responseData = await NetworkHelper().bookingSection(
+        context: context,
+        date: DateFormat('MM-dd-yyyy').format(DateTime.now()),
+        code: "91",
+        name: name ?? "",
+        addressid: addressid ?? "",
+        message: message ?? "",
+        phoneNumber: phoneNumber ?? "",
+        serviceId: serviceId ?? "",
+        file: file, // ✅ pass File
+      );
+
+      log("${responseData["status"]}");
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(responseData["message"] ?? "Booking added successfully");
+
+        if (!context.mounted) return;
+        Navigator.pop(context);
+        bNameCntrl.clear();
+        bphoneCntrl.clear();
+        bMsgCntrl.clear();
+        bookFile = null;
+      } else {
+        final errorMessage =
+            responseData["message"] ??
+            responseData["error"] ??
+            "Please try again.";
+
+        log("❌ API error: $errorMessage");
+
+        if (!context.mounted) return;
+        ToastUtil.show(errorMessage);
+      }
+    } catch (e, stack) {
+      log("❌ Exception: $e\n$stack");
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      expense = false;
+      notifyListeners();
+    }
+  }
+
+  File? bookFile;
+  Future<void> pickBookFileSection() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+    );
+
+    if (result != null && result.files.single.path != null) {
+      bookFile = File(result.files.single.path!);
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateAddress({
+    required BuildContext context,
+    required String adddresId,
+  }) async {
+    memberLoads = true;
+    notifyListeners();
+
+    try {
+      var responseData = await NetworkHelper().updateAddress(
+        context: context,
+        addressId: adddresId ?? "",
+      );
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(responseData["message"] ?? "Updated Successfully");
+        fetchAddressList(context: context);
+      } else {
+        ToastUtil.show(
+          responseData["message"] ??
+              responseData["error"] ??
+              "Please try again.",
+        );
+      }
+    } catch (e) {
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      memberLoads = false; // ✅ FIXED
+      notifyListeners();
+    }
+  }
+
+  ServiceCategryListModel? serviceCategryListModel;
+
+  Future fetchServiceCategry({required BuildContext context}) async {
+    itemLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getServiceCatgryList(context);
+
+      if (response != null) {
+        serviceCategryListModel = response; // Store fetched subcategories
+
+        log("Fetched items successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      itemLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteExpense({
+    required BuildContext context,
+    required String eid,
+
+    // String? snagId,
+  }) async {
+    memberLoads = true;
+    notifyListeners();
+
+    try {
+      var responseData = await NetworkHelper().expenseDelete(
+        context: context,
+        eid: eid ?? "",
+      );
+
+      log("LOG MESSAGE222222:");
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(responseData["message"]);
+      } else {
+        String errorMessage =
+            responseData["message"] ??
+            responseData["error"] ??
+            "Please try again.";
+        log("Sign$errorMessage");
+
+        if (!context.mounted) return;
+        ToastUtil.show("An error occurred. Please try again.");
+      }
+    } catch (e, stack) {
+      log("❌ exception: $e\n$stack");
+      log("Error: $e");
+      // ToastUtil.show("An error occurred. Please try again.");
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> editQty({
+    required BuildContext context,
+    required String? pid,
+    required String? qty,
+    required String? price,
+    required String? calPrice,
+  }) async {
+    memberLoads = true;
+    notifyListeners();
+
+    try {
+      var responseData = await NetworkHelper().editQty(
+        context: context,
+        calPrice: calPrice ?? "",
+        pid: pid ?? "",
+        qty: qty ?? "",
+        price: price ?? "",
+      );
+
+      log("LOG MESSAGE222222:");
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(responseData["message"]);
+
+        if (!context.mounted) return;
+        fetchCartList(
+          context: context,
+        ); // log("Navigating to LoginSuccessfulScreen...");
+        //
+
+        // fetchProjectMember(context: context, id: );
+      } else {
+        String errorMessage =
+            responseData["message"] ??
+            responseData["error"] ??
+            "Please try again.";
+        log("Sign$errorMessage");
+
+        if (!context.mounted) return;
+        ToastUtil.show("An error occurred. Please try again.");
+      }
+    } catch (e, stack) {
+      log("❌ exception: $e\n$stack");
+      log("Error: $e");
+      // ToastUtil.show("An error occurred. Please try again.");
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+  }
+
+  DateTime? _fundDate;
+
+  DateTime? get fundDate => _fundDate;
+
+  String get formattedFundDate {
+    if (_fundDate == null) return "";
+    return DateFormat('MM-dd-yyyy').format(_fundDate!);
+  }
+
+  Future<void> pickFundDate(BuildContext context) async {
+    final DateTime? pickedFDate = await showDatePicker(
+      context: context,
+      initialDate: _fundDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedFDate != null) {
+      _fundDate = pickedFDate;
+      print("-----$formattedFundDate--------${fundDate}");
+      notifyListeners();
+    }
+  }
+
+  DateTime? _expenseDate;
+
+  DateTime? get expenseDate => _expenseDate;
+
+  String get formattedExpenseDate {
+    if (_expenseDate == null) return "";
+    return DateFormat('MM-dd-yyyy').format(_expenseDate!);
+  }
+
+  Future<void> pickExpanseDate(BuildContext context) async {
+    final DateTime? pickedEDate = await showDatePicker(
+      context: context,
+      initialDate: _expenseDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedEDate != null) {
+      _expenseDate = pickedEDate;
+      print("-----$formattedExpenseDate--------${expenseDate}");
+      notifyListeners();
+    }
+  }
+}
+
+class AddedCategoryItem {
+  final CategoryDropDown category;
+  final String count;
+
+  AddedCategoryItem({required this.category, required this.count});
 }

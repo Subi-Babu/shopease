@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:youbuilt/custom_widgets/custom_button.dart';
@@ -151,6 +152,7 @@ class _FilterPageState extends State<FilterPage> {
                       child: CustomButton(
                         text: "Apply",
                         onPress: () {
+                          HapticFeedback.heavyImpact();
                           print("Selected Sub IDs: ${items.selectedSubIds}");
                           print("Selected Brand IDs: $selectedBrandIds");
                           print(
@@ -162,6 +164,7 @@ class _FilterPageState extends State<FilterPage> {
                             endPrice: "${priceRange.end}",
                             catid: "",
                             brandiid: "$selectedBrandIds",
+                            sort: "",
                           );
                           items.selectedSubIds.clear();
                           // items.selectedBrandIds.clear();

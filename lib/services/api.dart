@@ -9,13 +9,18 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:path/path.dart' as path;
 import 'package:youbuilt/model/activity_model.dart';
+import 'package:youbuilt/model/addressListModel.dart';
+import 'package:youbuilt/model/assign_project_model.dart';
 import 'package:youbuilt/model/brandmodel.dart';
+import 'package:youbuilt/model/cart_list_model.dart';
+import 'package:youbuilt/model/category_dropdown.dart';
 import 'package:youbuilt/model/category_list_model.dart';
 import 'package:youbuilt/model/countrycode.dart';
 import 'package:youbuilt/model/estimaton.dart';
 import 'package:youbuilt/model/expense_model.dart';
 import 'package:youbuilt/model/item_details.dart';
 import 'package:youbuilt/model/item_list_model.dart';
+import 'package:youbuilt/model/orderlist_model.dart';
 import 'package:youbuilt/model/profile_model.dart';
 import 'package:youbuilt/model/project_file_list_model.dart';
 import 'package:youbuilt/model/project_list_model.dart';
@@ -25,6 +30,11 @@ import 'package:youbuilt/model/project_view_model.dart';
 import 'package:youbuilt/model/projectfolder_model.dart';
 import 'package:youbuilt/model/quatation.dart';
 import 'package:youbuilt/model/sanp_drop_model.dart';
+import 'package:youbuilt/model/seller_model.dart.dart';
+import 'package:youbuilt/model/serviceCatmodel.dart';
+import 'package:youbuilt/model/service_booking_model.dart';
+import 'package:youbuilt/model/servicemodel.dart';
+import 'package:youbuilt/model/serviceviewmodel.dart';
 import 'package:youbuilt/model/snaglist_model.dart';
 import 'package:youbuilt/model/stage_model.dart';
 import 'package:youbuilt/model/subcatgeory_model.dart';
@@ -34,6 +44,7 @@ import 'package:youbuilt/model/wallet_model.dart';
 import 'package:youbuilt/services/urls.dart';
 import 'package:youbuilt/utils/toast_util.dart';
 
+import '../model/oder_details.dart';
 import '../screen/login.dart';
 import '../utils/constants.dart';
 import 'netwrkscreen.dart';
@@ -135,7 +146,7 @@ class NetworkHelper {
             },
         body: jsonEncode(body),
       );
-
+      log("$accessToken");
       debugPrint("POST $url | ${response.statusCode} | ${response.body}");
 
       // ✅ Always return response
@@ -692,53 +703,81 @@ class NetworkHelper {
     }
   }
 
-  Future<Map<String, dynamic>> addExpenses({
+  Future<Map<String, dynamic>> cartDelete({
     required BuildContext context,
-    required String amount,
-    required String amountDetails,
-    required String catId,
-    required File? file,
-    required String projectId,
+
+    required String? cartId,
   }) async {
     try {
-      final uri = Uri.parse("${Urls.addExpenseUrl}/$projectId");
-      final request = http.MultipartRequest('POST', uri);
-
-      // 🔐 Headers
-      request.headers.addAll({'Authorization': "Bearer ${accessToken ?? ""}"});
-
-      // 🧾 Fields
-      request.fields['amount'] = amount;
-      request.fields['expenseDetails'] = amountDetails;
-      request.fields['expenseCategoryId'] = catId;
-
-      // 📎 Optional file
-      if (file != null) {
-        request.files.add(await http.MultipartFile.fromPath('file', file.path));
-      }
-
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-      debugPrint(
-        "url - $uri \n header  \n---tokenn00---$accessToken body - $request \n response Status - ${response.statusCode} \n response - ${response.body}",
+      http.Response? response;
+      response = await _deleteRequest(
+        context: context,
+        url: "${Urls.cartDeleteUrl}/$cartId",
       );
-      debugPrint("FIELDS:");
-      request.fields.forEach((k, v) => debugPrint("$k : $v"));
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return jsonDecode(response.body);
-      } else {
-        return {"status": false, "error": response.body};
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
       }
+
+      return jsonDecode(response.body);
     } catch (e) {
       return {"status": false, "error": e.toString()};
     }
   }
 
+  // Future<Map<String, dynamic>> addExpenses({
+  //   required BuildContext context,
+  //   required String amount,
+  //   required String amountDetails,
+  //   required String catId,
+  //   required File? file,
+  //   required String projectId,
+  // }) async {
+  //   try {
+  //     final uri = Uri.parse("${Urls.addExpenseUrl}/$projectId");
+  //     final request = http.MultipartRequest('POST', uri);
+  //
+  //     // 🔐 Headers
+  //     request.headers.addAll({'Authorization': "Bearer ${accessToken ?? ""}"});
+  //
+  //     // 🧾 Fields
+  //     request.fields['amount'] = amount;
+  //     request.fields['expenseDetails'] = amountDetails;
+  //     request.fields['expenseCategoryId'] = catId;
+  //
+  //     // 📎 Optional file
+  //     if (file != null) {
+  //       request.files.add(
+  //         await http.MultipartFile.fromPath(
+  //           'file', // ✅ match backend
+  //           file.path,
+  //         ),
+  //       );
+  //     }
+  //
+  //     final streamedResponse = await request.send();
+  //     final response = await http.Response.fromStream(streamedResponse);
+  //     debugPrint(
+  //       "url - $uri \n header  \n---tokenn00---$accessToken body - $request \n response Status - ${response.statusCode} \n response - ${response.body}",
+  //     );
+  //     debugPrint("FIELDS:");
+  //     request.fields.forEach((k, v) => debugPrint("$k : $v"));
+  //
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       return jsonDecode(response.body);
+  //     } else {
+  //       return {"status": false, "error": response.body};
+  //     }
+  //   } catch (e) {
+  //     return {"status": false, "error": e.toString()};
+  //   }
+  // }
+
   Future<Map<String, dynamic>> addFund({
     required BuildContext context,
     required String amount,
     required String details,
+    required String date,
     required File? file,
     required String projectId,
   }) async {
@@ -751,6 +790,80 @@ class NetworkHelper {
       print("URLLLL____$uri");
       // 🧾 Fields (EXACT as backend expects)
       request.fields.addAll({'amount': amount, 'details': details});
+
+      // 📎 File
+      if (file != null && await file.exists()) {
+        final fileName = path.basename(file.path);
+        final ext = fileName.split('.').last.toLowerCase();
+
+        MediaType mediaType;
+        if (ext == 'png') {
+          mediaType = MediaType('image', 'png');
+        } else if (ext == 'jpg' || ext == 'jpeg') {
+          mediaType = MediaType('image', 'jpeg');
+        } else if (ext == 'pdf') {
+          mediaType = MediaType('application', 'pdf');
+        } else {
+          mediaType = MediaType('application', 'octet-stream');
+        }
+
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'file', // ✅ EXACT key
+            file.path,
+            filename: fileName,
+            contentType: mediaType,
+          ),
+        );
+      }
+
+      // 🧪 Debug
+      debugPrint("URL: $uri");
+      debugPrint("HEADERS: ${request.headers}");
+      request.fields.forEach((k, v) => debugPrint("FIELD $k: $v"));
+      for (final f in request.files) {
+        debugPrint(
+          "FILE field=${f.field}, filename=${f.filename}, type=${f.contentType}",
+        );
+      }
+
+      // 🚀 Send
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      debugPrint("STATUS: ${response.statusCode}");
+      debugPrint("RESPONSE: ${response.body}");
+
+      final decoded = jsonDecode(response.body);
+
+      return decoded is Map<String, dynamic>
+          ? decoded
+          : {"status": false, "error": response.body};
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> addExpenses({
+    required BuildContext context,
+    required String amount,
+    required String amountDetails,
+    required String catId,
+    required String date,
+    required File? file,
+    required String projectId,
+  }) async {
+    try {
+      final uri = Uri.parse("${Urls.addExpenseUrl}/$projectId");
+      final request = http.MultipartRequest('POST', uri);
+
+      // 🔐 Header
+      request.headers['Authorization'] = "Bearer ${accessToken ?? ""}";
+      print("URLLLL____$uri");
+      // 🧾 Fields (EXACT as backend expects)
+      request.fields['amount'] = amount;
+      request.fields['expenseDetails'] = amountDetails;
+      request.fields['expenseCategoryId'] = catId;
 
       // 📎 File
       if (file != null && await file.exists()) {
@@ -953,7 +1066,7 @@ class NetworkHelper {
     http.Response? response;
     response = await _getRequest(
       context: context,
-      url: "${Urls.itemUrl}?categoryId=$catId",
+      url: "${Urls.itemUrl}?SortBy=&categoryId=$catId",
     );
     if (response != null) {
       log("$response");
@@ -970,13 +1083,14 @@ class NetworkHelper {
     String? endPrice,
     String? startPrice,
     String? brandiid,
+    String? sort,
     // String? pid,
   ) async {
     http.Response? response;
     response = await _getRequest(
       context: context,
       url:
-          "${Urls.itemUrl}?categoryId=$catId&brandId=$brandiid&startPrice=$startPrice&endPrice=$endPrice&sortby=",
+          "${Urls.itemUrl}?categoryId=$catId&brandId=$brandiid&startPrice=$startPrice&endPrice=$endPrice&sortby=$sort",
     );
     if (response != null) {
       log("$response");
@@ -1002,6 +1116,180 @@ class NetworkHelper {
     }
   }
 
+  Future<CategoryQoutesListModel?> getCategoryQuotes(
+    BuildContext context,
+  ) async {
+    http.Response? response;
+    response = await _getRequest(
+      context: context,
+      url: "${Urls.catDropdownUrl}",
+    );
+    if (response != null) {
+      log("$response");
+      return CategoryQoutesListModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<CartListModel?> getCartList(BuildContext context) async {
+    http.Response? response;
+    response = await _getRequest(context: context, url: "${Urls.cartlistUrl}");
+    if (response != null) {
+      log("$response");
+      return CartListModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<AssignProjectModel?> getAssignProject(BuildContext context) async {
+    http.Response? response;
+    response = await _getRequest(
+      context: context,
+      url: "${Urls.projectAssignlistUrl}",
+    );
+    if (response != null) {
+      log("$response");
+      return AssignProjectModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<ServiceModel?> getServiceList(BuildContext context, String? id) async {
+    http.Response? response;
+    response = await _getRequest(
+      context: context,
+      url: "${Urls.serviceUrl}?serviceCategoryId=$id",
+    );
+    if (response != null) {
+      log("$response");
+      return ServiceModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<ServiceCategryListModel?> getServiceCatgryList(
+    BuildContext context,
+  ) async {
+    http.Response? response;
+    response = await _getRequest(
+      context: context,
+      url: "${Urls.serviceCatUrl}",
+    );
+    if (response != null) {
+      log("$response");
+      return ServiceCategryListModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<ServiceViewModel?> getServiceView(
+    BuildContext context,
+    String? id,
+  ) async {
+    http.Response? response;
+    response = await _getRequest(
+      context: context,
+      url: "${Urls.serviceViewUrl}/$id",
+    );
+    if (response != null) {
+      log("$response");
+      return ServiceViewModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<SellerModel?> getSellerList(
+    BuildContext context,
+    String? id,
+    Map attributeMap,
+  ) async {
+    final uri = Uri.parse(
+      "${Urls.sellerUrl}/$id",
+    ).replace(queryParameters: {'attributeName': jsonEncode(attributeMap)});
+
+    http.Response? response = await _getRequest(
+      context: context,
+      url: uri.toString(),
+    );
+
+    if (response != null) {
+      log("URL: $uri");
+      log("Response: ${response.body}");
+      return SellerModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<OrderListModel?> getOrderList(
+    BuildContext context,
+    String? keyword,
+  ) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.orderUrl}?keyword=$keyword",
+    );
+
+    if (response != null) {
+      log("Response: ${response.body}");
+      return OrderListModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<OrderViewModel?> getOrderView(BuildContext context, String? id) async {
+    // final uri = Uri.parse(
+    //   "${Urls.sellerUrl}/$id",
+    // ).replace(queryParameters: {'attributeName': jsonEncode(attributeMap)});
+
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.orderDetailUrl}/$id",
+    );
+
+    if (response != null) {
+      // log("URL: $uri");
+      log("Response: ${response.body}");
+      return OrderViewModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<ServiceBookingModel?> getServiceBookingList(
+    BuildContext context,
+    // String? id,
+  ) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.serviceBookingUrl}",
+    );
+
+    if (response != null) {
+      log("Response: ${response.body}");
+      return ServiceBookingModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
   Future<SubCategoryModel?> getSubCategoryyLists(
     BuildContext context,
     String? catId,
@@ -1020,20 +1308,20 @@ class NetworkHelper {
     }
   }
 
-  Future<VariationModelModel?> getItemVaraition(
+  Future<VariationModelModel?> getItemVariation(
     BuildContext context,
-    String? itemid,
-    Map<String, dynamic> attributeMap,
+    String? itemId,
+    Map attributeMap,
   ) async {
-    http.Response? response;
-    String attributeJson = jsonEncode(attributeMap);
-    response = await _getRequest(
-      context: context,
-      url:
-          "${Urls.itemVaraiationUrl}/$itemid?attributeName=${Uri.encodeComponent(attributeJson)}",
-    );
+    final uri = Uri.parse(
+      "${Urls.itemVaraiationUrl}/$itemId",
+    ).replace(queryParameters: {'attributeName': jsonEncode(attributeMap)});
+    print("object=========1=================>>>>>>>>>>>>>>>>$attributeMap");
+    final response = await _getRequest(context: context, url: uri.toString());
+    print("object=========3=================>>>>>>>>>>>>>>>>$attributeMap");
+
     if (response != null) {
-      log("$response");
+      log("Response: ${response.body}");
       return VariationModelModel.fromJson(jsonDecode(response.body));
     } else {
       ToastUtil.show("Error in fetching details");
@@ -1168,6 +1456,9 @@ class NetworkHelper {
     required String buildarea,
     required String clientName,
     required File? file,
+    required File? siteplan,
+    required File? boq,
+    required File? govtaper,
     required String projectTypeNAme,
     required String description,
     required String date,
@@ -1198,12 +1489,24 @@ class NetworkHelper {
       request.fields['plotArea'] = plotArea;
 
       request.fields['builtUpArea'] = buildarea;
-      request.fields['builtUpArea'] = buildarea;
       request.fields['categoryType'] = jsonEncode(categoryType);
 
       // 📎 Optional file
       if (file != null) {
         request.files.add(await http.MultipartFile.fromPath('file', file.path));
+      }
+      if (siteplan != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('siteplan', siteplan.path),
+        );
+      }
+      if (govtaper != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('govtpaper', govtaper.path),
+        );
+      }
+      if (boq != null) {
+        request.files.add(await http.MultipartFile.fromPath('boq', boq.path));
       }
 
       final streamedResponse = await request.send();
@@ -1292,6 +1595,21 @@ class NetworkHelper {
     }
   }
 
+  Future<AddressListModel?> getAddressList(BuildContext context) async {
+    http.Response? response;
+    response = await _getRequest(
+      context: context,
+      url: "${Urls.addressListUrl}",
+    );
+    if (response != null) {
+      log("$response");
+      return AddressListModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>> addAddress({
     required BuildContext context,
     required String? title,
@@ -1300,26 +1618,383 @@ class NetworkHelper {
     required String? lat,
     required String? lng,
     required String? name,
-    required String? location,
     required String? phone,
   }) async {
     try {
-      http.Response? response;
-      response = await _postRequest(
+      http.Response? response = await _postRequest(
         context: context,
-        url: "${Urls.addAddressUrl}",
+        url: Urls.addAddressUrl,
         body: {
-          "address": address,
-          "addressTitle": title,
-
+          "address": address ?? "",
+          "addressTitle": title ?? "",
+          "pinCode": pincode ?? "",
           "location": jsonEncode({
-            "lat": double.parse(lat ?? "0"),
-            "lng": double.parse(lng ?? "0"),
+            "lat": double.tryParse(lat ?? "") ?? 0.0,
+            "lng": double.tryParse(lng ?? "") ?? 0.0,
           }),
-          "name": name,
-          "phoneNumber": phone,
-          "pinCode": pincode,
+          "name": name ?? "",
+          "phoneNumber": phone ?? "",
+          "code": "91",
         },
+      );
+      log("---------------------$address,$lat");
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> addToCart({
+    required BuildContext context,
+    required String projectId,
+    required String storeId,
+    required String itemId,
+    required String mrp,
+    required String qty,
+    required String categoryId,
+    required String calPrice,
+    required List<Map<String, dynamic>> attributeCategory,
+    required Map<String, dynamic> attributeName,
+  }) async {
+    try {
+      final Map<String, dynamic> requestBody = {
+        "projectId": projectId,
+        "cart": [
+          {
+            "storeId": storeId,
+            "itemId": itemId,
+            "mrp": mrp,
+            "qty": qty,
+            "calculatorPrice": calPrice,
+            "categoryId": categoryId,
+            "attributecategory": attributeCategory,
+            "attributeName": attributeName,
+          },
+        ],
+      };
+
+      /// ✅ PRINT BODY
+      print("Add To Cart Request Body:");
+      print(jsonEncode(requestBody));
+
+      http.Response? response = await _postRequest(
+        context: context,
+        url: Urls.cartUrl,
+        body: requestBody,
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      print("Add To Cart Error: $e");
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> checkOut({
+    required BuildContext context,
+    required String projectId,
+    required String addressId,
+    required String totalprice,
+    required String grandprice,
+    required String calPrice,
+    required List<Map<String, dynamic>> cart,
+  }) async {
+    try {
+      final body = {
+        "projectId": projectId,
+        "userAddressId": addressId,
+        "totalPrice": totalprice,
+        "grandTotal": grandprice,
+        "totalcalculatorPrice": calPrice,
+        "cart": cart,
+      };
+
+      // ✅ LOG REQUEST BODY
+      debugPrint("========== CHECKOUT REQUEST ==========");
+      debugPrint("URL: ${Urls.checkOutUrl}");
+      debugPrint("BODY: ${jsonEncode(body)}");
+      debugPrint("======================================");
+
+      http.Response? response = await _postRequest(
+        context: context,
+        url: Urls.checkOutUrl,
+        body: body,
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      // ✅ LOG RESPONSE
+      debugPrint("========== CHECKOUT RESPONSE ==========");
+      debugPrint("Status Code: ${response.statusCode}");
+      debugPrint("Response Body: ${response.body}");
+      debugPrint("======================================");
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      debugPrint("CHECKOUT ERROR: $e");
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> addProfile({
+    required BuildContext context,
+    required String number,
+    required String name,
+    required File? file,
+    required String gender,
+    required String email,
+  }) async {
+    try {
+      final uri = Uri.parse("${Urls.profileEditUrl}");
+      final request = http.MultipartRequest('POST', uri);
+
+      // 🔐 Header
+      request.headers['Authorization'] = "Bearer ${accessToken ?? ""}";
+      print("URLLLL____$uri");
+      // 🧾 Fields (EXACT as backend expects)
+      request.fields.addAll({
+        'phoneNumber': number,
+        'code': "+91",
+        "name": name,
+        "email": email,
+        "gender": gender,
+      });
+
+      // 📎 File
+      if (file != null && await file.exists()) {
+        final fileName = path.basename(file.path);
+        final ext = fileName.split('.').last.toLowerCase();
+
+        MediaType mediaType;
+        if (ext == 'png') {
+          mediaType = MediaType('image', 'png');
+        } else if (ext == 'jpg' || ext == 'jpeg') {
+          mediaType = MediaType('image', 'jpeg');
+        } else if (ext == 'pdf') {
+          mediaType = MediaType('application', 'pdf');
+        } else {
+          mediaType = MediaType('application', 'octet-stream');
+        }
+
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'file', // ✅ EXACT key
+            file.path,
+            filename: fileName,
+            contentType: mediaType,
+          ),
+        );
+      }
+
+      // 🧪 Debug
+      debugPrint("URL: $uri");
+      debugPrint("HEADERS: ${request.headers}");
+      request.fields.forEach((k, v) => debugPrint("FIELD $k: $v"));
+      for (final f in request.files) {
+        debugPrint(
+          "FILE field=${f.field}, filename=${f.filename}, type=${f.contentType}",
+        );
+      }
+
+      // 🚀 Send
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      debugPrint("STATUS: ${response.statusCode}");
+      debugPrint("RESPONSE: ${response.body}");
+
+      final decoded = jsonDecode(response.body);
+
+      return decoded is Map<String, dynamic>
+          ? decoded
+          : {"status": false, "error": response.body};
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> placeOrder({
+    required BuildContext context,
+    required String? pid,
+    required String? addressId,
+    required String? orderId,
+    required String? pMethod,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _patchRequest(
+        context: context,
+        url: "${Urls.payementUrl}/$orderId",
+        body: {
+          "projectId": pid,
+          "userAddressId": addressId,
+          "paymentMethod": pMethod,
+        },
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> bookingSection({
+    required BuildContext context,
+    required String name,
+    required String phoneNumber,
+    required File? file,
+    required String serviceId,
+    required String addressid,
+    required String code,
+    required String message,
+    required String date,
+  }) async {
+    try {
+      final uri = Uri.parse("${Urls.bookingUrl}");
+      final request = http.MultipartRequest('POST', uri);
+
+      // 🔐 Header
+      request.headers['Authorization'] = "Bearer ${accessToken ?? ""}";
+      print("URLLLL____$uri");
+      // 🧾 Fields (EXACT as backend expects)
+      request.fields.addAll({
+        'serviceId': serviceId,
+        'userAddressId': addressid,
+        'name': name,
+        'code': code,
+        'phoneNumber': phoneNumber,
+        'message': message,
+        'date': date,
+      });
+
+      // 📎 File
+      if (file != null && await file.exists()) {
+        final fileName = path.basename(file.path);
+        final ext = fileName.split('.').last.toLowerCase();
+
+        MediaType mediaType;
+        if (ext == 'png') {
+          mediaType = MediaType('image', 'png');
+        } else if (ext == 'jpg' || ext == 'jpeg') {
+          mediaType = MediaType('image', 'jpeg');
+        } else if (ext == 'pdf') {
+          mediaType = MediaType('application', 'pdf');
+        } else {
+          mediaType = MediaType('application', 'octet-stream');
+        }
+
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'file', // ✅ EXACT key
+            file.path,
+            filename: fileName,
+            contentType: mediaType,
+          ),
+        );
+      }
+
+      // 🧪 Debug
+      debugPrint("URL: $uri");
+      debugPrint("HEADERS: ${request.headers}");
+      request.fields.forEach((k, v) => debugPrint("FIELD $k: $v"));
+      for (final f in request.files) {
+        debugPrint(
+          "FILE field=${f.field}, filename=${f.filename}, type=${f.contentType}",
+        );
+      }
+
+      // 🚀 Send
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      debugPrint("STATUS: ${response.statusCode}");
+      debugPrint("RESPONSE: ${response.body}");
+
+      final decoded = jsonDecode(response.body);
+
+      return decoded is Map<String, dynamic>
+          ? decoded
+          : {"status": false, "error": response.body};
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> updateAddress({
+    required BuildContext context,
+    required String addressId,
+  }) async {
+    try {
+      final Map<String, dynamic> requestBody = {};
+
+      /// ✅ PRINT BODY
+
+      http.Response? response = await _postRequest(
+        context: context,
+        url: "${Urls.defaultAddressUrl}/$addressId",
+        body: requestBody,
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      print("Add To  Error: $e");
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> expenseDelete({
+    required BuildContext context,
+
+    required String? eid,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _deleteRequest(
+        context: context,
+        url: "${Urls.walletDelete}/$eid",
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> editQty({
+    required BuildContext context,
+    required String? pid,
+    required String? qty,
+    required String? price,
+    required String? calPrice,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _patchRequest(
+        context: context,
+        url: "${Urls.qtyEdit}/$pid",
+        body: {"calculatorPrice": calPrice, "mrp": price, "qty": qty},
       );
 
       if (response == null) {

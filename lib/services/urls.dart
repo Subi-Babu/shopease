@@ -40,5 +40,24 @@ class Urls {
   static String subCatUrl = "$kBaseUrl/users/subCategoryList";
   static String brandUrl = "$kBaseUrl/users/brandsList";
   static String addAddressUrl = "$kBaseUrl/users/address";
-
+  static String addressListUrl = "$kBaseUrl/users/addressList";
+  static String catDropdownUrl = "$kBaseUrl/users/categoryDropDown";
+  static String cartUrl = "$kBaseUrl/users/cart";
+  static String profileEditUrl = "$kBaseUrl/users/profile";
+  static String cartlistUrl = "$kBaseUrl/users/cartList";
+  static String projectAssignlistUrl = "$kBaseUrl/users/usersProjectDropDown";
+  static String cartDeleteUrl = "$kBaseUrl/users/cart";
+  static String checkOutUrl = "$kBaseUrl/users/order";
+  static String bookingUrl = "$kBaseUrl/users/servieBooking";
+  static String serviceUrl = "$kBaseUrl/users/serviceList";
+  static String serviceViewUrl = "$kBaseUrl/users/servicebyId";
+  static String payementUrl = "$kBaseUrl/users/placeOrder";
+  static String sellerUrl = "$kBaseUrl/users/itemListByStore";
+  static String serviceCatUrl = "$kBaseUrl/users/serviceCategoryList";
+  static String defaultAddressUrl = "$kBaseUrl/users/updateDefaultAddress";
+  static String orderUrl = "$kBaseUrl/users/orderList";
+  static String orderDetailUrl = "$kBaseUrl/users/order";
+  static String serviceBookingUrl = "$kBaseUrl/users/servieBookingList";
+  static String qtyEdit = "$kBaseUrl/users/editCartQty";
+  static String walletDelete = "$kBaseUrl/users/deleteExpenses";
 }

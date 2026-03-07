@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:youbuilt/custom_widgets/custom_button.dart';
 
@@ -39,6 +40,7 @@ class ConnectivityCheckScreen extends StatelessWidget {
                   text: "Retry",
                   onPress: () async {
                     bool connection = await checkNetworkConnectivity();
+                    HapticFeedback.heavyImpact();
                     if (connection) {
                       if (context.mounted) {
                         Navigator.pop(context);

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'colors.dart';
 
 /*-----------Url Constants---------------*/
-const kBaseUrl = "https://youbuilt-jrqd6.ondigitalocean.app/api";
+const kBaseUrl = "https://youbuiltlive-lhph6.ondigitalocean.app/api";
+// "https://youbuilt-jrqd6.ondigitalocean.app/api";
 
 /*-----------TextStyle Constants---------------*/
 const f16B = TextStyle(
@@ -26,3 +27,6 @@ String? userid;
 const accesstokenKey = "accessToken";
 const idKey = "Id";
 String? accessToken;
+
+String? city = "";
+String? state = "";

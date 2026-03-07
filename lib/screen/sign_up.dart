@@ -9,6 +9,7 @@ import 'package:youbuilt/providers/signin/login_provider.dart';
 import 'package:youbuilt/screen/login.dart';
 // import 'package:youbuilt/login.dart';
 import 'package:youbuilt/screen/otp.dart';
+import 'package:youbuilt/screen/profile/profile.dart';
 import 'package:youbuilt/utils/colors.dart';
 import 'package:youbuilt/utils/toast_util.dart';
 import 'package:youbuilt/utils/validates.dart';
@@ -205,7 +206,9 @@ class _UserSignUpScreenState extends State<UserSignUpScreen> {
                                       fontWeight: FontWeight.w700,
                                     ),
                                     recognizer: TapGestureRecognizer()
-                                      ..onTap = () {},
+                                      ..onTap = () {
+                                        launchTerms();
+                                      },
                                   ),
                                   const TextSpan(text: " and "),
                                   TextSpan(
@@ -215,7 +218,9 @@ class _UserSignUpScreenState extends State<UserSignUpScreen> {
                                       fontWeight: FontWeight.w700,
                                     ),
                                     recognizer: TapGestureRecognizer()
-                                      ..onTap = () {},
+                                      ..onTap = () {
+                                        launchPrivacyPolicy();
+                                      },
                                   ),
                                 ],
                               ),
@@ -230,6 +235,7 @@ class _UserSignUpScreenState extends State<UserSignUpScreen> {
                           text: "Submit",
                           isLoading: sign.signUpLoading,
                           onPress: () {
+                            HapticFeedback.heavyImpact();
                             if (!sign.isTermsAccepted) {
                               ToastUtil.show(
                                 "Please accept Terms & Conditions",
