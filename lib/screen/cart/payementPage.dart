@@ -1,3 +1,6 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -63,6 +66,79 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
             return CustomButton(
               text: "Proceed to Pay ${widget.total ?? ""}",
               onPress: () async {
+                final pidValue =
+                    (widget.pid == null ||
+                        widget.pid == "null" ||
+                        widget.pid!.isEmpty)
+                    ? null
+                    : widget.pid;
+                log("----1----${widget.pid}");
+
+                // ✅ If pid is NULL → place order directly
+                if (pidValue == null) {
+                  log("----3----${widget.pid}");
+                  final addressId =
+                      pay.addressListModel?.data?.first?.id.toString() ?? "";
+                  log("----5---- addressId: $addressId");
+                  await pay.placeOrdeer(
+                    context: context,
+                    pid: "",
+                    orderId: widget.orderId ?? "",
+                    adddressId: addressId,
+                    methodPay: selectedPayment,
+                  );
+                  return;
+                }
+
+                // ✅ pid exists — check if balance has loaded yet
+                final balance =
+                    pay.selectedProjectBalance; // Keep as nullable double?
+
+                if (balance == null) {
+                  // Balance not yet fetched, optionally show a loading snackbar
+                  // ScaffoldMessenger.of(context).showSnackBar(
+                  //   const SnackBar(
+                  //     content: Text("Loading balance, please wait..."),
+                  //   ),
+                  // );
+                  return;
+                }
+
+                // ✅ pid exists + balance is zero → show popup
+                if (balance <= 0.0) {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        content: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Image.asset(
+                              "assets/suff.jpg",
+                              height: 50,
+                              width: 50,
+                            ),
+                            const SizedBox(height: 10),
+                            const Text("Insufficient Wallet Amount"),
+                          ],
+                        ),
+                        actions: [
+                          CustomButton(
+                            text: "Close",
+                            onPress: () => Navigator.pop(context),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                  return;
+                }
+
+                log("----6----${balance}");
+                log("----7----${widget.pid}");
+
+                // ✅ pid exists + balance sufficient → place order
                 await pay.placeOrdeer(
                   context: context,
                   pid: widget.pid ?? "",
@@ -141,8 +217,27 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                               color: primaryClr,
                             ),
                           ),
+                          SizedBox(width: 50),
+                          Text(
+                            "Balance : ${pay.selectedProjectBalance ?? 0.0}",
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: "Manrope",
+                              color: primaryClr,
+                            ),
+                          ),
                           Spacer(),
-                          Icon(Icons.radio_button_checked),
+                          Radio<String>(
+                            value: "YBCash",
+                            groupValue: selectedPayment,
+                            activeColor: primaryClr,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedPayment = value!;
+                              });
+                            },
+                          ),
                         ],
                       ),
                       SizedBox(height: 15),
@@ -151,16 +246,20 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                         height: 38,
                         child: CustomButton(
                           text: "Pay using YB Wallet",
-                          onPress: () async {},
+
+                          // onPress: () async {},
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 15),
-                _paymentOption("Razor Pay"),
                 const SizedBox(height: 10),
-                _paymentOption("Paytm"),
+                _paymentOption("Pay Later", "Paylater"),
+
+                const SizedBox(height: 10),
+                _paymentOption("Razor Pay", "RazorPay"),
+                const SizedBox(height: 10),
+                _paymentOption("Paytm", "Paytm"),
               ],
             );
           },
@@ -169,7 +268,8 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
     );
   }
 
-  Widget _paymentOption(String title) {
+  String selectedPayment = "YBCash"; // default selected
+  Widget _paymentOption(String title, String value) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -190,7 +290,16 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
             ),
           ),
           const Spacer(),
-          const Icon(Icons.radio_button_off),
+          Radio<String>(
+            value: value,
+            groupValue: selectedPayment,
+            activeColor: primaryClr,
+            onChanged: (val) {
+              setState(() {
+                selectedPayment = val!;
+              });
+            },
+          ),
         ],
       ),
     );

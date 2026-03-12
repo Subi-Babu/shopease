@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youbuilt/custom_widgets/custom_button.dart';
 import 'package:youbuilt/screen/profile/address.dart';
@@ -234,10 +235,10 @@ class _ProductViewPageState extends State<ProductViewPage> {
                               child: CachedNetworkImage(
                                 imageUrl: imageUrl,
                                 fit: BoxFit.fill,
-                                placeholder: (_, __) => const Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
+                                placeholder: (_, __) => shimmerBox(
+                                  height: 270.h,
+                                  width: double.infinity,
+                                  radius: 14,
                                 ),
                                 errorWidget: (_, __, ___) =>
                                     const Icon(Icons.error),
@@ -679,7 +680,7 @@ class _ProductViewPageState extends State<ProductViewPage> {
         final sellerList = project.sellerModel?.data ?? [];
 
         if (project.itemLoading) {
-          return const Center(child: CircularProgressIndicator());
+          // return const Center(child: CircularProgressIndicator());
         }
 
         if (sellerList.isEmpty) {
@@ -851,6 +852,21 @@ Widget _shareOption({
         const SizedBox(height: 6),
         Text(label),
       ],
+    ),
+  );
+}
+
+Widget shimmerBox({double? height, double? width, double radius = 8}) {
+  return Shimmer.fromColors(
+    baseColor: Colors.grey.shade300,
+    highlightColor: Colors.grey.shade100,
+    child: Container(
+      height: height,
+      width: width,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(radius),
+      ),
     ),
   );
 }

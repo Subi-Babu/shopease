@@ -16,6 +16,7 @@ import 'package:youbuilt/screen/profile/address.dart';
 import 'package:youbuilt/screen/profile/edit_profile.dart';
 import 'package:youbuilt/screen/profile/profile.dart';
 import 'package:youbuilt/screen/projects/add_projects.dart';
+import 'package:youbuilt/screen/search.dart';
 import 'package:youbuilt/screen/service/service_page.dart';
 import 'package:youbuilt/utils/colors.dart';
 import 'package:youbuilt/utils/constants.dart';
@@ -43,8 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
       await reg.fetchProfile(context: context);
       await reg.fetchAddressList(context: context);
 
-      await reg.fetchServiceList(context: context, id: "");
+      await reg.fetchServiceList(context: context, id: "", keywrd: "");
       await reg.fetchServiceCategry(context: context);
+      await reg.fetchSearch(context: context, keyword: "");
     });
     getCurrentLocation();
     // TODO: implement initState
@@ -126,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    height: ScreenUtil().screenHeight / 3,
+                    height: ScreenUtil().screenHeight / 3.2,
                     decoration: BoxDecoration(
                       image: const DecorationImage(
                         image: AssetImage("assets/Ellipse 1682.png"),
@@ -252,108 +254,148 @@ class _HomeScreenState extends State<HomeScreen> {
                               // ),
                             ],
                           ),
-                          Container(
-                            margin: EdgeInsets.only(top: 15, bottom: 15),
-                            padding: EdgeInsets.symmetric(
-                              vertical: 10,
-                              horizontal: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: backgroundColor,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.search, color: Color(0xff7A7A7A)),
-                                SizedBox(width: 8),
-                                Text(
-                                  "What are you looking for?",
-                                  style: TextStyle(
-                                    color: Color(0xff7A7A7A),
-                                    fontFamily: "Manrope",
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 14.sp,
+                          // InkWell(
+                          InkWell(
+                            onTap: () {
+                              final searchList =
+                                  project.searchModel?.serviceList ?? [];
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SearchResultPage(
+                                    // products: searchList,
+                                    keyword: "",
                                   ),
                                 ),
-                              ],
+                              );
+                            },
+                            child: Container(
+                              margin: EdgeInsets.only(top: 15, bottom: 15),
+                              padding: EdgeInsets.symmetric(
+                                vertical: 10,
+                                horizontal: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: backgroundColor,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.search, color: Color(0xff7A7A7A)),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "What are you looking for?",
+                                    style: TextStyle(
+                                      color: Color(0xff7A7A7A),
+                                      fontFamily: "Manrope",
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 14.sp,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      right: 16,
-                      bottom: 5,
+                  Container(
+                    height: 100,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage(
+                          "assets/Frame 1171276313.png",
+                        ), // your image
+                        fit: BoxFit.cover,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text(
-                      "Projects",
-                      style: TextStyle(
-                        color: primaryClr,
-                        fontFamily: "Manrope",
-                        fontWeight: FontWeight.w700,
-                        fontSize: 22.sp,
+                    child: Center(
+                      child: Text(
+                        "Your Text Here",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      right: 16,
-                      bottom: 5,
-                    ),
-
-                    child: Row(
-                      children: [
-                        Text(
-                          "Digitize and streamline the\nconstruction process",
-                          style: TextStyle(
-                            color: primaryClr,
-                            fontFamily: "Manrope",
-                            fontWeight: FontWeight.w400,
-                            fontSize: 15.sp,
-                          ),
-                        ),
-                        Spacer(),
-                        InkWell(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => AddProjects()),
-                            );
-                          },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(6),
-                              color: Color(0xff0D0D0D),
-                              // color: primaryClr,
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.add, color: backgroundColor),
-                                SizedBox(width: 4),
-                                Text(
-                                  "Add Project",
-                                  style: TextStyle(
-                                    color: backgroundColor,
-                                    fontFamily: "Manrope",
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 12.sp,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // Padding(
+                  //   padding: const EdgeInsets.only(
+                  //     left: 16,
+                  //     right: 16,
+                  //     bottom: 5,
+                  //   ),
+                  //   child: Text(
+                  //     "Projects",
+                  //     style: TextStyle(
+                  //       color: primaryClr,
+                  //       fontFamily: "Manrope",
+                  //       fontWeight: FontWeight.w700,
+                  //       fontSize: 22.sp,
+                  //     ),
+                  //   ),
+                  // ),
+                  // Padding(
+                  //   padding: const EdgeInsets.only(
+                  //     left: 16,
+                  //     right: 16,
+                  //     bottom: 5,
+                  //   ),
+                  //
+                  //   child: Row(
+                  //     children: [
+                  //       Text(
+                  //         "Digitize and streamline the\nconstruction process",
+                  //         style: TextStyle(
+                  //           color: primaryClr,
+                  //           fontFamily: "Manrope",
+                  //           fontWeight: FontWeight.w400,
+                  //           fontSize: 15.sp,
+                  //         ),
+                  //       ),
+                  //       Spacer(),
+                  //       InkWell(
+                  //         onTap: () {
+                  //           Navigator.push(
+                  //             context,
+                  //             MaterialPageRoute(builder: (_) => AddProjects()),
+                  //           );
+                  //         },
+                  //         child: Container(
+                  //           padding: EdgeInsets.symmetric(
+                  //             horizontal: 8,
+                  //             vertical: 8,
+                  //           ),
+                  //           decoration: BoxDecoration(
+                  //             borderRadius: BorderRadius.circular(6),
+                  //             color: Color(0xff0D0D0D),
+                  //             // color: primaryClr,
+                  //           ),
+                  //           child: Row(
+                  //             children: [
+                  //               Icon(Icons.add, color: backgroundColor),
+                  //               SizedBox(width: 4),
+                  //               Text(
+                  //                 "Add Project",
+                  //                 style: TextStyle(
+                  //                   color: backgroundColor,
+                  //                   fontFamily: "Manrope",
+                  //                   fontWeight: FontWeight.w700,
+                  //                   fontSize: 12.sp,
+                  //                 ),
+                  //               ),
+                  //             ],
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
                   Padding(
                     padding: const EdgeInsets.only(
                       left: 16,
@@ -361,136 +403,113 @@ class _HomeScreenState extends State<HomeScreen> {
                       top: 15,
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        InkWell(
-                          onTap: () {
-                            HapticFeedback.heavyImpact();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AllProductsPage(),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: EdgeInsets.all(15),
-                            decoration: BoxDecoration(
-                              color: Color(0xffF5F5F5),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Image.asset(
-                                  "assets/solar_bag-check-bold.png",
-                                  height: 35,
-                                  width: 35,
+                        /// Purchase
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              HapticFeedback.heavyImpact();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AllProductsPage(),
                                 ),
-                                Text(
-                                  "Purchase",
-                                  style: TextStyle(
-                                    color: primaryClr,
-                                    fontFamily: "Manrope",
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 12.sp,
+                              );
+                            },
+                            child: Container(
+                              height: 90,
+                              margin: EdgeInsets.symmetric(horizontal: 5),
+                              decoration: BoxDecoration(
+                                color: Color(0xffF5F5F5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    "assets/solar_bag-check-bold.png",
+                                    height: 30,
+                                    width: 30,
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () {
-                            HapticFeedback.heavyImpact();
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ServicesPage(),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: EdgeInsets.all(15),
-                            decoration: BoxDecoration(
-                              color: Color(0xffF5F5F5),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Image.asset(
-                                  "assets/fluent_toolbox-32-filled.png",
-                                  height: 35,
-                                  width: 35,
-                                ),
-                                Text(
-                                  "Service",
-                                  style: TextStyle(
-                                    color: primaryClr,
-                                    fontFamily: "Manrope",
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 12.sp,
+                                  SizedBox(height: 5),
+                                  Text(
+                                    "Purchase",
+                                    style: TextStyle(
+                                      color: primaryClr,
+                                      fontFamily: "Manrope",
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12.sp,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                        Container(
-                          padding: EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                            color: Color(0xffF5F5F5),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                "assets/solar_clipboard-bold.png",
-                                height: 35,
-                                width: 35,
-                              ),
-                              Text(
-                                "Rental",
-                                style: TextStyle(
-                                  color: primaryClr,
-                                  fontFamily: "Manrope",
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12.sp,
+
+                        /// Service
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              HapticFeedback.heavyImpact();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ServicesPage(),
                                 ),
+                              );
+                            },
+                            child: Container(
+                              height: 90,
+                              margin: EdgeInsets.symmetric(horizontal: 5),
+                              decoration: BoxDecoration(
+                                color: Color(0xffF5F5F5),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            ],
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    "assets/fluent_toolbox-32-filled.png",
+                                    height: 30,
+                                    width: 30,
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text(
+                                    "Service",
+                                    style: TextStyle(
+                                      color: primaryClr,
+                                      fontFamily: "Manrope",
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12.sp,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                        InkWell(
-                          onTap: () {
-                            HapticFeedback.heavyImpact();
 
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => EstimationPage(),
-                              ),
-                            );
-                          },
+                        /// Rental
+                        Expanded(
                           child: Container(
-                            padding: EdgeInsets.all(15),
+                            height: 90,
+                            margin: EdgeInsets.symmetric(horizontal: 5),
                             decoration: BoxDecoration(
                               color: Color(0xffF5F5F5),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Image.asset(
                                   "assets/solar_clipboard-bold.png",
-                                  height: 35,
-                                  width: 35,
+                                  height: 30,
+                                  width: 30,
                                 ),
+                                SizedBox(height: 5),
                                 Text(
-                                  "Quote",
+                                  "Rental",
                                   style: TextStyle(
                                     color: primaryClr,
                                     fontFamily: "Manrope",
@@ -499,6 +518,49 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                               ],
+                            ),
+                          ),
+                        ),
+
+                        /// Quote
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              HapticFeedback.heavyImpact();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => EstimationPage(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              height: 90,
+                              margin: EdgeInsets.symmetric(horizontal: 5),
+                              decoration: BoxDecoration(
+                                color: Color(0xffF5F5F5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    "assets/solar_clipboard-bold.png",
+                                    height: 30,
+                                    width: 30,
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text(
+                                    "Quote",
+                                    style: TextStyle(
+                                      color: primaryClr,
+                                      fontFamily: "Manrope",
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12.sp,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),

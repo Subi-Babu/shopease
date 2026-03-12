@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -1115,6 +1117,14 @@ Widget _estimationTab() {
                         "${item?.date?.day ?? ""}/${item?.date?.month ?? ""}/${item?.date?.year ?? ""}",
                     // status: item.status,
                     showActions: true,
+                    onPress: () {
+                      log("message1");
+
+                      Provider.of<ProjectProvider>(
+                        context,
+                        listen: false,
+                      ).downloadPdf(context: context, id: item?.id ?? 0);
+                    },
                   );
                 },
               ),
@@ -1163,6 +1173,13 @@ Widget _quoteTab() {
                         "${item?.date?.day ?? ""}/${item?.date?.month ?? ""}/${item?.date?.year ?? ""}",
                     // status: item.status,
                     showActions: true,
+                    onPress: () {
+                      log("message2");
+                      Provider.of<ProjectProvider>(
+                        context,
+                        listen: false,
+                      ).downloadQuotesPdf(context: context, id: item?.id ?? 0);
+                    },
                   );
                 },
               ),
@@ -1180,6 +1197,7 @@ class EstimationCard extends StatelessWidget {
   final String date;
   final String? status;
   final bool showActions;
+  final void Function()? onPress;
 
   const EstimationCard({
     super.key,
@@ -1188,6 +1206,7 @@ class EstimationCard extends StatelessWidget {
     required this.date,
     this.status,
     this.showActions = false,
+    required this.onPress,
   });
 
   @override
@@ -1281,7 +1300,7 @@ class EstimationCard extends StatelessWidget {
                 Flexible(
                   child: SizedBox(
                     height: 38,
-                    child: CustomButton(text: "Download", onPress: () {}),
+                    child: CustomButton(text: "Download", onPress: onPress),
                   ),
                 ),
               ],

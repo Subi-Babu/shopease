@@ -47,14 +47,14 @@ class ItemList {
   int? id;
   int? storeId;
   String? storeName;
-  int? mrp;
-  int? basePrice;
-  int? yourPrice;
+  dynamic mrp;
+  dynamic basePrice;
+  dynamic yourPrice;
   int? itemId;
   List<Attributecategory>? attributecategory;
   AttributeName? attributeName;
   Item? item;
-  Null? totalGst;
+  dynamic totalGst;
 
   ItemList({
     this.id,
@@ -181,7 +181,7 @@ class Item {
   double? commision;
   int? gst;
   String? units;
-  int? basePrice;
+  dynamic basePrice;
   int? barCode;
   bool? isActive;
   bool? isDelete;

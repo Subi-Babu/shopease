@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:youbuilt/model/activity_model.dart';
 import 'package:youbuilt/model/addressListModel.dart';
 import 'package:youbuilt/model/assign_project_model.dart';
@@ -30,6 +31,7 @@ import 'package:youbuilt/model/project_view_model.dart';
 import 'package:youbuilt/model/projectfolder_model.dart';
 import 'package:youbuilt/model/quatation.dart';
 import 'package:youbuilt/model/sanp_drop_model.dart';
+import 'package:youbuilt/model/search_model.dart';
 import 'package:youbuilt/model/seller_model.dart.dart';
 import 'package:youbuilt/model/serviceCatmodel.dart';
 import 'package:youbuilt/model/service_booking_model.dart';
@@ -300,12 +302,13 @@ class NetworkHelper {
     required BuildContext context,
     required String phonenumber,
     required String pwd,
+    required String code,
   }) async {
     try {
       final response = await _postRequest(
         context: context,
         url: Urls.loginUrl,
-        body: {"phoneNumber": phonenumber, "password": pwd},
+        body: {"phoneNumber": phonenumber, "password": pwd, "code": code},
       );
 
       if (response == null) {
@@ -345,6 +348,42 @@ class NetworkHelper {
     }
   }
 
+  Future<Map<String, dynamic>?> sendForgotOtp({
+    required BuildContext context,
+    required String? phonenumber,
+    required String? code,
+  }) async {
+    try {
+      log("Forgot OTP API called");
+      log("Phone Number: $phonenumber");
+      log("Code: $code");
+
+      final response = await _postRequest(
+        context: context,
+        showErrorToast: false,
+        url: Urls.fSendOtpUrl,
+        body: {"phoneNumber": phonenumber, "code": "+${code}"},
+      );
+
+      log("API Response Raw: ${response?.body}");
+      log("Status Code: ${response?.statusCode}");
+
+      if (response == null) {
+        log("Response is null");
+        return null;
+      }
+
+      var responseData = jsonDecode(response.body);
+
+      log("Decoded Response: $responseData");
+
+      return {"status": response.statusCode, "data": responseData};
+    } catch (e) {
+      log("Error in sendForgotOtp: $e");
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
   Future<Map<String, dynamic>?> verifyOtp({
     required BuildContext context,
     required String? phonenumber,
@@ -368,6 +407,79 @@ class NetworkHelper {
 
       return {"status": response.statusCode, "data": responseData};
     } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>?> forgotVerifyOtp({
+    required BuildContext context,
+    required String? phonenumber,
+    required String? code,
+    required String? otp,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _postRequest(
+        context: context,
+        url: Urls.fverifyUrl,
+        showErrorToast: false,
+        body: {"phoneNumber": phonenumber, "code": "+${code}", "otp": otp},
+      );
+
+      if (response == null) {
+        return null;
+      }
+
+      var responseData = jsonDecode(response.body);
+
+      return {"status": response.statusCode, "data": responseData};
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>?> forgotpwdUpdate({
+    required BuildContext context,
+    required String? phonenumber,
+    required String? code,
+    required String? pwd,
+  }) async {
+    try {
+      log("📤 Forgot Password Update API Called");
+      log("URL: ${Urls.fUpdateOtpUrl}");
+
+      final body = {
+        "phoneNumber": phonenumber,
+        "code": "${code ?? ""}",
+        "password": pwd,
+      };
+
+      log("Request Body: $body");
+
+      http.Response? response = await _postRequest(
+        context: context,
+        url: Urls.fUpdateOtpUrl,
+        showErrorToast: false,
+        body: body,
+      );
+
+      if (response == null) {
+        log("❌ Response is NULL");
+        return null;
+      }
+
+      log("📥 Status Code: ${response.statusCode}");
+      log("📥 Response Body: ${response.body}");
+
+      var responseData = jsonDecode(response.body);
+
+      log("📦 Decoded Response: $responseData");
+
+      return {"status": response.statusCode, "data": responseData};
+    } catch (e, stackTrace) {
+      log("❌ forgotpwdUpdate Exception: $e");
+      log("StackTrace: $stackTrace");
+
       return {"status": false, "error": e.toString()};
     }
   }
@@ -1061,12 +1173,12 @@ class NetworkHelper {
     BuildContext context,
     String? catId,
     String? endPrice,
-    // String? pid,
+    String? keyword,
   ) async {
     http.Response? response;
     response = await _getRequest(
       context: context,
-      url: "${Urls.itemUrl}?SortBy=&categoryId=$catId",
+      url: "${Urls.itemUrl}?SortBy=&categoryId=$catId&keyword=$keyword",
     );
     if (response != null) {
       log("$response");
@@ -1160,11 +1272,15 @@ class NetworkHelper {
     }
   }
 
-  Future<ServiceModel?> getServiceList(BuildContext context, String? id) async {
+  Future<ServiceModel?> getServiceList(
+    BuildContext context,
+    String? id,
+    String? keywrd,
+  ) async {
     http.Response? response;
     response = await _getRequest(
       context: context,
-      url: "${Urls.serviceUrl}?serviceCategoryId=$id",
+      url: "${Urls.serviceUrl}?serviceCategoryId=$id&keyword=$keywrd",
     );
     if (response != null) {
       log("$response");
@@ -1284,6 +1400,24 @@ class NetworkHelper {
     if (response != null) {
       log("Response: ${response.body}");
       return ServiceBookingModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<SearchModel?> getSearchList(
+    BuildContext context,
+    String? keyword,
+  ) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.searchHomeUrl}?keyword=$keyword",
+    );
+
+    if (response != null) {
+      log("Response: ${response.body}");
+      return SearchModel.fromJson(jsonDecode(response.body));
     } else {
       ToastUtil.show("Error in fetching details");
       return null;
@@ -2004,6 +2138,102 @@ class NetworkHelper {
       return jsonDecode(response.body);
     } catch (e) {
       return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<http.StreamedResponse?> editFund({
+    required String id,
+    required String amount,
+    required String details,
+    // required String catId,
+    required String date,
+    File? file,
+  }) async {
+    try {
+      var request = http.MultipartRequest(
+        'PATCH',
+        Uri.parse("${Urls.fundEdit}/$id"),
+      );
+
+      request.headers['Authorization'] = "Bearer $accessToken";
+
+      /// fields
+      request.fields['amount'] = amount;
+      request.fields['details'] = details;
+      // request.fields['expenseCategoryId'] = catId;
+      request.fields['date'] = date;
+
+      /// file
+      if (file != null) {
+        request.files.add(await http.MultipartFile.fromPath('file', file.path));
+      }
+
+      var response = await request.send();
+
+      final respStr = await response.stream.bytesToString();
+
+      debugPrint("Status : ${response.statusCode}");
+      debugPrint("Response : $respStr");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response;
+      } else {
+        final jsonResponse = jsonDecode(respStr);
+        ToastUtil.show(jsonResponse['message'] ?? "Something went wrong");
+        return null;
+      }
+    } catch (e) {
+      log("Edit Expense Error: $e");
+      return null;
+    }
+  }
+
+  Future<String?> downloadEstimationPdf(int id) async {
+    try {
+      final url = Uri.parse("${Urls.downloadUrl}/$id");
+
+      final response = await http.get(
+        url,
+        headers: {"Authorization": "Bearer $accessToken"},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File("${dir.path}/estimation_$id.pdf");
+
+        await file.writeAsBytes(response.bodyBytes);
+
+        return file.path;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("PDF Error: $e");
+      return null;
+    }
+  }
+  Future<String?> downloadQuotesPdf(int id) async {
+    try {
+      final url = Uri.parse("${Urls.downloadQotesUrl}/$id");
+
+      final response = await http.get(
+        url,
+        headers: {"Authorization": "Bearer $accessToken"},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File("${dir.path}/estimation_$id.pdf");
+
+        await file.writeAsBytes(response.bodyBytes);
+
+        return file.path;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("PDF Error: $e");
+      return null;
     }
   }
 }

@@ -10,6 +10,7 @@ import 'package:youbuilt/screen/sign_up.dart';
 import 'package:youbuilt/utils/colors.dart';
 import 'package:dotted_border/dotted_border.dart';
 // import 'package:flutter/material.dart';
+import 'package:youbuilt/model/wallet_model.dart';
 
 import '../../../model/sanp_drop_model.dart';
 import '../../../utils/toast_util.dart';
@@ -553,7 +554,13 @@ Widget _lastTransactions() {
                             id: transaction.projectId.toString(),
                           );
                         },
-                        onEdit: () {},
+                        onEdit: () {
+                          _showEditTransactionDialog(
+                            context,
+                            projectId: transaction.projectId.toString(),
+                            transaction: transaction,
+                          );
+                        },
                         //
                       );
                     },
@@ -1038,5 +1045,125 @@ Widget uploadFileBox({
         ),
       ),
     ),
+  );
+}
+
+void _showEditTransactionDialog(
+  BuildContext context, {
+  required String projectId,
+  required Datum transaction,
+}) {
+  final project = Provider.of<ProjectProvider>(context, listen: false);
+
+  project.amountCtrl.text = transaction.amount.toString();
+  project.detailsCtrl.text = transaction.details ?? "";
+  if (transaction.createdAt != null) {
+    project.setExpenseDate(DateTime.parse(transaction.createdAt.toString()));
+  }
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Consumer<ProjectProvider>(
+            builder: (context, project, _) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  /// TITLE
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Edit Transaction",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: primaryClr,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  /// AMOUNT
+                  CustomTextField(
+                    hintText: "Amount",
+                    controller: project.amountCtrl,
+                    keyboardType: TextInputType.number,
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  /// DETAILS
+                  CustomTextField(
+                    hintText: "Details",
+                    controller: project.detailsCtrl,
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  /// DATE
+                  GestureDetector(
+                    onTap: () {
+                      project.pickExpanseDate(context);
+                    },
+                    child: AbsorbPointer(
+                      child: CustomTextField(
+                        hintText: "Date",
+                        controller: TextEditingController(
+                          text: project.formattedExpenseDate,
+                        ),
+                        suffixIcon: const Icon(Icons.calendar_month),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  /// UPDATE BUTTON
+                  CustomButton(
+                    text: "Update",
+                    onPress: () async {
+                      // await project.updateExpense(
+                      //   context: context,
+                      //   id: transaction.id.toString(),
+                      //   projectId: projectId,
+                      //   amount: project.amountCtrl.text.trim(),
+                      //   details: project.detailsCtrl.text.trim(),
+                      //   date: project.formattedExpenseDate,
+                      // ); // await project.updateExpense(
+                      //   context: context,
+                      //   id: transaction.id.toString(),
+                      //   projectId: projectId,
+                      //   amount: project.amountCtrl.text.trim(),
+                      //   details: project.detailsCtrl.text.trim(),
+                      //   date: project.formattedExpenseDate,
+                      // );
+
+                      Navigator.pop(context);
+
+                      await project.fetchWallet(
+                        context: context,
+                        id: projectId,
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      );
+    },
   );
 }

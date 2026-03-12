@@ -60,4 +60,12 @@ class Urls {
   static String serviceBookingUrl = "$kBaseUrl/users/servieBookingList";
   static String qtyEdit = "$kBaseUrl/users/editCartQty";
   static String walletDelete = "$kBaseUrl/users/deleteExpenses";
+  static String fundEdit = "$kBaseUrl/users/editMoney";
+  static String expenseEdit = "$kBaseUrl/users/";
+  static String searchHomeUrl = "$kBaseUrl/users/searchItemAndService";
+  static String fSendOtpUrl = "$kBaseUrl/users/forgetPasswordSendOtp";
+  static String fverifyUrl = "$kBaseUrl/users/forgetPasswordVerifyOtp";
+  static String fUpdateOtpUrl = "$kBaseUrl/users/updateForgetPassword";
+  static String downloadUrl = "$kBaseUrl/users/adminEstimationPDF";
+  static String downloadQotesUrl = "$kBaseUrl/users/adminQuatationPDF";
 }

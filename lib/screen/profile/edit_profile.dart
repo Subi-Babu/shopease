@@ -25,6 +25,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   late TextEditingController phonecodeController;
   late TextEditingController emailController;
   late TextEditingController genderController;
+  late TextEditingController gstController;
 
   String selectedGender = "";
   File? selectedImage;
@@ -40,6 +41,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     phonecodeController = TextEditingController();
     emailController = TextEditingController();
     genderController = TextEditingController();
+    gstController = TextEditingController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = Provider.of<ProjectProvider>(context, listen: false);
@@ -55,6 +57,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           emailController.text = data?.email ?? "";
           selectedGender = data?.gender ?? "";
           genderController.text = selectedGender;
+          gstController.text = data?.gst ?? "";
         });
       }
     });
@@ -66,6 +69,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     phoneController.dispose();
     emailController.dispose();
     genderController.dispose();
+    gstController.dispose();
     super.dispose();
   }
 
@@ -319,7 +323,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           SizedBox(height: 12),
                           CustomTextField(
                             hintText: "Gst Number",
-                            // readonly: true,
+                            readonly: !isEditing,
+                            controller: gstController,
                             // controller: genderController,
                           ),
                         ],
