@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'colors.dart';
 
 /*-----------Url Constants---------------*/
-const kBaseUrl = "https://youbuilt-jrqd6.ondigitalocean.app/api";
+const kBaseUrl = "https://youbuiltlive-lhph6.ondigitalocean.app/api";
+// "https://youbuilt-jrqd6.ondigitalocean.app/api";
 
 /*-----------TextStyle Constants---------------*/
 const f16B = TextStyle(
@@ -20,10 +21,12 @@ const kLoading = Center(child: CircularProgressIndicator(color: primaryClr));
 /*-----------String Constants---------------*/
 // const String kKeyAccessToken = "access_token";
 const String kKeyLocationDb = "location_db";
-String? token;
+// String? token;
 String? userid;
 
 const accesstokenKey = "accessToken";
 const idKey = "Id";
-// const accesstokenKey ="accessToken";
 String? accessToken;
+
+String? city = "";
+String? state = "";

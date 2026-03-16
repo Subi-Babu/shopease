@@ -154,19 +154,22 @@ class _amountCard extends StatelessWidget {
 }
 
 Widget _transactionItem(
+  BuildContext context,
   String name,
   String date,
   String amount,
   Color color,
-  String tag,
-) {
+  String tag, {
+  VoidCallback? onEdit,
+  VoidCallback? onDelete,
+}) {
   return ListTile(
     contentPadding: EdgeInsets.zero,
     title: Text(
       name,
       style: const TextStyle(
         fontSize: 14,
-        fontFamily: "Manropre",
+        fontFamily: "Manrope",
         color: primaryClr,
         fontWeight: FontWeight.w600,
       ),
@@ -175,30 +178,139 @@ Widget _transactionItem(
       date,
       style: const TextStyle(
         fontSize: 12,
-        fontFamily: "Manropre",
+        fontFamily: "Manrope",
         color: Color(0xff737373),
         fontWeight: FontWeight.w500,
       ),
     ),
-    trailing: Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+    trailing: Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          amount,
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              amount,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            Text(
+              tag,
+              style: const TextStyle(
+                fontSize: 12,
+                fontFamily: "Manrope",
+                color: Color(0xff737373),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
-        Text(
-          tag,
-          style: const TextStyle(
-            fontSize: 12,
-            fontFamily: "Manropre",
-            color: Color(0xff737373),
-            fontWeight: FontWeight.w600,
+        PopupMenuButton<String>(
+          color: Colors.white,
+          icon: const Icon(Icons.more_vert, color: Color(0xff737373), size: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
           ),
+          onSelected: (value) {
+            if (value == 'edit') {
+              onEdit?.call();
+            } else if (value == 'delete') {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  title: const Text(
+                    "Delete ?",
+                    style: TextStyle(
+                      fontFamily: "Manrope",
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                  content: const Text(
+                    "Are you sure you want to delete this transaction?",
+                    style: TextStyle(
+                      fontFamily: "Manrope",
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xff737373),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text(
+                        "Cancel",
+                        style: TextStyle(
+                          fontFamily: "Manrope",
+                          color: Color(0xff737373),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        onDelete?.call();
+                      },
+                      child: const Text(
+                        "Delete",
+                        style: TextStyle(
+                          fontFamily: "Manrope",
+                          color: Colors.red,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'edit',
+              child: Row(
+                children: const [
+                  Icon(Icons.edit_outlined, size: 18, color: primaryClr),
+                  SizedBox(width: 8),
+                  Text(
+                    'Edit',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontFamily: "Manrope",
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: const [
+                  Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text(
+                    'Delete',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontFamily: "Manrope",
+                      color: Colors.red,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     ),
@@ -278,7 +390,8 @@ Widget _bottomButtons(BuildContext context, {required String projectId}) {
                 context,
                 listen: false,
               );
-              project.clearExpenseCategory(); //
+              project.clearExpenseCategory();
+              project.formattedFundDate == ""; //
               _showAddFundDialog(context, projectId: projectId ?? "");
             },
           ),
@@ -298,6 +411,8 @@ Widget _bottomButtons(BuildContext context, {required String projectId}) {
               );
 
               project.clearExpenseCategory(); //
+              project.formattedExpenseDate == ""; //
+
               _showAddExpenseDialog(context, projectId: projectId ?? "");
             },
           ),
@@ -397,31 +512,52 @@ Widget _lastTransactions() {
               );
             }
 
-            return ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: transactions.length,
-              padding: EdgeInsets.all(0),
-              itemBuilder: (context, index) {
-                final transaction = transactions[index];
-                // Format the date
-                String formattedDate = "";
-                if (transaction.createdAt != null) {
-                  formattedDate = DateFormat(
-                    'dd MMM, yyyy',
-                  ).format(DateTime.parse(transaction.createdAt.toString()));
-                }
+            return project.load == true
+                ? CircularProgressIndicator(color: primaryClr)
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: transactions.length,
+                    padding: EdgeInsets.all(0),
+                    itemBuilder: (context, index) {
+                      final transaction = transactions[index];
+                      // Format the date
+                      String formattedDate = "";
+                      if (transaction.createdAt != null) {
+                        formattedDate = DateFormat('dd MMM, yyyy').format(
+                          DateTime.parse(transaction.createdAt.toString()),
+                        );
+                      }
 
-                return _transactionItem(
-                  transaction.projectName ?? "",
-                  formattedDate ?? "",
-                  transaction.amount.toString() ?? "",
-                  Colors.green,
-                  transaction.expenseCategoryName.toString() ?? "",
-                  //
-                );
-              },
-            );
+                      return _transactionItem(
+                        context,
+                        transaction.projectName ?? "",
+                        formattedDate ?? "",
+                        "${transaction.type == "expensemoney" ? "-" : "+"} ₹${transaction.amount ?? ""}",
+                        transaction.type == "expensemoney"
+                            ? Colors.red
+                            : Colors.green,
+                        transaction.type ?? "",
+                        onDelete: () async {
+                          await project.deleteExpense(
+                            context: context,
+                            eid: transaction.id.toString(),
+                          );
+
+                          await Future.delayed(
+                            const Duration(milliseconds: 500),
+                          );
+
+                          await project.fetchWallet(
+                            context: context,
+                            id: transaction.projectId.toString(),
+                          );
+                        },
+                        onEdit: () {},
+                        //
+                      );
+                    },
+                  );
           },
         ),
       ],
@@ -606,6 +742,27 @@ void _showAddFundDialog(BuildContext context, {required String projectId}) {
                           controller: project.detailsFundCtrl,
                         ),
                         const SizedBox(height: 10),
+                        GestureDetector(
+                          onTap: () {
+                            context.read<ProjectProvider>().pickFundDate(
+                              context,
+                            );
+                          },
+                          child: AbsorbPointer(
+                            child: CustomTextField(
+                              hintText: "Date",
+                              fillColor: Colors.white,
+                              controller: TextEditingController(
+                                text: project.formattedFundDate,
+                              ),
+                              suffixIcon: const Icon(
+                                Icons.calendar_month_outlined,
+                                color: Color(0xff737373),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
 
                         uploadFileBox(
                           title: project.fundFile == null
@@ -629,6 +786,7 @@ void _showAddFundDialog(BuildContext context, {required String projectId}) {
                                   // }
                                   project.addFund(
                                     context: context,
+                                    date: project.formattedFundDate,
                                     projectId: projectId,
                                     fund: project.amountFundCtrl.text.trim(),
                                     fundDetails: project.detailsFundCtrl.text
@@ -710,6 +868,27 @@ void _showAddExpenseDialog(BuildContext context, {required String projectId}) {
                           controller: project.detailsCtrl,
                         ),
                         const SizedBox(height: 10),
+                        GestureDetector(
+                          onTap: () {
+                            context.read<ProjectProvider>().pickExpanseDate(
+                              context,
+                            );
+                          },
+                          child: AbsorbPointer(
+                            child: CustomTextField(
+                              hintText: "Date",
+                              fillColor: Colors.white,
+                              controller: TextEditingController(
+                                text: project.formattedExpenseDate,
+                              ),
+                              suffixIcon: const Icon(
+                                Icons.calendar_month_outlined,
+                                color: Color(0xff737373),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
 
                         // Dropdown
                         Container(
@@ -784,6 +963,7 @@ void _showAddExpenseDialog(BuildContext context, {required String projectId}) {
                                   project.addExpenses(
                                     context: context,
                                     projectId: projectId,
+                                    date: project.formattedExpenseDate,
                                     amount: project.amountCtrl.text.trim(),
                                     amountDetails: project.detailsCtrl.text
                                         .trim(),
@@ -837,12 +1017,14 @@ Widget uploadFileBox({
               children: [
                 Image.asset("assets/uploadd.png", height: 18, width: 18),
                 const SizedBox(width: 5),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xffA3A3A3),
+                Flexible(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xffA3A3A3),
+                    ),
                   ),
                 ),
               ],

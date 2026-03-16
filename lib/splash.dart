@@ -23,12 +23,12 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _initApp() async {
     // ⏳ Splash delay
     await Future.delayed(const Duration(seconds: 2));
-    token = await SharedPrefUtil.getString(accesstokenKey);
-    print("🔐 TOKEN => $token");
+    accessToken = await SharedPrefUtil.getString(accesstokenKey);
+    print("🔐 TOKEN => $accessToken");
     userid = await SharedPrefUtil.getString(idKey);
     print("🔐 Id => $userid");
     if (!mounted) return;
-    if (token != null && token!.isNotEmpty) {
+    if (accessToken != null && accessToken!.isNotEmpty) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const BottomNavScreen()),

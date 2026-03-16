@@ -33,8 +33,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = Provider.of<ProjectProvider>(context, listen: false);
       reg.fetchProjectList(context: context, status: "");
-
-
     });
     super.initState();
   }
@@ -46,6 +44,9 @@ class _ProjectScreenState extends State<ProjectScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         leading: SizedBox(),
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
         title: Text(
           "Projects",
           style: TextStyle(
@@ -426,17 +427,21 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                         Row(
                                           // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                              project
-                                                      .projectListModel
-                                                      ?.projectList?[index]
-                                                      .name ??
-                                                  "",
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                color: primaryClr,
-                                                fontWeight: FontWeight.w600,
-                                                fontFamily: "Manrope",
+                                            SizedBox(
+                                              width: 200.w,
+                                              child: Text(
+                                                project
+                                                        .projectListModel
+                                                        ?.projectList?[index]
+                                                        .name ??
+                                                    "",
+                                                maxLines: 2,
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  color: primaryClr,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontFamily: "Manrope",
+                                                ),
                                               ),
                                             ),
                                             Spacer(),

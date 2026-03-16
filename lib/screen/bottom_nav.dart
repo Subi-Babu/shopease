@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_bottom_bar/liquid_glass_bottom_bar.dart';
+import 'package:youbuilt/screen/cart/addcart.dart';
+import 'package:youbuilt/screen/cart/all_product.dart';
 import 'package:youbuilt/screen/profile/profile.dart';
 import 'package:youbuilt/screen/projects/projects.dart';
 
@@ -18,7 +20,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
 
   final List<Widget> _pages = const [
     HomeScreen(),
-    Center(child: Text("Cart")),
+    MyCartPage(),
     ProjectScreen(),
     ProfileMenuPage(),
   ];
@@ -32,14 +34,17 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(100), // FULL CURVE
+          borderRadius: BorderRadius.circular(999),
+          clipBehavior: Clip.antiAlias,
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
+              padding: EdgeInsets.all(2),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-                color: Colors.black.withOpacity(0.10), // glass look
-                border: Border.all(color: Colors.white, width: 2),
+                borderRadius: BorderRadius.circular(999),
+                // color: Colors.black.withOpacity(0.10), // glass look
+                color: Colors.black, // glass look
+                border: Border.all(color: Colors.white, width: 0),
               ),
               child: LiquidGlassBottomBar(
                 height: 60,
@@ -49,9 +54,8 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
 
                 /// Keep bar transparent
                 barBlurSigma: 0,
-                activeBlurSigma: 0,
-                activeColor: Colors.black,
-
+                activeBlurSigma: 10,
+                activeColor: Colors.white,
                 onTap: (index) {
                   setState(() => currentIndex = index);
                 },

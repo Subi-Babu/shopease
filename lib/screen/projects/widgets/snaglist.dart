@@ -37,7 +37,7 @@ class _SnaglistState extends State<Snaglist> {
     super.initState();
   }
 
-  // ✅ NEW METHOD: Initialize dropdowns with API values
+  // ✅ FIXED: Proper initialization with type-safe comparison
   void _initializePriorityDropdowns(ProjectProvider project) {
     final allSnags = project.snagListModel?.projectSnagList ?? [];
     final dropdownList = project.snagDropdownModel?.snagStatusDropDown ?? [];
@@ -51,12 +51,33 @@ class _SnaglistState extends State<Snaglist> {
     for (var snag in allSnags) {
       final snagStatusId = snag.snagStatusId;
 
-      // Find the matching dropdown item
-      SnagStatusDropDown matchedItem = dropdownList.firstWhere(
-        (dropdownItem) => dropdownItem.value == snagStatusId,
-        orElse: () => dropdownList.first, // Fallback to first item
+      // ✅ Debug: Print what we're looking for
+      debugPrint(
+        "Looking for snagStatusId: $snagStatusId for snag: ${snag.details}",
       );
 
+      // ✅ Find the EXACT object from the dropdown list by comparing VALUES
+      SnagStatusDropDown matchedItem = dropdownList.firstWhere(
+        (dropdownItem) {
+          // Convert both to strings for comparison to avoid type mismatches
+          final dropdownValue = dropdownItem.value?.toString();
+          final snagValue = snagStatusId?.toString();
+
+          debugPrint(
+            "Comparing dropdown value: $dropdownValue with snag value: $snagValue",
+          );
+
+          return dropdownValue == snagValue;
+        },
+        orElse: () {
+          debugPrint("No match found, using first item");
+          return dropdownList.first;
+        },
+      );
+
+      debugPrint(
+        "Matched item label: ${matchedItem.label}, value: ${matchedItem.value}",
+      );
       project.selectedSnagStatusDropList.add(matchedItem);
     }
 
@@ -135,7 +156,14 @@ class _SnaglistState extends State<Snaglist> {
                               child: DropdownButtonHideUnderline(
                                 child: DropdownButton<SnagStatusDropDown>(
                                   value: project.selectedSnagStatus,
-
+                                  // ✅ Add hint to show "Select Priority" when null
+                                  hint: Text(
+                                    "Select Priority",
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
                                   icon: const Icon(
                                     Icons.keyboard_arrow_down,
                                     size: 14,
@@ -182,7 +210,8 @@ class _SnaglistState extends State<Snaglist> {
                                 pid: widget.projectId,
                               );
                               project.titleController.clear();
-                              project.selectedSnagId == 1;
+                              // ✅ Reset to null instead of 1
+                              project.selectedSnagStatus = null;
                             },
                           ),
                         ],
@@ -405,11 +434,12 @@ class _SnaglistState extends State<Snaglist> {
                   priorityValue =
                       project.selectedSnagStatusDropList[actualIndex];
                 } else {
-                  // Fallback: match by snagStatusId
+                  // Fallback: match by snagStatusId using string comparison
                   final list =
                       project.snagDropdownModel?.snagStatusDropDown ?? [];
                   priorityValue = list.firstWhere(
-                    (item) => item.value == snag.snagStatusId,
+                    (item) =>
+                        item.value?.toString() == snag.snagStatusId?.toString(),
                     orElse: () =>
                         list.isNotEmpty ? list.first : SnagStatusDropDown(),
                   );
@@ -445,9 +475,22 @@ class _SnaglistState extends State<Snaglist> {
                   },
                   dataVal: percentageValue,
 
-                  // Priority dropdown handler
+                  // ✅ FIXED: Priority dropdown handler with debug logging
                   onChangedDrop: (val) async {
                     if (val != null) {
+                      // ✅ Debug logging
+                      debugPrint("=== PRIORITY CHANGE DEBUG ===");
+                      debugPrint("Selected label: ${val.label}");
+                      debugPrint("Selected value: ${val.value}");
+                      debugPrint(
+                        "Selected value type: ${val.value.runtimeType}",
+                      );
+                      debugPrint("Snag ID: ${snag.id}");
+                      debugPrint("Current snagStatusId: ${snag.snagStatusId}");
+                      debugPrint(
+                        "Current snagStatusId type: ${snag.snagStatusId.runtimeType}",
+                      );
+
                       // Ensure list is large enough
                       while (project.selectedSnagStatusDropList.length <=
                           actualIndex) {
@@ -472,6 +515,13 @@ class _SnaglistState extends State<Snaglist> {
                       print(
                         "----------Priority changed at index $actualIndex--${val.label}",
                       );
+
+                      // ✅ Refresh data after update to ensure sync
+                      await project.fetchSnagList(
+                        context: context,
+                        id: widget.projectId ?? "",
+                      );
+                      _initializePriorityDropdowns(project);
                     }
                   },
                   datadrop: priorityValue,
@@ -518,7 +568,7 @@ class _SnaglistState extends State<Snaglist> {
                 // Find the actual index in the full allSnags list
                 final actualIndex = allSnags.indexOf(snag);
 
-                // ✅ Get priority for completed items
+                // ✅ Get priority for completed items with string comparison
                 SnagStatusDropDown? priorityValue;
                 if (project.selectedSnagStatusDropList.length > actualIndex) {
                   priorityValue =
@@ -527,7 +577,8 @@ class _SnaglistState extends State<Snaglist> {
                   final list =
                       project.snagDropdownModel?.snagStatusDropDown ?? [];
                   priorityValue = list.firstWhere(
-                    (item) => item.value == snag.snagStatusId,
+                    (item) =>
+                        item.value?.toString() == snag.snagStatusId?.toString(),
                     orElse: () =>
                         list.isNotEmpty ? list.first : SnagStatusDropDown(),
                   );
@@ -672,11 +723,7 @@ class _SnaglistState extends State<Snaglist> {
                       }
                       return Colors.grey.shade300;
                     }),
-                    onChanged: onCheckboxChanged == null
-                        ? null
-                        : (project.memberLoads == false
-                              ? null
-                              : onCheckboxChanged),
+                    onChanged: onCheckboxChanged,
                   ),
                   InkWell(
                     onTap: deleteTap,
@@ -712,12 +759,47 @@ class _SnaglistState extends State<Snaglist> {
     return textPainter.didExceedMaxLines;
   }
 
+  // ✅ FIXED: Priority dropdown with proper value matching using string comparison
   Widget _priorityDropdown({
     required ProjectProvider project,
     required void Function(SnagStatusDropDown?) onChangedDrop,
     required SnagStatusDropDown? val,
   }) {
     final list = project.snagDropdownModel?.snagStatusDropDown ?? [];
+
+    // Handle empty list case
+    if (list.isEmpty) {
+      return Container(
+        height: 30,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          color: Colors.white,
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Center(
+          child: Text("No options", style: TextStyle(fontSize: 11)),
+        ),
+      );
+    }
+
+    // ✅ Find exact match by value (ID) using string comparison to avoid type issues
+    SnagStatusDropDown? selectedItem;
+    if (val?.value != null) {
+      try {
+        selectedItem = list.firstWhere(
+          (item) => item.value?.toString() == val!.value?.toString(),
+        );
+        debugPrint(
+          "Priority Dropdown - Found match: ${selectedItem.label} with value: ${selectedItem.value}",
+        );
+      } catch (e) {
+        debugPrint(
+          "Priority Dropdown - No match found for value: ${val?.value}",
+        );
+        selectedItem = null; // If no match found, show "Select Priority"
+      }
+    }
 
     return Container(
       height: 30,
@@ -729,7 +811,11 @@ class _SnaglistState extends State<Snaglist> {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<SnagStatusDropDown>(
-          value: val,
+          value: selectedItem, // ✅ Use the matched item or null
+          hint: Text(
+            "Select Priority",
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          ),
           icon: const Icon(Icons.keyboard_arrow_down, size: 14),
           items: list.map((e) {
             return DropdownMenuItem<SnagStatusDropDown>(

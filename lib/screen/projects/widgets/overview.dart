@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -5,12 +6,15 @@ import 'package:provider/provider.dart';
 import 'package:youbuilt/custom_widgets/custom_button.dart';
 import 'package:youbuilt/model/project_members.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
+import 'package:youbuilt/screen/projects/activity_page.dart';
 import 'package:youbuilt/screen/sign_up.dart';
 import 'package:youbuilt/utils/colors.dart';
 import 'package:youbuilt/utils/constants.dart';
 
 class OverviewTab extends StatefulWidget {
-  const OverviewTab({super.key});
+  final String? projectId;
+
+  OverviewTab({super.key, required this.projectId});
 
   @override
   State<OverviewTab> createState() => _OverviewTabState();
@@ -18,12 +22,30 @@ class OverviewTab extends StatefulWidget {
 
 class _OverviewTabState extends State<OverviewTab> {
   // Store access level for each member by their index
+
   Map<int, String> memberAccessLevels = {};
   final List<String> accessList = ["Owner", "Full Access", "Limited"];
 
   // Search controller for filtering members
   final TextEditingController searchController = TextEditingController();
   String searchQuery = "";
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final reg = Provider.of<ProjectProvider>(context, listen: false);
+
+      await reg.fetchStageCategory(
+        context: context,
+        id: widget.projectId ?? "",
+      );
+      reg.fetchActivity(
+        context: context,
+        id: widget.projectId ?? "",
+        keyword: "Today",
+      );
+    });
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -87,31 +109,39 @@ class _OverviewTabState extends State<OverviewTab> {
                     const Spacer(),
 
                     // Work Status Badge
-                    Container(
-                      padding: EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: _getStatusBackgroundColor(
-                          project.projectListViewModel?.data?.workStatus,
-                        ),
-                        border: Border.all(
-                          color: _getStatusBorderColor(
-                            project.projectListViewModel?.data?.workStatus,
+                    project.load == true
+                        ? SizedBox()
+                        : Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: _getStatusBackgroundColor(
+                                project.projectListViewModel?.data?.workStatus,
+                              ),
+                              border: Border.all(
+                                color: _getStatusBorderColor(
+                                  project
+                                      .projectListViewModel
+                                      ?.data
+                                      ?.workStatus,
+                                ),
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              "${project.projectListViewModel?.data?.workStatus ?? ""}",
+                              style: TextStyle(
+                                color: _getStatusTextColor(
+                                  project
+                                      .projectListViewModel
+                                      ?.data
+                                      ?.workStatus,
+                                ),
+                                fontFamily: "Manrope",
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12.sp,
+                              ),
+                            ),
                           ),
-                        ),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        "${project.projectListViewModel?.data?.workStatus ?? ""}",
-                        style: TextStyle(
-                          color: _getStatusTextColor(
-                            project.projectListViewModel?.data?.workStatus,
-                          ),
-                          fontFamily: "Manrope",
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12.sp,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -146,6 +176,7 @@ class _OverviewTabState extends State<OverviewTab> {
               kSpacer,
 
               // Recent Activity Section
+              // Recent Activity Section
               Container(
                 color: Colors.white,
                 padding: EdgeInsets.all(16.w),
@@ -163,39 +194,67 @@ class _OverviewTabState extends State<OverviewTab> {
                             color: Color(0xff131313),
                           ),
                         ),
-                        Text(
-                          "View All",
-                          style: TextStyle(
-                            fontFamily: "Manrope",
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16.sp,
-                            color: Colors.red,
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ActivityPage(
+                                  projectId: widget.projectId ?? '',
+                                ),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            "View All",
+                            style: TextStyle(
+                              fontFamily: "Manrope",
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16.sp,
+                              color: Colors.red,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    Row(
-                      children: [
-                        Text(
-                          "Latest : ",
-                          style: TextStyle(
-                            fontFamily: "Manrope",
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16.sp,
-                            color: Color(0xff131313),
+                    SizedBox(height: 8.h),
+                    // Check if activities exist before accessing
+                    if (project.activityModel?.projectActivity != null &&
+                        project.activityModel!.projectActivity!.isNotEmpty)
+                      Row(
+                        children: [
+                          Text(
+                            "Latest : ",
+                            style: TextStyle(
+                              fontFamily: "Manrope",
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16.sp,
+                              color: Color(0xff131313),
+                            ),
                           ),
-                        ),
-                        Text(
-                          "gfhg mkbhgfyuuyikuh",
-                          style: TextStyle(
-                            fontFamily: "Manrope",
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16.sp,
-                            color: Color(0xff737373),
+                          Expanded(
+                            child: Text(
+                              "${project.activityModel!.projectActivity!.first.description ?? ""} by ${project.activityModel!.projectActivity!.first.users?.name ?? ""}",
+                              style: TextStyle(
+                                fontFamily: "Manrope",
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16.sp,
+                                color: Color(0xff737373),
+                              ),
+                            ),
                           ),
+                        ],
+                      )
+                    else
+                      Text(
+                        "No recent activity",
+                        style: TextStyle(
+                          fontFamily: "Manrope",
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14.sp,
+                          color: Color(0xff737373),
                         ),
-                      ],
-                    ),
+                      ),
                   ],
                 ),
               ),
@@ -219,7 +278,7 @@ class _OverviewTabState extends State<OverviewTab> {
                 padding: const EdgeInsets.all(16),
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: 6,
+                itemCount: project.stageCategoryModel?.data?.length ?? 0,
                 separatorBuilder: (context, index) =>
                     const SizedBox(height: 12),
                 itemBuilder: (context, index) {
@@ -244,10 +303,24 @@ class _OverviewTabState extends State<OverviewTab> {
                           // Left Icon
                           CircleAvatar(
                             backgroundColor: const Color(0xffF4F4F4),
-                            radius: 30,
-                            child: Image.asset(
-                              "assets/planning_888979.png",
+                            radius: 25,
+                            child: CachedNetworkImage(
+                              imageUrl:
+                                  project
+                                      .stageCategoryModel
+                                      ?.data?[index]
+                                      .image ??
+                                  "",
                               height: 30,
+                              width: 30,
+                              fit: BoxFit.contain,
+                              placeholder: (context, url) => const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: SizedBox(),
+                              ),
+                              errorWidget: (context, url, error) =>
+                                  const Icon(Icons.image_not_supported),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -262,7 +335,11 @@ class _OverviewTabState extends State<OverviewTab> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        "Preliminary Works",
+                                        project
+                                                .stageCategoryModel
+                                                ?.data?[index]
+                                                .name ??
+                                            "",
                                         style: TextStyle(
                                           fontSize: 16,
                                           color: primaryClr,
@@ -271,10 +348,16 @@ class _OverviewTabState extends State<OverviewTab> {
                                         ),
                                       ),
                                     ),
-                                    const Icon(
-                                      Icons.check_circle_outline,
-                                      color: Colors.green,
-                                    ),
+                                    project
+                                                .stageCategoryModel
+                                                ?.data?[index]
+                                                .isCompleted ==
+                                            true
+                                        ? Icon(
+                                            Icons.check_circle_outline,
+                                            color: Colors.green,
+                                          )
+                                        : SizedBox(),
                                   ],
                                 ),
                                 const SizedBox(height: 6),
@@ -290,7 +373,15 @@ class _OverviewTabState extends State<OverviewTab> {
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
-                                        "13 Oct, 25 - 25 Feb, 26",
+                                        formatDate(
+                                          project
+                                                  .stageCategoryModel
+                                                  ?.data?[index]
+                                                  .createdAt
+                                                  .toString() ??
+                                              "",
+                                        ),
+
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Color(0xff8A8A8A),
@@ -319,6 +410,12 @@ class _OverviewTabState extends State<OverviewTab> {
         },
       ),
     );
+  }
+
+  String formatDate(String? date) {
+    if (date == null || date.isEmpty) return "";
+    final parsedDate = DateTime.parse(date);
+    return DateFormat('dd MMM yyyy').format(parsedDate);
   }
 
   // Show Invite Members Dialog

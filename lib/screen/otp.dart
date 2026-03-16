@@ -26,6 +26,8 @@ class _UserOtpScreeenState extends State<UserOtpScreeen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<LoginProvider>(context, listen: false).startResendTimer();
+      Provider.of<LoginProvider>(context, listen: false).otpContrl.clear();
+      Provider.of<LoginProvider>(context, listen: false).otpErrorMessage = null;
     });
   }
 
@@ -49,6 +51,13 @@ class _UserOtpScreeenState extends State<UserOtpScreeen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    InkWell(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      child: Icon(Icons.arrow_back, color: primaryClr),
+                    ),
+                    SizedBox(height: 20),
                     SizedBox(height: MediaQuery.of(context).padding.top * 3),
                     FirstSection(
                       heading: "OTP \nVerification",
@@ -85,6 +94,18 @@ class _UserOtpScreeenState extends State<UserOtpScreeen> {
                         ), // Limits input to 6 characters
                       ],
                     ),
+                    if (otp.otpErrorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          otp.otpErrorMessage!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+
                     const Spacer(),
                     Center(
                       child: RichText(
