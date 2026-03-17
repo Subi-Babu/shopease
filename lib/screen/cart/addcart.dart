@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:youbuilt/custom_widgets/custom_button.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
+import 'package:youbuilt/screen/bottom_nav.dart';
 import 'package:youbuilt/screen/cart/payementPage.dart';
 import 'package:youbuilt/screen/profile/address.dart';
 import '../../model/cart_list_model.dart';
@@ -37,10 +38,22 @@ class _MyCartPageState extends State {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xffF4F4F4),
+      // backgroundColor: Color(0xffF4F4F4),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        leading: SizedBox(),
+        // leading: SizedBox(),
+        leading: InkWell(
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          onTap: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => BottomNavScreen()),
+            );
+          },
+          child: Icon(Icons.arrow_back),
+        ),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
@@ -53,7 +66,7 @@ class _MyCartPageState extends State {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
 
       // ✅ FIX: Checkout bar is now fixed at the bottom via bottomNavigationBar
@@ -237,7 +250,7 @@ class _MyCartPageState extends State {
             padding: const EdgeInsets.all(12),
             margin: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Color(0xffF4F4F4),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -271,7 +284,7 @@ class _MyCartPageState extends State {
           padding: const EdgeInsets.all(12),
           margin: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Color(0xffF4F4F4),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -349,7 +362,7 @@ class _MyCartPageState extends State {
       padding: const EdgeInsets.all(15),
       margin: const EdgeInsets.only(left: 16, right: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color(0xffF4F4F4),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -508,7 +521,7 @@ class _MyCartPageState extends State {
           margin: const EdgeInsets.symmetric(horizontal: 16),
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: Colors.white, // ✅ Green background
+            color: Color(0xffF4F4F4), // ✅ Green background
             borderRadius: BorderRadius.circular(12),
           ),
           child: DropdownButtonFormField<int>(
@@ -718,6 +731,7 @@ class _MyCartPageState extends State {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: Colors.white,
+            border: Border.all(color: Color(0xffF4F4F4)),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(

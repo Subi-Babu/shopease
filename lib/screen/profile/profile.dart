@@ -195,7 +195,7 @@ class _ProfileMenuPageState extends State<ProfileMenuPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => MyOrdersPage(),
+                                builder: (context) => MyOrdersPage(btn: false),
                               ),
                             );
                           },

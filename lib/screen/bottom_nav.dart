@@ -8,6 +8,7 @@ import 'package:youbuilt/screen/profile/profile.dart';
 import 'package:youbuilt/screen/projects/projects.dart';
 
 import 'home.dart';
+import 'order/order_tab_Page.dart';
 
 class BottomNavScreen extends StatefulWidget {
   const BottomNavScreen({Key? key}) : super(key: key);
@@ -22,7 +23,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   final List<Widget> _pages = const [
     HomeScreen(),
     MyCartPage(),
-    MyOrdersPage(),
+    OrderTabPage(),
     // ProjectScreen(),
     ProfileMenuPage(),
   ];

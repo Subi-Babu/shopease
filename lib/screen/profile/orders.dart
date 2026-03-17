@@ -9,7 +9,9 @@ import '../../providers/signin/project_provider.dart';
 import '../../utils/colors.dart';
 
 class MyOrdersPage extends StatefulWidget {
-  const MyOrdersPage({super.key});
+  final bool btn;
+
+  const MyOrdersPage({super.key, this.btn = false});
 
   @override
   State<MyOrdersPage> createState() => _MyOrdersPageState();
@@ -59,8 +61,10 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        leading: SizedBox(),
-        // leading: const BackButton(color: Colors.black),
+        // leading: SizedBox(),
+        leading: (widget.btn ?? false)
+            ? const SizedBox()
+            : const BackButton(color: Colors.black),
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
         title: Text(
@@ -72,7 +76,7 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: (widget.btn ?? true) ? true : false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -230,6 +234,7 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
                                   id: item.id?.toString() ?? "",
                                 );
                               },
+                              ordertatus: item.orderStatus ?? "",
                               orderId: item.orderId?.toString() ?? "",
                               items: item.cCount?.orderItems ?? "0",
                               total: item.totalPrice ?? "",
@@ -248,6 +253,7 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
 
 class OrderCard extends StatelessWidget {
   final String orderId;
+  final String ordertatus;
   final dynamic items;
   final dynamic total;
   final void Function()? onTap;
@@ -255,6 +261,7 @@ class OrderCard extends StatelessWidget {
   const OrderCard({
     super.key,
     required this.orderId,
+    required this.ordertatus,
     required this.items,
     required this.total,
     required this.onTap,
@@ -275,14 +282,43 @@ class OrderCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "#$orderId",
-              style: TextStyle(
-                color: const Color(0xff737373),
-                fontFamily: "Manrope",
-                fontWeight: FontWeight.w500,
-                fontSize: 14.sp,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+              children: [
+                Text(
+                  "#$orderId",
+                  style: TextStyle(
+                    color: const Color(0xff737373),
+                    fontFamily: "Manrope",
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14.sp,
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.only(
+                    left: 4,
+                    right: 4,
+                    top: 2,
+                    bottom: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.green),
+                  ),
+                  child: Text(
+                    "$ordertatus",
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontFamily: "Manrope",
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14.sp,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 10),
             Row(

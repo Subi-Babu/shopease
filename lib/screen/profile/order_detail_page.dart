@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
 
@@ -27,7 +28,7 @@ class OrderDetailsPage extends StatelessWidget {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -95,13 +96,16 @@ class OrderDetailsPage extends StatelessWidget {
                           Icon(Icons.location_pin, color: Color(0xff737373)),
                           SizedBox(width: 8),
 
-                          Text(
-                            "${order.orderViewModel?.data?.userAddress?.address ?? ""},${order.orderViewModel?.data?.userAddress?.addressTitle ?? ""}",
-                            style: TextStyle(
-                              color: primaryClr,
-                              fontFamily: "Manrope",
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14.sp,
+                          Expanded(
+                            child: Text(
+                              "${order.orderViewModel?.data?.userAddress?.address ?? ""},${order.orderViewModel?.data?.userAddress?.addressTitle ?? ""}",
+                              maxLines: 4,
+                              style: TextStyle(
+                                color: primaryClr,
+                                fontFamily: "Manrope",
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14.sp,
+                              ),
                             ),
                           ),
                         ],
@@ -111,8 +115,10 @@ class OrderDetailsPage extends StatelessWidget {
                 ),
                 Text(
                   "Order Summary",
+
                   style: TextStyle(
                     color: Color(0xff737373),
+                    height: 4,
                     fontFamily: "Manrope",
                     fontWeight: FontWeight.w600,
                     fontSize: 16.sp,
@@ -176,31 +182,80 @@ class OrderDetailsPage extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      order
-                                              .orderViewModel
-                                              ?.data
-                                              ?.orderItems?[index]
-                                              ?.item
-                                              ?.name ??
-                                          "",
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            order
+                                                    .orderViewModel
+                                                    ?.data
+                                                    ?.orderItems?[index]
+                                                    ?.item
+                                                    ?.name ??
+                                                "",
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          margin: EdgeInsets.only(bottom: 8),
+                                          padding: EdgeInsets.only(
+                                            left: 4,
+                                            right: 4,
+                                            top: 2,
+                                            bottom: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.green,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            order
+                                                    .orderViewModel
+                                                    ?.data
+                                                    ?.orderItems?[index]
+                                                    ?.storeStatus ??
+                                                "",
+                                            style: TextStyle(
+                                              color: Colors.green,
+                                              fontFamily: "Manrope",
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14.sp,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text("Qty: ${item?.qty ?? 1}"),
+                                    const SizedBox(height: 5),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+
+                                      children: [
+                                        Text("Qty: ${item?.qty ?? 1}"),
+                                        Text(
+                                          "₹${NumberFormat('#,##0.00').format(order.orderViewModel?.data?.orderItems?[index]?.calculatorPrice ?? 0)}",
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),
 
                               /// Price
-                              Text(
-                                "₹${order.orderViewModel?.data?.orderItems?[index]?.calculatorPrice ?? ""}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
                             ],
                           );
                         },
@@ -225,7 +280,7 @@ class OrderDetailsPage extends StatelessWidget {
                                   "Item Total (${order.orderViewModel?.data?.orderItems?.length ?? 0}item)",
                                 ),
                                 Text(
-                                  "₹${order.orderViewModel?.data?.grandTotal.toStringAsFixed(2) ?? 0}",
+                                  "₹${NumberFormat('#,##0.00').format(order.orderViewModel?.data?.grandTotal ?? 0)}",
                                 ),
                               ],
                             ),
@@ -236,7 +291,8 @@ class OrderDetailsPage extends StatelessWidget {
                               children: [
                                 const Text("Tax"),
                                 Text(
-                                  "₹${order.orderViewModel?.data?.totalGst.toStringAsFixed(2) ?? 0}",
+                                  "₹${NumberFormat('#,##0.00').format(order.orderViewModel?.data?.totalGst ?? 0)}",
+                                  // ),
                                   style: const TextStyle(color: Colors.green),
                                 ),
                               ],
@@ -252,7 +308,8 @@ class OrderDetailsPage extends StatelessWidget {
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 Text(
-                                  "₹${order.orderViewModel?.data?.totalPrice.toStringAsFixed(2) ?? 0}",
+                                  "₹${NumberFormat('#,##0.00').format(order.orderViewModel?.data?.totalPrice ?? 0)}",
+
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),

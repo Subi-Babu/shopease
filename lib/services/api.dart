@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:math' hide log;
-
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -26,6 +26,7 @@ import 'package:youbuilt/model/profile_model.dart';
 import 'package:youbuilt/model/project_file_list_model.dart';
 import 'package:youbuilt/model/project_list_model.dart';
 import 'package:youbuilt/model/project_members.dart';
+import 'package:youbuilt/model/project_single_model.dart';
 import 'package:youbuilt/model/project_type_model.dart';
 import 'package:youbuilt/model/project_view_model.dart';
 import 'package:youbuilt/model/projectfolder_model.dart';
@@ -701,11 +702,16 @@ class NetworkHelper {
     }
   }
 
-  Future<SnagListModel?> getSnagList(BuildContext context, String? id) async {
+  Future<SnagListModel?> getSnagList(
+    BuildContext context, {
+    required String? page,
+    required String? limit,
+    required String? id,
+  }) async {
     http.Response? response;
     response = await _getRequest(
       context: context,
-      url: "${Urls.snaglistUrl}/$id",
+      url: "${Urls.snaglistUrl}/$id&page=$page&limit=$limit",
     );
     if (response != null) {
       log("$response");
@@ -1030,11 +1036,16 @@ class NetworkHelper {
     }
   }
 
-  Future<WalletModel?> getWalletList(BuildContext context, String? id) async {
+  Future<WalletModel?> getWalletList(
+    BuildContext context,
+    String? id,
+    String? page,
+    String? limit,
+  ) async {
     http.Response? response;
     response = await _getRequest(
       context: context,
-      url: "${Urls.walletUrl}/$id",
+      url: "${Urls.walletUrl}/$id?page=$page&limit=$limit",
     );
     if (response != null) {
       log("$response");
@@ -1686,6 +1697,7 @@ class NetworkHelper {
       request.fields['email'] = email;
       request.fields['name'] = clientName;
       request.fields['code'] = "+91";
+      request.fields['location'] = address;
       request.fields['projectType'] = projectTypeNAme;
       request.fields['phoneNumber'] = phoneNo;
       request.fields['date'] = date;
@@ -1696,11 +1708,32 @@ class NetworkHelper {
 
       // 📎 Optional file
       if (file != null) {
-        request.files.add(await http.MultipartFile.fromPath('file', file.path));
+        final mimeType =
+            lookupMimeType(file.path) ?? 'application/octet-stream';
+        final mimeParts = mimeType.split('/');
+
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'file',
+            file.path,
+            filename: file.path.split('/').last,
+            contentType: MediaType(mimeParts[0], mimeParts[1]),
+          ),
+        );
       }
+      print("FIELDS: ${request.fields}");
+      print("FILES: ${request.files.length}");
+      debugPrint("FILE PATH: ${file?.path}");
+      debugPrint("FILE EXISTS: ${await File(file!.path).exists()}");
+      debugPrint("FILE SIZE: ${await File(file.path).length()}");
+      // final response = await request.send();
+      // final respStr = await response.stream.bytesToString();
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
+
+      print("STATUS: ${response.statusCode}");
+      // print("BODY: $respStr");
       debugPrint(
         "url - $uri \n header  \n---tokenn00---$accessToken body - $request \n response Status - ${response.statusCode} \n response - ${response.body}",
       );
@@ -1818,6 +1851,62 @@ class NetworkHelper {
       http.Response? response = await _postRequest(
         context: context,
         url: Urls.cartUrl,
+        body: requestBody,
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      print("Add To Cart Error: $e");
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> buyNow({
+    required BuildContext context,
+    required String addressid,
+    required String total,
+    required String grandTotal,
+    required String storeId,
+    required String itemId,
+    required String mrp,
+    required String qty,
+    required String categoryId,
+    required String calPrice,
+    required List<Map<String, dynamic>> attributeCategory,
+    required Map<String, dynamic> attributeName,
+  }) async {
+    try {
+      final Map<String, dynamic> requestBody = {
+        "grandTotal": grandTotal,
+        "addressId": addressid,
+        "totalPrice": total,
+        "totalcalculatorPrice": calPrice,
+
+        "cart": [
+          {
+            "storeId": storeId,
+            "itemId": itemId,
+            "mrp": mrp,
+            "qty": qty,
+            "calculatorPrice": calPrice,
+            "categoryId": categoryId,
+            "attributecategory": attributeCategory,
+            "attributeName": attributeName,
+          },
+        ],
+      };
+
+      /// ✅ PRINT BODY
+      print("Add To Cart Request Body:");
+      print(jsonEncode(requestBody));
+
+      http.Response? response = await _postRequest(
+        context: context,
+        url: Urls.buynowUrl,
         body: requestBody,
       );
 
@@ -2068,6 +2157,25 @@ class NetworkHelper {
     }
   }
 
+  Future<ProjectWithIdModel?> getProjectSingle(
+    BuildContext context,
+    String? id,
+  ) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.projectIngleUrl}/$id",
+    );
+
+    if (response != null) {
+      // log("URL: $uri");
+      log("Response: ${response.body}");
+      return ProjectWithIdModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>> updateAddress({
     required BuildContext context,
     required String addressId,
@@ -2116,6 +2224,28 @@ class NetworkHelper {
     }
   }
 
+  Future<Map<String, dynamic>> projectDelete({
+    required BuildContext context,
+
+    required String? pid,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _deleteRequest(
+        context: context,
+        url: "${Urls.projectDeleteUrl}/$pid",
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
   Future<Map<String, dynamic>> editQty({
     required BuildContext context,
     required String? pid,
@@ -2129,6 +2259,37 @@ class NetworkHelper {
         context: context,
         url: "${Urls.qtyEdit}/$pid",
         body: {"calculatorPrice": calPrice, "mrp": price, "qty": qty},
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> editProjecct({
+    required BuildContext context,
+    required String? name,
+    required String? pid,
+    required String? dueDate,
+    required String? budget,
+    required String? description,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _patchRequest(
+        context: context,
+        url: "${Urls.projectIngleUrl}/$pid",
+        body: {
+          "name": name,
+          "dueDate": dueDate,
+          "budget": budget,
+          "description": description,
+        },
       );
 
       if (response == null) {
@@ -2212,6 +2373,61 @@ class NetworkHelper {
       return null;
     }
   }
+
+  Future<String?> downloadSnagReport(int id) async {
+    try {
+      final url = Uri.parse("${Urls.downloadSnagUrl}?projectId=$id");
+
+      final response = await http.get(
+        url,
+        headers: {"Authorization": "Bearer $accessToken"},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File("${dir.path}/snag_report_$id.pdf");
+
+        await file.writeAsBytes(response.bodyBytes);
+
+        print("Report downloaded to: ${file.path}");
+        return file.path; // return path
+      } else {
+        print("Failed to download report");
+        return null;
+      }
+    } catch (e) {
+      print("PDF Error: $e");
+      return null;
+    }
+  }
+
+  Future<String?> downloadWalletReport(int id) async {
+    try {
+      final url = Uri.parse("${Urls.downloadWalletUrl}?projectId=$id");
+
+      final response = await http.get(
+        url,
+        headers: {"Authorization": "Bearer $accessToken"},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File("${dir.path}/wallet_report_$id.pdf");
+
+        await file.writeAsBytes(response.bodyBytes);
+
+        print("Report downloaded to: ${file.path}");
+        return file.path; // return path
+      } else {
+        print("Failed to download report");
+        return null;
+      }
+    } catch (e) {
+      print("PDF Error: $e");
+      return null;
+    }
+  }
+
   Future<String?> downloadQuotesPdf(int id) async {
     try {
       final url = Uri.parse("${Urls.downloadQotesUrl}/$id");

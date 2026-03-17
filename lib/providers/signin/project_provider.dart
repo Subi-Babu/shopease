@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:youbuilt/model/activity_model.dart';
 import 'package:youbuilt/model/addressListModel.dart' hide Datum;
@@ -22,6 +23,7 @@ import 'package:youbuilt/model/profile_model.dart';
 import 'package:youbuilt/model/project_file_list_model.dart';
 import 'package:youbuilt/model/project_list_model.dart';
 import 'package:youbuilt/model/project_members.dart';
+import 'package:youbuilt/model/project_single_model.dart';
 import 'package:youbuilt/model/project_view_model.dart';
 import 'package:youbuilt/model/projectfolder_model.dart';
 import 'package:youbuilt/model/quatation.dart' hide Datum;
@@ -373,7 +375,6 @@ class ProjectProvider extends ChangeNotifier {
 
       if (responseData["status"] == true) {
         ToastUtil.show(responseData["message"]);
-        fetchSnagList(id: pid ?? "", context: context);
 
         if (!context.mounted) return;
 
@@ -565,7 +566,7 @@ class ProjectProvider extends ChangeNotifier {
 
       if (responseData["status"] == true) {
         ToastUtil.show(responseData["message"]);
-        fetchSnagList(context: context, id: pid ?? "");
+        fetchSnagList(context: context, id: pid ?? "", pge: "2", limit: "10");
       } else {
         String errorMessage =
             responseData["message"] ??
@@ -631,38 +632,55 @@ class ProjectProvider extends ChangeNotifier {
   Future fetchSnagList({
     required BuildContext context,
     required String id,
+    required String pge,
+    required String limit,
   }) async {
     loading1 = true;
     notifyListeners();
 
     try {
-      final response = await NetworkHelper().getSnagList(context, id);
+      final response = await NetworkHelper().getSnagList(
+        context,
+        id: id,
+        page: pge,
+        limit: limit,
+      );
 
       if (response != null) {
-        snagListModel = response; // Store fetched subcategories
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (context) => ViewBookTaskDetails(
-        //       taskId: idd.toString(),
-        //     ),
-        //   ),
-        // );
+        /// ✅ FIRST PAGE → replace list
+        if (pge == "1") {
+          snagListModel = response;
+        }
+        /// ✅ NEXT PAGES → append items
+        else {
+          snagListModel?.projectSnagList?.addAll(
+            response.projectSnagList ?? [],
+          );
+        }
+
+        /// ✅ Recalculate pending count
         final pendingCount =
             snagListModel?.projectSnagList
                 ?.where((e) => e.isComplete == false)
                 .length ??
             0;
 
-        selectedPercentages = List.generate(pendingCount, (index) => "0%");
-        notifyListeners();
+        /// ✅ Maintain percentage list
+        if (selectedPercentages.length < pendingCount) {
+          selectedPercentages.addAll(
+            List.generate(
+              pendingCount - selectedPercentages.length,
+              (index) => "0%",
+            ),
+          );
+        }
 
-        log("Fetched details successfully.");
+        log("Fetched snag list page $pge successfully.");
       } else {
-        log("Failed to fetch.");
+        log("Failed to fetch snag list.");
       }
     } catch (e) {
-      log("Error fetching : $e");
+      log("Error fetching snag list: $e");
     } finally {
       loading1 = false;
       notifyListeners();
@@ -747,10 +765,11 @@ class ProjectProvider extends ChangeNotifier {
         ToastUtil.show(
           responseData["message"] ?? "Expenses added successfully",
         );
-        fetchWallet(context: context, id: projectId);
+        // fetchWallet(context: context, id: projectId,limit: "",page: );
+        fetchWallet(context: context, id: projectId, page: "1", limit: "10");
 
         if (!context.mounted) return;
-        Navigator.pop(context);
+        // Navigator.pop(context);
       } else {
         final errorMessage =
             responseData["message"] ??
@@ -809,12 +828,10 @@ class ProjectProvider extends ChangeNotifier {
       log("${responseData["status"]}");
 
       if (responseData["status"] == true) {
-        ToastUtil.show(
-          responseData["message"] ?? "Expenses added successfully",
-        );
-        fetchWallet(context: context, id: projectId);
+        ToastUtil.show(responseData["message"] ?? "Fund added successfully");
+        fetchWallet(context: context, id: projectId, page: "1", limit: "10");
         if (!context.mounted) return;
-        Navigator.pop(context);
+        // Navigator.pop(context);
       } else {
         final errorMessage =
             responseData["message"] ??
@@ -1001,35 +1018,70 @@ class ProjectProvider extends ChangeNotifier {
   int? selectedExpenseCategoryId;
 
   wallet.WalletModel? walletModel;
+  // Add these fields to ProjectProvider
+  bool hasReachedMax = false;
+  // our existing fetchWallet - resets list on fresh load
   Future fetchWallet({
     required BuildContext context,
     required String id,
+    required String page,
+    required String limit,
   }) async {
     load = true;
+    hasReachedMax = false; // 👈 reset
     notifyListeners();
 
     try {
-      final response = await NetworkHelper().getWalletList(context, id);
-
+      final response = await NetworkHelper().getWalletList(
+        context,
+        id,
+        page,
+        limit,
+      );
       if (response != null) {
-        walletModel = response; // Store fetched subcategories
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (context) => ViewBookTaskDetails(
-        //       taskId: idd.toString(),
-        //     ),
-        //   ),
-        // );
-        log("Fetched details successfully.");
-      } else {
-        log("Failed to fetch.");
+        walletModel = response;
+        // If returned items < limit, no more pages exist
+        if ((response.data?.length ?? 0) < int.parse(limit)) {
+          hasReachedMax = true;
+        }
+        log("Fetched wallet successfully.");
       }
     } catch (e) {
-      log("Error fetching : $e");
+      log("Error fetching wallet: $e");
     } finally {
       load = false;
       notifyListeners();
+    }
+  }
+
+  // New method - appends to existing list
+  Future fetchMoreWallet({
+    required BuildContext context,
+    required String id,
+    required String page,
+    required String limit,
+  }) async {
+    try {
+      final response = await NetworkHelper().getWalletList(
+        context,
+        id,
+        page,
+        limit,
+      );
+      if (response != null && response.data != null) {
+        if (response.data!.isEmpty) {
+          hasReachedMax = true; // 👈 no more data
+        } else {
+          // Append new transactions to existing list
+          walletModel?.data?.addAll(response.data!);
+          if (response.data!.length < int.parse(limit)) {
+            hasReachedMax = true;
+          }
+        }
+        notifyListeners();
+      }
+    } catch (e) {
+      log("Error fetching more wallet: $e");
     }
   }
 
@@ -1382,7 +1434,7 @@ class ProjectProvider extends ChangeNotifier {
         context: context,
         amount: amount ?? "",
         clientName: clientName ?? "",
-        date: DateFormat('dd-MM-yyyy').format(DateTime.now()),
+        date: DateFormat('MM-dd-yyyy').format(DateTime.now()),
         description: description ?? "",
         address: address ?? "",
         email: email ?? "",
@@ -1919,6 +1971,74 @@ class ProjectProvider extends ChangeNotifier {
         ToastUtil.show(responseData["message"] ?? "Cart added");
         fetchProjectList(context: context, status: "");
         fetchCartList(context: context);
+        if (!context.mounted) return;
+
+        // Navigator.pop(context);
+      } else {
+        ToastUtil.show(
+          responseData["message"] ??
+              responseData["error"] ??
+              "Please try again.",
+        );
+      }
+    } catch (e) {
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      cartLoadingMap[itemId] = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> buyNow({
+    required BuildContext context,
+    required String addressid,
+    required String pid,
+    required String total,
+    required String grandTotal,
+    required String storeId,
+    required String itemId,
+    required String mrp,
+    required String qty,
+    required String categoryId,
+    required String calPrice,
+    required List<Map<String, dynamic>> attributeCategory,
+    required Map<String, dynamic> attributeName,
+  }) async {
+    cartLoadingMap[itemId] = true;
+    notifyListeners();
+
+    try {
+      var responseData = await NetworkHelper().buyNow(
+        context: context,
+        addressid: addressid,
+        total: total,
+        grandTotal: grandTotal,
+        attributeCategory: attributeCategory,
+        attributeName: attributeName,
+        categoryId: categoryId,
+        itemId: itemId,
+        mrp: mrp,
+        qty: qty,
+        calPrice: calPrice,
+        storeId: storeId,
+      );
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(
+          responseData["message"] ?? "Buy now created successfully",
+        );
+        fetchProjectList(context: context, status: "");
+        // fetchCartList(context: context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PaymentMethodPage(
+              total: grandTotal ?? "",
+              orderId: responseData["OrderId"].toString(),
+              pid: pid ?? "",
+            ),
+          ),
+        );
         if (!context.mounted) return;
 
         // Navigator.pop(context);
@@ -2596,6 +2716,47 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> deleteProject({
+    required BuildContext context,
+    required String pid,
+
+    // String? snagId,
+  }) async {
+    memberLoads = true;
+    notifyListeners();
+
+    try {
+      var responseData = await NetworkHelper().projectDelete(
+        context: context,
+        pid: pid ?? "",
+      );
+
+      log("LOG MESSAGE222222:");
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(responseData["message"]);
+        fetchProjectList(context: context, status: "");
+      } else {
+        String errorMessage =
+            responseData["message"] ??
+            responseData["error"] ??
+            "Please try again.";
+        log("Sign$errorMessage");
+
+        if (!context.mounted) return;
+        ToastUtil.show("An error occurred. Please try again.");
+      }
+    } catch (e, stack) {
+      log("❌ exception: $e\n$stack");
+      log("Error: $e");
+      // ToastUtil.show("An error occurred. Please try again.");
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      memberLoads = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> editQty({
     required BuildContext context,
     required String? pid,
@@ -2623,6 +2784,61 @@ class ProjectProvider extends ChangeNotifier {
         if (!context.mounted) return;
         fetchCartList(
           context: context,
+        ); // log("Navigating to LoginSuccessfulScreen...");
+        //
+
+        // fetchProjectMember(context: context, id: );
+      } else {
+        String errorMessage =
+            responseData["message"] ??
+            responseData["error"] ??
+            "Please try again.";
+        log("Sign$errorMessage");
+
+        if (!context.mounted) return;
+        ToastUtil.show("An error occurred. Please try again.");
+      }
+    } catch (e, stack) {
+      log("❌ exception: $e\n$stack");
+      log("Error: $e");
+      // ToastUtil.show("An error occurred. Please try again.");
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> editProject({
+    required BuildContext context,
+    required String? name,
+    required String? pid,
+    required String? dueDate,
+    required String? budget,
+    required String? description,
+  }) async {
+    loading = true;
+    notifyListeners();
+
+    try {
+      var responseData = await NetworkHelper().editProjecct(
+        context: context,
+        pid: pid ?? "",
+        name: name ?? "",
+        budget: budget ?? "",
+        dueDate: dueDate ?? "",
+        description: description ?? "",
+      );
+
+      log("LOG MESSAGE222222:");
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(responseData["message"]);
+
+        if (!context.mounted) return;
+        fetchProjectList(
+          context: context,
+          status: "",
         ); // log("Navigating to LoginSuccessfulScreen...");
         //
 
@@ -2773,6 +2989,77 @@ class ProjectProvider extends ChangeNotifier {
       await OpenFilex.open(path);
     }
   }
+  // bool isLoading = false;
+
+  Future<void> downloadSnagPdf({
+    required BuildContext context,
+    required int id,
+  }) async {
+    try {
+      isLoading = true;
+      notifyListeners();
+
+      final path = await NetworkHelper().downloadSnagReport(id);
+
+      isLoading = false;
+      notifyListeners();
+
+      if (path != null) {
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(content: Text("Report downloaded successfully")),
+        ToastUtil.show("Report downloaded successfully");
+        // );
+      } else {
+        ToastUtil.show("Failed to download report");
+
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(content: Text("Failed to download report")),
+        // );
+      }
+    } catch (e) {
+      isLoading = false;
+      notifyListeners();
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Something went wrong")));
+    }
+  }
+
+  Future<void> downloadWalletPdf({
+    required BuildContext context,
+    required int id,
+  }) async {
+    try {
+      isLoading = true;
+      notifyListeners();
+
+      final path = await NetworkHelper().downloadWalletReport(id);
+
+      isLoading = false;
+      notifyListeners();
+
+      if (path != null) {
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(content: Text("Report downloaded successfully")),
+        ToastUtil.show("Report downloaded successfully");
+        // );
+      } else {
+        ToastUtil.show("Failed to download report");
+
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(content: Text("Failed to download report")),
+        // );
+      }
+    } catch (e) {
+      isLoading = false;
+      notifyListeners();
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Something went wrong")));
+    }
+  }
 
   Future<void> downloadQuotesPdf({
     required BuildContext context,
@@ -2788,6 +3075,48 @@ class ProjectProvider extends ChangeNotifier {
 
     if (path != null) {
       await OpenFilex.open(path);
+    }
+  }
+
+  TextEditingController titlePCntrl = TextEditingController();
+  TextEditingController budgetPCntrl = TextEditingController();
+  TextEditingController dueDatePCntrl = TextEditingController();
+  TextEditingController desPCntrl = TextEditingController();
+
+  String? formatteProjectDate;
+
+  ProjectWithIdModel? projectWithIdModel;
+
+  Future fetchSingleProject({required BuildContext context, String? id}) async {
+    itemLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getProjectSingle(context, id);
+
+      if (response != null) {
+        projectWithIdModel = response; // Store fetched subcategories
+
+        titlePCntrl.text = response?.data?.name ?? "";
+        budgetPCntrl.text = response?.data?.budget.toString() ?? "";
+
+        dueDatePCntrl.text = DateFormat(
+          'dd MMM yyyy',
+        ).format(DateTime.parse(response?.data?.dueDate.toString() ?? ""));
+
+        desPCntrl.text = response.data?.description ?? "";
+
+        notifyListeners();
+      }
+      // }   log("Fetched items successfully.");
+      else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      itemLoading = false;
+      notifyListeners();
     }
   }
 }

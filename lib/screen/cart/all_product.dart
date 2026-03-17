@@ -13,7 +13,9 @@ import 'mycart2.dart';
 final TextEditingController searchController = TextEditingController();
 
 class AllProductsPage extends StatefulWidget {
-  const AllProductsPage({super.key});
+  final String? keyword;
+
+  const AllProductsPage({super.key, this.keyword});
 
   @override
   State<AllProductsPage> createState() => _AllProductsPageState();
@@ -22,9 +24,20 @@ class AllProductsPage extends StatefulWidget {
 class _AllProductsPageState extends State<AllProductsPage> {
   @override
   void initState() {
+    searchController.text = widget.keyword ?? "";
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = Provider.of<ProjectProvider>(context, listen: false);
-      reg.fetchItemLists(context: context, endPrice: "", catid: "", keywrd: "");
+      // reg.fetchItemLists(context: context, endPrice: "", catid: "", keywrd: "");
+      // searchController = TextEditingController(
+      //   text: widget.keyword ?? "",
+      // );
+      reg.fetchItemLists(
+        context: context,
+        endPrice: "",
+        catid: "",
+        keywrd: widget.keyword ?? "",
+      );
+
       reg.fetchCategoryLists(context: context);
       reg.fetchBrand(context: context);
       reg.fetchCartList(context: context);
@@ -126,7 +139,7 @@ class _AllProductsPageState extends State<AllProductsPage> {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: Consumer<ProjectProvider>(
         builder: (context, items, _) {

@@ -40,7 +40,7 @@ class _MyCartPage2State extends State {
       backgroundColor: Color(0xffF4F4F4),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        leading: SizedBox(),
+
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
@@ -53,7 +53,7 @@ class _MyCartPage2State extends State {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
 
       // ✅ FIX: Checkout bar is now fixed at the bottom via bottomNavigationBar

@@ -40,7 +40,10 @@ class _ActivityPageState extends State<ActivityPage> {
       backgroundColor: const Color(0xffF4F4F4),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        centerTitle: true,
+        centerTitle: false,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
         title: Text(
           "Activities",
           style: TextStyle(
@@ -53,82 +56,82 @@ class _ActivityPageState extends State<ActivityPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              /// HEADER
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Recent Activity",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: primaryClr,
-                      fontFamily: "Manrope",
-                    ),
-                  ),
-                  Container(
-                    height: 42.h,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Color(0xffC1C1C1)),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedValues,
-                        icon: const Icon(Icons.keyboard_arrow_down),
-                        onChanged: (value) {
-                          if (value == null) return;
-
-                          setState(() {
-                            selectedValues = value;
-                          });
-
-                          _fetchActivity(); // 🔥 API call
-                        },
-                        items: const [
-                          DropdownMenuItem(
-                            value: "Today",
-                            child: Text(
-                              "Today",
-                              style: TextStyle(color: Color(0xff00AF11)),
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: "This_week",
-                            child: Text(
-                              "This Week",
-                              style: TextStyle(color: Color(0xff487FFF)),
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: "This_month",
-                            child: Text(
-                              "This Month",
-                              style: TextStyle(color: Color(0xffFF766A)),
-                            ),
-                          ),
-                        ],
+        child: SingleChildScrollView(
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                /// HEADER
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Recent Activity",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: primaryClr,
+                        fontFamily: "Manrope",
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    Container(
+                      height: 42.h,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Color(0xffC1C1C1)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedValues,
+                          icon: const Icon(Icons.keyboard_arrow_down),
+                          onChanged: (value) {
+                            if (value == null) return;
 
-              const SizedBox(height: 16),
+                            setState(() {
+                              selectedValues = value;
+                            });
 
-              /// LIST
-              Expanded(
-                child: Consumer<ProjectProvider>(
+                            _fetchActivity(); // 🔥 API call
+                          },
+                          items: const [
+                            DropdownMenuItem(
+                              value: "Today",
+                              child: Text(
+                                "Today",
+                                style: TextStyle(color: Color(0xff00AF11)),
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: "This_week",
+                              child: Text(
+                                "This Week",
+                                style: TextStyle(color: Color(0xff487FFF)),
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: "This_month",
+                              child: Text(
+                                "This Month",
+                                style: TextStyle(color: Color(0xffFF766A)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                /// LIST
+                Consumer<ProjectProvider>(
                   builder: (context, project, _) {
                     final activities =
                         project.activityModel?.projectActivity ?? [];
@@ -144,6 +147,8 @@ class _ActivityPageState extends State<ActivityPage> {
 
                     return ListView.separated(
                       itemCount: activities.length,
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final activity = activities[index];
@@ -225,8 +230,8 @@ class _ActivityPageState extends State<ActivityPage> {
                     );
                   },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

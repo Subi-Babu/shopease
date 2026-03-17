@@ -124,28 +124,91 @@ class _ProductViewPageState extends State<ProductViewPage> {
 
             return Padding(
               padding: const EdgeInsets.all(16.0),
-              child: CustomButton(
-                text: "Add to Cart",
-                onPress: () async {
-                  await item.addtoCart(
-                    context: context,
-                    projectId: "",
-                    calPrice:
-                        item.itemListDetailsModel?.data?.yourPrice.toString() ??
-                        "",
-                    storeId:
-                        item.selectedSellerStoreId?.toString() ??
-                        item.itemListDetailsModel?.data?.storeId.toString() ??
-                        "",
-                    itemId:
-                        item.itemListDetailsModel?.data?.id.toString() ?? "",
-                    mrp: item.itemListDetailsModel?.data?.mrp.toString() ?? "",
-                    qty: "1",
-                    categoryId: "",
-                    attributeCategory: item.selectedAttributeCategoryList,
-                    attributeName: item.selectedAttributeNameMap,
-                  );
-                },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: CustomButton(
+                      text: "Add to Cart",
+                      textColor: primaryClr,
+                      bgColor: Colors.white,
+                      borderSide: BorderSide(color: primaryClr),
+                      onPress: () async {
+                        await item.addtoCart(
+                          context: context,
+                          projectId: "",
+                          calPrice:
+                              item.itemListDetailsModel?.data?.yourPrice
+                                  .toString() ??
+                              "",
+                          storeId:
+                              item.selectedSellerStoreId?.toString() ??
+                              item.itemListDetailsModel?.data?.storeId
+                                  .toString() ??
+                              "",
+                          itemId:
+                              item.itemListDetailsModel?.data?.id.toString() ??
+                              "",
+                          mrp:
+                              item.itemListDetailsModel?.data?.mrp.toString() ??
+                              "",
+                          qty: "1",
+                          categoryId: "",
+                          attributeCategory: item.selectedAttributeCategoryList,
+                          attributeName: item.selectedAttributeNameMap,
+                        );
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: CustomButton(
+                      text: "Buy Now",
+                      onPress: () async {
+                        final addressList = item.addressListModel?.data ?? [];
+
+                        Datum? defaultAddress;
+
+                        if (addressList.isNotEmpty) {
+                          defaultAddress = addressList.firstWhere(
+                            (element) => element.isDefault == true,
+                            orElse: () => addressList.first,
+                          );
+                        }
+                        await item.buyNow(
+                          context: context,
+                          pid: "",
+                          total:
+                              item.itemListDetailsModel?.data?.mrp.toString() ??
+                              "",
+                          grandTotal:
+                              item.itemListDetailsModel?.data?.yourPrice
+                                  .toString() ??
+                              "",
+                          addressid: defaultAddress?.id.toString() ?? "",
+                          calPrice:
+                              item.itemListDetailsModel?.data?.yourPrice
+                                  .toString() ??
+                              "",
+                          storeId:
+                              item.selectedSellerStoreId?.toString() ??
+                              item.itemListDetailsModel?.data?.storeId
+                                  .toString() ??
+                              "",
+                          itemId:
+                              item.itemListDetailsModel?.data?.id.toString() ??
+                              "",
+                          mrp:
+                              item.itemListDetailsModel?.data?.mrp.toString() ??
+                              "",
+                          qty: "1",
+                          categoryId: "",
+                          attributeCategory: item.selectedAttributeCategoryList,
+                          attributeName: item.selectedAttributeNameMap,
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             );
           },
@@ -161,7 +224,7 @@ class _ProductViewPageState extends State<ProductViewPage> {
           child: const Icon(Icons.arrow_back, color: Colors.black),
         ),
         title: const Text("Product", style: TextStyle(color: Colors.black)),
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: SingleChildScrollView(
         child: Padding(

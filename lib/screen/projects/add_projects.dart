@@ -28,7 +28,7 @@ class AddProjects extends StatelessWidget {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
 
       body: Padding(

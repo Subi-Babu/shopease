@@ -56,7 +56,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
       // bottomNavigationBar
       bottomNavigationBar: Padding(

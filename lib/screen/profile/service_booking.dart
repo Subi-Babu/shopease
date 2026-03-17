@@ -28,7 +28,7 @@ class MyServicePage extends StatelessWidget {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -96,7 +96,7 @@ class MyServicePage extends StatelessWidget {
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 12),
                     itemBuilder: (context, index) {
-                      return OrderCard(
+                      return OrderCard3(
                         onTap: () async {
                           // await order.fetchOrderView(
                           //   context: context,
@@ -131,14 +131,14 @@ class MyServicePage extends StatelessWidget {
   }
 }
 
-class OrderCard extends StatelessWidget {
+class OrderCard3 extends StatelessWidget {
   final String orderId;
   final dynamic items;
   final dynamic total;
   final void Function()? onTap;
   final String imageUrl;
 
-  const OrderCard({
+  const OrderCard3({
     super.key,
     required this.orderId,
     required this.items,

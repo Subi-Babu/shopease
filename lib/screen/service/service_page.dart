@@ -12,7 +12,9 @@ import '../cart/all_product.dart';
 final TextEditingController controller = TextEditingController();
 
 class ServicesPage extends StatefulWidget {
-  const ServicesPage({super.key});
+  final String? keyword;
+
+  const ServicesPage({super.key, this.keyword});
 
   @override
   State<ServicesPage> createState() => _ServicesPageState();
@@ -21,10 +23,16 @@ class ServicesPage extends StatefulWidget {
 class _ServicesPageState extends State<ServicesPage> {
   @override
   void initState() {
+    controller.text = widget.keyword ?? "";
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = Provider.of<ProjectProvider>(context, listen: false);
 
-      reg.fetchServiceList(context: context, id: "", keywrd: "");
+      reg.fetchServiceList(
+        context: context,
+        id: "",
+        keywrd: widget.keyword ?? "",
+      );
       reg.fetchServiceCategry(context: context);
     });
     // TODO: implement initState
@@ -50,7 +58,7 @@ class _ServicesPageState extends State<ServicesPage> {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: Consumer<ProjectProvider>(
         builder: (context, service, _) {

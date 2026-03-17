@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:youbuilt/model/search_model.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
 import 'package:youbuilt/screen/cart/all_product.dart';
@@ -25,6 +26,17 @@ class _SearchResultPageState extends State<SearchResultPage> {
   void initState() {
     super.initState();
     controller = TextEditingController(text: widget.keyword);
+
+    /// CALL SEARCH API WHEN PAGE LOADS
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.keyword.isNotEmpty) {
+        context.read<ProjectProvider>().fetchSearch(
+          context: context,
+          keyword: widget.keyword,
+        );
+      }
+    });
+    controller.clear();
   }
 
   @override
@@ -35,7 +47,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
       /// APP BAR
       appBar: AppBar(
         elevation: 0,
-        toolbarHeight: 100,
+        toolbarHeight: 80,
         backgroundColor: Colors.white,
         title: Container(
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
@@ -51,33 +63,38 @@ class _SearchResultPageState extends State<SearchResultPage> {
 
               /// SEARCH FIELD
               Expanded(
-                child: TextField(
-                  controller: controller,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    hintText: "Search for Services",
-                  ),
-                  onSubmitted: (value) async {
-                    if (value.isNotEmpty) {
-                      await context.read<ProjectProvider>().fetchSearch(
-                        context: context,
-                        keyword: value,
-                      );
-                    }
-                  },
-                  onChanged: (value) async {
-                    if (value.isNotEmpty) {
-                      await context.read<ProjectProvider>().fetchSearch(
-                        context: context,
-                        keyword: value,
-                      );
-                    }
-                  },
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontFamily: "Manrope",
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14.sp,
+                child: SizedBox(
+                  height: 35,
+                  child: TextField(
+                    controller: controller,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: "Search for Services",
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(vertical: 8),
+                    ),
+                    onSubmitted: (value) async {
+                      if (value.isNotEmpty) {
+                        await context.read<ProjectProvider>().fetchSearch(
+                          context: context,
+                          keyword: value,
+                        );
+                      }
+                    },
+                    onChanged: (value) async {
+                      if (value.isNotEmpty) {
+                        await context.read<ProjectProvider>().fetchSearch(
+                          context: context,
+                          keyword: value,
+                        );
+                      }
+                    },
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontFamily: "Manrope",
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14.sp,
+                    ),
                   ),
                 ),
               ),
@@ -153,7 +170,9 @@ class _SearchResultPageState extends State<SearchResultPage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => AllProductsPage(),
+                                      builder: (context) => AllProductsPage(
+                                        keyword: controller.text,
+                                      ),
                                     ),
                                   );
                                 },
@@ -226,7 +245,9 @@ class _SearchResultPageState extends State<SearchResultPage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => ServicesPage(),
+                                      builder: (context) => ServicesPage(
+                                        keyword: controller.text,
+                                      ),
                                     ),
                                   );
                                 },
@@ -305,6 +326,22 @@ class ProductCard extends StatelessWidget {
                 fit: BoxFit.fill,
                 height: 100,
                 width: double.infinity,
+
+                /// SHIMMER WHILE LOADING
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+
+                  return Shimmer.fromColors(
+                    baseColor: Colors.grey.shade300,
+                    highlightColor: Colors.grey.shade100,
+                    child: Container(
+                      height: 100,
+                      width: double.infinity,
+                      color: Colors.white,
+                    ),
+                  );
+                },
+
                 errorBuilder: (context, error, stackTrace) {
                   return SizedBox(
                     height: 100,
