@@ -540,10 +540,10 @@ Widget _bottomButtons(
                 );
                 project.clearExpenseCategory();
                 project.formattedFundDate == "";
-                _showAddFundDialog(
+                _showAddExpenseDialog(
                   context,
                   projectId: projectId,
-                  onSuccess: onFundAdded,
+                  onSuccess: onExpenseAdded,
                 );
               },
 
@@ -739,7 +739,7 @@ Widget _lastTransactions(String pid, bool isFetchingMore) {
 
                   return _transactionItem(
                     context,
-                    transaction.projectName ?? "",
+                    transaction.details ?? "",
                     formattedDate,
                     "${transaction.type == "expensemoney" ? "-" : "+"} ₹${formatPrice(transaction.amount)}",
                     transaction.type == "expensemoney"
@@ -871,7 +871,7 @@ void _showAddFundDialog(
                               hintText: "Date",
                               fillColor: Colors.white,
                               controller: TextEditingController(
-                                text: project.formattedFundDate,
+                                text: project.apiFundDate,
                               ),
                               suffixIcon: const Icon(
                                 Icons.calendar_month_outlined,
@@ -991,7 +991,7 @@ void _showAddExpenseDialog(
                               hintText: "Date",
                               fillColor: Colors.white,
                               controller: TextEditingController(
-                                text: project.formattedExpenseDate,
+                                text: project.apiDate,
                               ),
                               suffixIcon: const Icon(
                                 Icons.calendar_month_outlined,

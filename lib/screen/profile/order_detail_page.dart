@@ -1,14 +1,20 @@
+import 'dart:developer';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:pointycastle/asn1/object_identifiers_database.dart';
 import 'package:provider/provider.dart';
+import 'package:youbuilt/custom_widgets/custom_button.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
 
 import '../../utils/colors.dart';
 
 class OrderDetailsPage extends StatelessWidget {
-  const OrderDetailsPage({super.key});
+  final String? oid;
+  OrderDetailsPage({super.key, required this.oid});
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +124,7 @@ class OrderDetailsPage extends StatelessWidget {
 
                   style: TextStyle(
                     color: Color(0xff737373),
-                    height: 4,
+                    // height: 4,
                     fontFamily: "Manrope",
                     fontWeight: FontWeight.w600,
                     fontSize: 16.sp,
@@ -323,7 +329,108 @@ class OrderDetailsPage extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
+                // Align(
+                //   alignment: Alignment.topRight,
+                //   child: SizedBox(
+                //     width: 280.w,
+                //     child: CustomButton(
+                //       text: "Download Invoice",
+                //       onPress: () {},
+                //     ),
+                //   ),
+                // ),
+                Text(
+                  "Download Invoice",
+
+                  style: TextStyle(
+                    color: Color(0xff737373),
+                    // height: 4,
+                    fontFamily: "Manrope",
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16.sp,
+                  ),
+                ),
+                Divider(color: Color(0xffF4F4F4)),
+
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      /// 🔹 Order Items List
+                      ListView.separated(
+                        shrinkWrap: true,
+                        padding: EdgeInsets.zero,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount:
+                            order.orderViewModel?.data?.storeList?.length ?? 0,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          return Container(
+                            height: 50,
+                            padding: EdgeInsets.all(8),
+                            width: 60,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text("Seller ${index + 1}"),
+                                Spacer(),
+                                InkWell(
+                                  onTap: () async {
+                                    log("message---------------");
+                                    HapticFeedback.heavyImpact();
+                                    await Provider.of<ProjectProvider>(
+                                      context,
+                                      listen: false,
+                                    ).downloadInvoicePdf(
+                                      context: context,
+                                      Orderid: int.parse(
+                                        order
+                                                .orderViewModel
+                                                ?.data
+                                                ?.storeList?[index]
+                                                .id
+                                                .toString() ??
+                                            "",
+                                      ),
+
+                                      storeId: int.parse(
+                                        order
+                                                .orderViewModel
+                                                ?.data
+                                                ?.storeList?[index]
+                                                .storeId
+                                                .toString() ??
+                                            "",
+                                      ),
+                                    );
+                                  },
+                                  child: Row(
+                                    children: [
+                                      Text("Download"),
+                                      Icon(
+                                        Icons.file_download_outlined,
+                                        color: primaryClr,
+                                        size: 14,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
 
                 // Payment Method
                 // Container(

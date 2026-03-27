@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:youbuilt/custom_widgets/custom_button.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
+import 'package:youbuilt/screen/estimation/invoice_page.dart';
 import 'package:youbuilt/screen/projects/widgets/wallet.dart';
 import 'package:youbuilt/screen/sign_up.dart';
 import 'package:youbuilt/utils/colors.dart';
@@ -151,6 +152,13 @@ void _openEstimationBottomSheet(BuildContext context) {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      InkWell(
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: Icon(Icons.arrow_back),
+                      ),
+                      SizedBox(width: 5),
                       const Text(
                         "Estimation Request",
                         style: TextStyle(
@@ -160,6 +168,7 @@ void _openEstimationBottomSheet(BuildContext context) {
                           color: primaryClr,
                         ),
                       ),
+                      Spacer(),
                       InkWell(
                         onTap: () => Navigator.pop(context),
                         child: const Icon(Icons.close, color: Colors.grey),
@@ -400,10 +409,17 @@ void _openQuatationBottomSheet(BuildContext context) {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    InkWell(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      child: Icon(Icons.arrow_back),
+                    ),
+                    SizedBox(width: 5),
                     const Text(
                       "Quotation Request",
                       style: TextStyle(
@@ -413,6 +429,7 @@ void _openQuatationBottomSheet(BuildContext context) {
                         color: primaryClr,
                       ),
                     ),
+                    Spacer(),
                     InkWell(
                       onTap: () => Navigator.pop(context),
                       child: const Icon(Icons.close, color: Colors.grey),
@@ -659,10 +676,17 @@ void _openQuatationBottomSheet2(BuildContext context) {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Icon(Icons.arrow_back),
+                  ),
+                  SizedBox(width: 5),
                   const Text(
                     "Quotation Request",
                     style: TextStyle(
@@ -672,6 +696,7 @@ void _openQuatationBottomSheet2(BuildContext context) {
                       color: primaryClr,
                     ),
                   ),
+                  Spacer(),
                   InkWell(
                     onTap: () => Navigator.pop(context),
                     child: const Icon(Icons.close, color: Colors.grey),
@@ -1105,17 +1130,29 @@ Widget _estimationTab() {
 
           final item = project?.estimationModel?.data?[index - 1];
           return EstimationCard(
-            title: item?.name ?? "",
-            subtitle:
-                "${item?.location ?? ""} . ${item?.builtUpArea ?? ""}sq.ft",
+            title: item?.estimationId ?? "",
+            // subtitle: "",
+            subtitle: item?.projectType ?? "",
             date:
                 "${item?.date?.day ?? ""}/${item?.date?.month ?? ""}/${item?.date?.year ?? ""}",
             showActions: true,
+            status: item?.status,
             onPress: () {
+              log("message");
               Provider.of<ProjectProvider>(
                 context,
                 listen: false,
               ).downloadPdf(context: context, id: item?.id ?? 0);
+            },
+            onPressView: () {
+              log("message");
+              Provider.of<ProjectProvider>(
+                context,
+                listen: false,
+              ).fetchViewEstimation(
+                context: context,
+                id: item?.id.toString() ?? "",
+              );
             },
           );
         },
@@ -1202,17 +1239,32 @@ Widget _quoteTab() {
 
           final item = project?.quatationModel?.data?[index - 1];
           return EstimationCard(
-            title: item?.name ?? "",
-            subtitle:
-                "${item?.location ?? ""} . ${item?.builtUpArea ?? ""}sq.ft",
+            title: item?.quatationId ?? "",
+            subtitle: item?.projectType ?? "",
+            // "${item?.location ?? ""} . ${item?.builtUpArea ?? ""}sq.ft",
             date:
                 "${item?.date?.day ?? ""}/${item?.date?.month ?? ""}/${item?.date?.year ?? ""}",
             showActions: true,
+            status: item?.status,
             onPress: () {
               Provider.of<ProjectProvider>(
                 context,
                 listen: false,
               ).downloadQuotesPdf(context: context, id: item?.id ?? 0);
+            },
+            onPressView: () {
+              log("message");
+              Provider.of<ProjectProvider>(
+                context,
+                listen: false,
+              ).fetchQuotationView(
+                context: context,
+                id: item?.id.toString() ?? "",
+              );
+              // Provider.of<ProjectProvider>(
+              //   context,
+              //   listen: false,
+              // ).downloadQuotesPdf(context: context, id: item?.id ?? 0);
             },
           );
         },
@@ -1282,6 +1334,7 @@ class EstimationCard extends StatelessWidget {
   final String? status;
   final bool showActions;
   final void Function()? onPress;
+  final void Function()? onPressView;
 
   const EstimationCard({
     super.key,
@@ -1291,6 +1344,7 @@ class EstimationCard extends StatelessWidget {
     this.status,
     this.showActions = false,
     required this.onPress,
+    required this.onPressView,
   });
 
   @override
@@ -1330,6 +1384,7 @@ class EstimationCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             subtitle,
+            maxLines: 3,
             style: const TextStyle(
               fontSize: 14,
               color: Color(0xff737373),
@@ -1340,7 +1395,7 @@ class EstimationCard extends StatelessWidget {
           const SizedBox(height: 12),
 
           /// Status or Actions
-          if (status != null)
+          if (status != "null")
             Align(
               alignment: Alignment.centerRight,
               child: Container(
@@ -1353,7 +1408,7 @@ class EstimationCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  status!,
+                  status ?? "",
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xffFF3B30),
@@ -1363,7 +1418,8 @@ class EstimationCard extends StatelessWidget {
                 ),
               ),
             ),
-          if (showActions)
+          SizedBox(height: 5),
+          if (showActions && status != "New_Enquiry" && status != "pending")
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -1373,7 +1429,7 @@ class EstimationCard extends StatelessWidget {
                     height: 38,
                     child: CustomButton(
                       text: "View",
-                      onPress: () {},
+                      onPress: onPressView,
                       bgColor: Colors.white,
                       textColor: primaryClr,
                       borderSide: BorderSide(color: primaryClr),

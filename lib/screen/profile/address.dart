@@ -119,6 +119,7 @@ class _AddressPageState extends State<AddressPage> {
                             return _addressCard(
                               title: item.addressTitle ?? "",
                               name: item.name ?? "",
+                              id: item.id.toString() ?? "",
                               address: item.address ?? "",
                               index: index,
                               isSelected: item.isDefault ?? false,
@@ -146,6 +147,7 @@ class _AddressPageState extends State<AddressPage> {
     required VoidCallback onChanged,
     required String title,
     required String name,
+    required String id,
     required String address,
   }) {
     return InkWell(
@@ -242,7 +244,96 @@ class _AddressPageState extends State<AddressPage> {
                       ),
 
                       // const SizedBox(width: 10),
-                      const Icon(Icons.more_vert, color: Colors.grey),
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert, color: Colors.grey),
+                        onSelected: (value) async {
+                          if (value == 'edit') {
+                            _showEditAddressDialog(context, index);
+                          } else if (value == 'delete') {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                title: const Text(
+                                  "Delete ?",
+                                  style: TextStyle(
+                                    fontFamily: "Manrope",
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                content: const Text(
+                                  "Are you sure you want to delete this address?",
+                                  style: TextStyle(
+                                    fontFamily: "Manrope",
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xff737373),
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: const Text(
+                                      "Cancel",
+                                      style: TextStyle(
+                                        fontFamily: "Manrope",
+                                        color: Color(0xff737373),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      Navigator.pop(ctx);
+                                      await context
+                                          .read<ProjectProvider>()
+                                          .deleteAddress(
+                                            context: context,
+                                            eid: id ?? "",
+                                          );
+
+                                      // onDelete?.call();
+                                    },
+                                    child: const Text(
+                                      "Delete",
+                                      style: TextStyle(
+                                        fontFamily: "Manrope",
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, size: 18),
+                                SizedBox(width: 8),
+                                Text("Edit"),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, size: 18, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text("Delete"),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ],
@@ -255,6 +346,28 @@ class _AddressPageState extends State<AddressPage> {
   }
 }
 
+void _showEditAddressDialog(BuildContext context, int index) {
+  final provider = context.read<ProjectProvider>();
+  final item = provider.addressListModel!.data![index];
+
+  provider.titleAddressController.text = item.addressTitle ?? "";
+  provider.addressCntrl.text = item.address ?? "";
+  provider.pincodeAddressController.text = item.pinCode?.toString() ?? "";
+  provider.nameddressController.text = item.name ?? "";
+  provider.phoneddressController.text = item.phoneNumber ?? "";
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) => AddAddressSheet(
+      isEdit: true,
+      addressId: item.id.toString(), // ✅ important
+    ),
+  );
+}
 // ─────────────────────────────────────────────────────────────
 // Location Search Dialog
 // ─────────────────────────────────────────────────────────────
@@ -499,7 +612,10 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
 // ─────────────────────────────────────────────────────────────
 
 class AddAddressSheet extends StatefulWidget {
-  const AddAddressSheet({super.key});
+  final bool isEdit;
+  final String? addressId;
+
+  const AddAddressSheet({super.key, this.isEdit = false, this.addressId});
 
   @override
   State<AddAddressSheet> createState() => _AddAddressSheetState();
@@ -635,7 +751,7 @@ class _AddAddressSheetState extends State<AddAddressSheet> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Add New Address",
+                        widget.isEdit ? "Edit Address" : "Add New Address",
                         style: TextStyle(
                           color: primaryClr,
                           fontFamily: "Manrope",
@@ -892,23 +1008,45 @@ class _AddAddressSheetState extends State<AddAddressSheet> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: CustomButton(
-                          text: "Save",
+                          text: widget.isEdit ? "Update" : "Save",
                           onPress: () async {
-                            await provider.addAddress(
-                              context: context,
-                              title: provider.titleAddressController.text,
-                              address: provider.addressCntrl.text,
-                              pincode: provider.pincodeAddressController.text,
-                              lat: _selectedLatLng.latitude.toString(),
-                              lng: _selectedLatLng.longitude.toString(),
-                              name: provider.nameddressController.text,
-                              phone: provider.phoneddressController.text,
-                            );
+                            final provider = context.read<ProjectProvider>();
+
+                            if (widget.isEdit) {
+                              /// ✅ EDIT
+                              await provider.editAddress(
+                                context: context,
+                                addressId: widget.addressId ?? "",
+                                title: provider.titleAddressController.text,
+                                address: provider.addressCntrl.text,
+                                pincode: provider.pincodeAddressController.text,
+                                lat: _selectedLatLng.latitude.toString(),
+                                lng: _selectedLatLng.longitude.toString(),
+                                name: provider.nameddressController.text,
+                                phone: provider.phoneddressController.text,
+                              );
+                            } else {
+                              /// ✅ ADD
+                              await provider.addAddress(
+                                context: context,
+                                title: provider.titleAddressController.text,
+                                address: provider.addressCntrl.text,
+                                pincode: provider.pincodeAddressController.text,
+                                lat: _selectedLatLng.latitude.toString(),
+                                lng: _selectedLatLng.longitude.toString(),
+                                name: provider.nameddressController.text,
+                                phone: provider.phoneddressController.text,
+                              );
+                            }
+
+                            /// ✅ CLEAR + CLOSE
                             provider.titleAddressController.clear();
                             provider.addressCntrl.clear();
                             provider.pincodeAddressController.clear();
                             provider.nameddressController.clear();
                             provider.phoneddressController.clear();
+
+                            Navigator.pop(context);
                           },
                         ),
                       ),

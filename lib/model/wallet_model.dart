@@ -12,10 +12,10 @@ String walletModelToJson(WalletModel data) => json.encode(data.toJson());
 class WalletModel {
   bool? status;
   String? message;
-  int? budget;
-  int? walletBalance;
-  int? expenses;
-  int? ybCash;
+  dynamic budget;
+  dynamic walletBalance;
+  dynamic expenses;
+  dynamic ybCash;
   int? page;
   int? limit;
   int? totalPages;
@@ -72,7 +72,7 @@ class WalletModel {
 class Datum {
   int? id;
   String? details;
-  int? amount;
+  dynamic amount;
   DateTime? createdAt;
   dynamic projectId;
   String? projectName;

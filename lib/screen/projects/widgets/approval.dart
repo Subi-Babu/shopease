@@ -1,16 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:youbuilt/screen/home.dart';
+
+import '../../../model/approval_model.dart';
+import '../../../providers/signin/project_provider.dart';
+import '../../profile/service_book_details.dart';
 
 class ApprovalsPage extends StatefulWidget {
-  const ApprovalsPage({super.key});
+  final String? projectId;
+  const ApprovalsPage({super.key, this.projectId});
 
   @override
   State<ApprovalsPage> createState() => _ApprovalsPageState();
 }
 
 class _ApprovalsPageState extends State<ApprovalsPage> {
-  int selectedFilter = 0;
+  ScrollController _scrollController = ScrollController();
+  @override
+  void initState() {
+    super.initState();
 
-  final filters = ["Pending", "Approved", "Rejected"];
+    final reg = Provider.of<ProjectProvider>(context, listen: false);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await reg.fetchApprovalList(
+        context: context,
+        id: widget.projectId ?? "",
+        page: "1",
+        limit: "10",
+      );
+    });
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+          _scrollController.position.maxScrollExtent) {
+        final provider = Provider.of<ProjectProvider>(context, listen: false);
+
+        if (provider.hasMore && !provider.isPaginationLoading) {
+          provider.fetchApprovalList(
+            context: context,
+            id: widget.projectId ?? "",
+            page: (provider.currentPage + 1).toString(),
+            limit: "10",
+          );
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,16 +81,30 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ),
-          const SizedBox(height: 12),
-          _filterChips(),
-          const SizedBox(height: 12),
+          // const SizedBox(height: 12),
+          // _filterChips(),
+          // const SizedBox(height: 12),
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: 3,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                return _approvalCard();
+            child: Consumer<ProjectProvider>(
+              builder: (context, provider, _) {
+                return ListView.separated(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount:
+                      provider.approvalList.length +
+                      (provider.isPaginationLoading ? 1 : 0),
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    // loader at bottom
+                    if (index == provider.approvalList.length) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final item = provider.approvalList[index];
+
+                    return _approvalCard(item);
+                  },
+                );
               },
             ),
           ),
@@ -61,46 +113,22 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
     );
   }
 
-  Widget _tabBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: const [
-          _TabItem(title: "Overview"),
-          _TabItem(title: "Snag List"),
-          _TabItem(title: "Wallet"),
-          _TabItem(title: "Approvals", isActive: true),
-        ],
-      ),
-    );
-  }
+  // Widget _tabBar() {
+  //   return Padding(
+  //     padding: const EdgeInsets.symmetric(horizontal: 16),
+  //     child: Row(
+  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //       children: const [
+  //         _TabItem(title: "Overview"),
+  //         _TabItem(title: "Snag List"),
+  //         _TabItem(title: "Wallet"),
+  //         _TabItem(title: "Approvals"),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-  Widget _filterChips() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: List.generate(filters.length, (index) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(filters[index]),
-              selected: selectedFilter == index,
-              onSelected: (_) {
-                setState(() => selectedFilter = index);
-              },
-              selectedColor: Colors.black,
-              labelStyle: TextStyle(
-                color: selectedFilter == index ? Colors.white : Colors.black,
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  Widget _approvalCard() {
+  Widget _approvalCard(Datum item) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -112,38 +140,89 @@ class _ApprovalsPageState extends State<ApprovalsPage> {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
+            children: [
               Text(
-                "Steve Harrington",
-                style: TextStyle(fontWeight: FontWeight.w600),
+                item.users?.name ?? "",
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black,
+                  fontFamily: "Manrope",
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              Text("₹5,000", style: TextStyle(fontWeight: FontWeight.w600)),
+              Text(
+                "#${item.orderId ?? ""}",
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xff737373),
+                  fontFamily: "Manrope",
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),
-          const Text(
-            "Materials",
-            style: TextStyle(color: Colors.grey, fontSize: 12),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            "25 Oct, 2025",
-            style: TextStyle(color: Colors.grey, fontSize: 12),
-          ),
-          const SizedBox(height: 12),
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _actionButton(
-                title: "Reject",
-                color: Colors.redAccent,
-                onTap: () {},
+              Text(
+                "",
+
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: primaryClr,
+                  fontFamily: "Manrope",
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              const SizedBox(width: 8),
-              _actionButton(
-                title: "Approve",
-                color: Colors.green,
-                onTap: () {},
+
+              Text(
+                "₹${formatter.format(item.grandTotal ?? "")}",
+
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: primaryClr,
+                  fontFamily: "Manrope",
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          Divider(),
+
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                item.createdAt != null
+                    ? DateFormat("dd MMM yyyy").format(item.createdAt!)
+                    : "",
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xff737373),
+                  fontFamily: "Manrope",
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.only(bottom: 8),
+                padding: EdgeInsets.only(left: 4, right: 4, top: 2, bottom: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.blue),
+                ),
+                child: Text(
+                  item?.paymentStatus ?? "",
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontFamily: "Manrope",
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14.sp,
+                  ),
+                ),
               ),
             ],
           ),

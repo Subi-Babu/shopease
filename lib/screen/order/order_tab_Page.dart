@@ -30,6 +30,7 @@ class _OrderTabPageState extends State<OrderTabPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = Provider.of<ProjectProvider>(context, listen: false);
       await reg.fetchOrderList(context: context, keyword: "");
+      // await reg.fetchServiceBookView(context: context, id: widget.id ?? "");
       await reg.fetchServiceBooking(context: context);
     });
   }
@@ -342,11 +343,47 @@ class _OrderTabPageState extends State<OrderTabPage> {
                     final item = order.serviceBookingModel?.data?[index];
 
                     return OrderCard3(
-                      onTap: () {},
-                      imageUrl: item?.file ?? "",
-                      orderId: "",
-                      items: item?.name ?? "",
-                      total: formatDate(item?.date?.toString() ?? ""),
+                      ordertatus:
+                          order.serviceBookingModel?.data?[index]?.status
+                              ?.replaceAll("_", " ")
+                              .toString() ??
+                          "",
+                      onTap: () async {
+                        await order.fetchServiceDetails(
+                          context: context,
+                          id:
+                              order.serviceBookingModel?.data?[index]?.id
+                                  .toString() ??
+                              "",
+                        );
+                        // await order.fetchOrderView(
+                        //   context: context,
+                        //   id:
+                        //       order.orderListModel?.data?[index].id
+                        //           .toString() ??
+                        //       "",
+                        // );
+                      },
+                      // imageUrl:
+                      //     order?.serviceBookingModel?.data?[index].file ?? "",
+                      orderId:
+                          order
+                              .serviceBookingModel
+                              ?.data?[index]
+                              ?.serviceBookingId
+                              .toString() ??
+                          "",
+                      // items:
+                      //     order.serviceBookingModel?.data?[index]?.name ?? "",
+                      total:
+                          order.serviceBookingModel?.data?[index]?.grandTotal ??
+                          "",
+                      items: formatDate(
+                        order.serviceBookingModel?.data?[index]?.date
+                                .toString() ??
+                            "",
+                      ),
+                      // deliveredDate: orders[index]["date"] as String,
                     );
                   },
                 ),

@@ -60,146 +60,151 @@ class _ServicesPageState extends State<ServicesPage> {
         ),
         centerTitle: false,
       ),
-      body: Consumer<ProjectProvider>(
-        builder: (context, service, _) {
-          return Column(
-            children: [
-              /// 🔍 Search
-              Divider(color: Color(0xffE0E0E0)),
-              // const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Container(
-                  padding: EdgeInsets.all(12),
-                  height: 45,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Color(0xffDFDFDF)),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: controller,
-                          onSubmitted: (value) async {
-                            if (value.isNotEmpty) {
-                              await context
-                                  .read<ProjectProvider>()
-                                  .fetchServiceList(
-                                    context: context,
-                                    id: "",
-                                    keywrd: value,
-                                  );
-                            }
-                          },
-                          onChanged: (value) async {
-                            if (value.isNotEmpty) {
-                              await context
-                                  .read<ProjectProvider>()
-                                  .fetchServiceList(
-                                    context: context,
-                                    id: "",
-                                    keywrd: value,
-                                  );
-                            }
-                          },
-                          decoration: InputDecoration(
-                            hintText: "Search services",
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 10,
-                            ),
-                            hintStyle: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: "Manrope",
-                            ),
-                            prefixIcon: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 5,
-                                bottom: 5,
+      body: SingleChildScrollView(
+        child: Consumer<ProjectProvider>(
+          builder: (context, service, _) {
+            return Column(
+              children: [
+                /// 🔍 Search
+                Divider(color: Color(0xffE0E0E0)),
+                // const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Container(
+                    padding: EdgeInsets.all(12),
+                    height: 45,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Color(0xffDFDFDF)),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: controller,
+                            onSubmitted: (value) async {
+                              if (value.isNotEmpty) {
+                                await context
+                                    .read<ProjectProvider>()
+                                    .fetchServiceList(
+                                      context: context,
+                                      id: "",
+                                      keywrd: value,
+                                    );
+                              }
+                            },
+                            onChanged: (value) async {
+                              if (value.isNotEmpty) {
+                                await context
+                                    .read<ProjectProvider>()
+                                    .fetchServiceList(
+                                      context: context,
+                                      id: "",
+                                      keywrd: value,
+                                    );
+                              }
+                            },
+                            decoration: InputDecoration(
+                              hintText: "Search services",
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 10,
                               ),
-                              child: Image.asset(
-                                "assets/search.png",
-                                height: 20,
-                                width: 20,
+                              hintStyle: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                fontFamily: "Manrope",
                               ),
-                            ),
-                            prefixIconConstraints: BoxConstraints(
-                              minHeight: 20,
-                              minWidth: 30,
+                              prefixIcon: Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 5,
+                                  bottom: 5,
+                                ),
+                                child: Image.asset(
+                                  "assets/search.png",
+                                  height: 20,
+                                  width: 20,
+                                ),
+                              ),
+                              prefixIconConstraints: BoxConstraints(
+                                minHeight: 20,
+                                minWidth: 30,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      GestureDetector(
-                        onTap: () async {
-                          controller.clear();
-                          await context
-                              .read<ProjectProvider>()
-                              .fetchServiceList(
-                                context: context,
-                                id: "",
-                                keywrd: "",
-                              );
-                        },
-                        child: const Icon(Icons.close, color: Colors.grey),
-                      ),
-                    ],
+                        GestureDetector(
+                          onTap: () async {
+                            controller.clear();
+                            await context
+                                .read<ProjectProvider>()
+                                .fetchServiceList(
+                                  context: context,
+                                  id: "",
+                                  keywrd: "",
+                                );
+                          },
+                          child: const Icon(Icons.close, color: Colors.grey),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 10),
+                const SizedBox(height: 10),
 
-              /// 🧱 Categories
-              SizedBox(
-                height: 110,
-                child: Consumer<ProjectProvider>(
-                  builder: (context, service, _) {
-                    final categories =
-                        service.serviceCategryListModel?.serviceCategoryList ??
-                        [];
+                /// 🧱 Categories
+                SizedBox(
+                  height: 110,
+                  child: Consumer<ProjectProvider>(
+                    builder: (context, service, _) {
+                      final categories =
+                          service
+                              .serviceCategryListModel
+                              ?.serviceCategoryList ??
+                          [];
 
-                    if (categories.isEmpty) {
-                      return const Center(child: Text("No Categories"));
-                    }
+                      if (categories.isEmpty) {
+                        return const Center(child: Text("No Categories"));
+                      }
 
-                    return ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: categories.length,
-                      itemBuilder: (context, index) {
-                        final category = categories[index];
+                      return ListView.builder(
+                        scrollDirection: Axis.horizontal,
 
-                        return _CategoryItem(
-                          title: category.name ?? "",
-                          image: category.image ?? "",
-                          isSelected:
-                              service.selectedCategoryId1 ==
-                              category.id.toString(),
-                          onTap: () {
-                            HapticFeedback.heavyImpact();
-                            service.fetchServiceList(
-                              context: context,
-                              id: category?.id.toString() ?? "",
-                              keywrd: "",
-                            );
-                          },
-                        );
-                      },
-                    );
-                  },
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: categories.length,
+                        itemBuilder: (context, index) {
+                          final category = categories[index];
+
+                          return _CategoryItem(
+                            title: category.name ?? "",
+                            image: category.image ?? "",
+                            isSelected:
+                                service.selectedCategoryId1 ==
+                                category.id.toString(),
+                            onTap: () {
+                              HapticFeedback.heavyImpact();
+                              service.fetchServiceList(
+                                context: context,
+                                id: category?.id.toString() ?? "",
+                                keywrd: "",
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
+                const SizedBox(height: 10),
 
-              /// Grid
-              service.serviceModel?.serviceList?.length == 0
-                  ? Text("No Service Available")
-                  : Expanded(
-                      child: GridView.builder(
+                /// Grid
+                service.serviceModel?.serviceList?.length == 0
+                    ? Text("No Service Available")
+                    : GridView.builder(
+                        physics: NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
                         itemCount:
                             service.serviceModel?.serviceList?.length ?? 0,
                         padding: EdgeInsets.all(16),
@@ -233,7 +238,7 @@ class _ServicesPageState extends State<ServicesPage> {
                                     "",
                               );
                             },
-                            child: _ServiceCard(
+                            child: ServiceCard(
                               image:
                                   service
                                       ?.serviceModel
@@ -265,10 +270,10 @@ class _ServicesPageState extends State<ServicesPage> {
                           );
                         },
                       ),
-                    ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -335,7 +340,7 @@ class _CategoryItem extends StatelessWidget {
   }
 }
 
-class _ServiceCard extends StatelessWidget {
+class ServiceCard extends StatelessWidget {
   final void Function()? onPressed;
 
   final String name;
@@ -343,7 +348,7 @@ class _ServiceCard extends StatelessWidget {
   // final String price;
   final String rating;
 
-  const _ServiceCard({
+  const ServiceCard({
     required this.onPressed,
     required this.name,
     required this.image,

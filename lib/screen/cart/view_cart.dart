@@ -22,7 +22,9 @@ int _currentPage = 0;
 
 class ProductViewPage extends StatefulWidget {
   final String? pid;
-  ProductViewPage({Key? key, required this.pid}) : super(key: key);
+  final String? projectid;
+  ProductViewPage({Key? key, required this.pid, required this.projectid})
+    : super(key: key);
 
   @override
   State<ProductViewPage> createState() => _ProductViewPageState();
@@ -135,7 +137,7 @@ class _ProductViewPageState extends State<ProductViewPage> {
                       onPress: () async {
                         await item.addtoCart(
                           context: context,
-                          projectId: "",
+                          projectId: widget.projectid ?? "",
                           calPrice:
                               item.itemListDetailsModel?.data?.yourPrice
                                   .toString() ??

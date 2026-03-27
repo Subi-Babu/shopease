@@ -12,41 +12,55 @@ class EstimationModel {
   bool? status;
   String? message;
   List<Datum>? data;
+  int? page;
+  int? totalPages;
+  int? totalEstimation;
 
   EstimationModel({
     this.status,
     this.message,
     this.data,
+    this.page,
+    this.totalPages,
+    this.totalEstimation,
   });
 
   factory EstimationModel.fromJson(Map<String, dynamic> json) => EstimationModel(
     status: json["status"],
     message: json["message"],
     data: json["data"] == null ? [] : List<Datum>.from(json["data"]!.map((x) => Datum.fromJson(x))),
+    page: json["page"],
+    totalPages: json["totalPages"],
+    totalEstimation: json["totalEstimation"],
   );
 
   Map<String, dynamic> toJson() => {
     "status": status,
     "message": message,
     "data": data == null ? [] : List<dynamic>.from(data!.map((x) => x.toJson())),
+    "page": page,
+    "totalPages": totalPages,
+    "totalEstimation": totalEstimation,
   };
 }
 
 class Datum {
   int? id;
+  String? estimationId;
   String? name;
   String? email;
   String? code;
+  String? status;
   String? phoneNumber;
   String? projectType;
   int? builtUpArea;
-  dynamic budget;
+  int? budget;
   DateTime? date;
-  dynamic document;
-  dynamic fileName;
-  dynamic size;
+  String? document;
+  String? fileName;
+  int? size;
   String? message;
-  dynamic location;
+  String? location;
   int? pinCode;
   int? userId;
   DateTime? createdAt;
@@ -56,9 +70,11 @@ class Datum {
 
   Datum({
     this.id,
+    this.estimationId,
     this.name,
     this.email,
     this.code,
+    this.status,
     this.phoneNumber,
     this.projectType,
     this.builtUpArea,
@@ -79,9 +95,11 @@ class Datum {
 
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
     id: json["id"],
+    estimationId: json["estimationId"],
     name: json["name"],
     email: json["email"],
     code: json["code"],
+    status: json["status"],
     phoneNumber: json["phoneNumber"],
     projectType: json["projectType"],
     builtUpArea: json["builtUpArea"],
@@ -102,9 +120,11 @@ class Datum {
 
   Map<String, dynamic> toJson() => {
     "id": id,
+    "estimationId": estimationId,
     "name": name,
     "email": email,
     "code": code,
+    "status": status,
     "phoneNumber": phoneNumber,
     "projectType": projectType,
     "builtUpArea": builtUpArea,
