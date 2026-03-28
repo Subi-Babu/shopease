@@ -17,6 +17,7 @@ import 'package:youbuilt/screen/profile/edit_profile.dart';
 import 'package:youbuilt/screen/profile/profile.dart';
 import 'package:youbuilt/screen/projects/add_projects.dart';
 import 'package:youbuilt/screen/projects/projects.dart';
+import 'package:youbuilt/screen/rental/rental_page.dart';
 import 'package:youbuilt/screen/search.dart';
 import 'package:youbuilt/screen/service/service_page.dart';
 import 'package:youbuilt/utils/colors.dart';
@@ -398,14 +399,25 @@ class _HomeScreenState extends State<HomeScreen> {
                                 },
                                 child: _QuickActionTile(
                                   image: "assets/solar_clipboard-bold.png",
-                                  label: "Quote",
+                                  label: "Quotation",
                                 ),
                               ),
                             ),
                             Expanded(
-                              child: _QuickActionTile(
-                                image: "assets/solar_clipboard-bold.png",
-                                label: "Rental",
+                              child: InkWell(
+                                onTap: () {
+                                  HapticFeedback.heavyImpact();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => RentalPage(),
+                                    ),
+                                  );
+                                },
+                                child: _QuickActionTile(
+                                  image: "assets/solar_clipboard-bold.png",
+                                  label: "Rental",
+                                ),
                               ),
                             ),
                           ],

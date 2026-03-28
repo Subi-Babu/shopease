@@ -40,6 +40,15 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
     }
   }
 
+  void nextPage2() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const UserSignUpScreen()),
+    );
+    // Navigate to login when page=2 and button pressed
+    // Navigator.pushNamed(context, Routers.login);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,21 +71,21 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                   heading: "Purchase",
                   description:
                       "Shop building materials \n& machinery with ease.",
-                  onSkip: nextPage,
+                  onSkip: nextPage2,
                 ),
                 CenterWidget(
                   imageUrl: 'assets/splash3 1.png',
                   heading: "Service",
                   description:
                       "Book trusted construction \nservices anytime, anywhere.",
-                  onSkip: nextPage,
+                  onSkip: nextPage2,
                 ),
                 CenterWidget(
                   imageUrl: 'assets/splash2 1.png',
                   heading: "Projects",
                   description:
                       "Manage your project, budget \n& tasks in one place.",
-                  onSkip: nextPage,
+                  onSkip: nextPage2,
                 ),
               ],
             ),

@@ -85,7 +85,7 @@ class _ProjectViewState extends State<ProjectView> {
             OverviewTab(projectId: widget.projectId),
             Snaglist(projectId: widget.projectId),
             WalletPage(projectId: widget.projectId),
-            ApprovalsPage(),
+            ApprovalsPage(projectId: widget.projectId),
             ProjectFilesPage(pid: widget.projectId),
           ],
         ),

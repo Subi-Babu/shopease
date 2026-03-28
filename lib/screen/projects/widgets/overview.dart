@@ -7,6 +7,7 @@ import 'package:youbuilt/custom_widgets/custom_button.dart';
 import 'package:youbuilt/model/project_members.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
 import 'package:youbuilt/screen/projects/activity_page.dart';
+import 'package:youbuilt/screen/projects/widgets/product_service.dart';
 import 'package:youbuilt/screen/sign_up.dart';
 import 'package:youbuilt/utils/colors.dart';
 import 'package:youbuilt/utils/constants.dart';
@@ -149,10 +150,88 @@ class _OverviewTabState extends State<OverviewTab> {
               SizedBox(height: 4.h),
 
               // Description Card
-              _infoCard(
-                title: "Description",
-                subtitle: project.projectListViewModel?.data?.description ?? "",
+              Container(
+                color: Colors.white,
+                padding: EdgeInsets.all(16.w),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Description (left side)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Description",
+                            style: TextStyle(
+                              fontFamily: "Manrope",
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14.sp,
+                              color: Color(0xffA3A3A3),
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            project.projectListViewModel?.data?.description ??
+                                "",
+                            style: TextStyle(
+                              fontFamily: "Manrope",
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16.sp,
+                              color: Color(0xff282828),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(width: 10),
+
+                    InkWell(
+                      onTap: () async {
+                        await project.downloadOverviewPdf(
+                          id: int.parse(widget.projectId.toString()),
+                          context: context,
+                        );
+                      },
+                      child: const Text(
+                        "Download",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: primaryClr,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    InkWell(
+                      onTap: () async {
+                        await project.downloadOverviewPdf(
+                          id: int.parse(widget.projectId.toString()),
+                          context: context,
+                        );
+                      },
+                      child: const Icon(
+                        Icons.file_download_outlined,
+                        color: primaryClr,
+                        size: 14,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //   children: [
+              //     Expanded(
+              //       child: _infoCard(
+              //         title: "Description",
+              //         subtitle:
+              //             project.projectListViewModel?.data?.description ?? "",
+              //       ),
+              //     ),
+              //   ],
+              // ),
 
               // Start Date and End Date
               Row(
@@ -286,6 +365,13 @@ class _OverviewTabState extends State<OverviewTab> {
                     borderRadius: BorderRadius.circular(10),
                     onTap: () {
                       // Navigate to project detail view
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              ProductServicePage(id: widget.projectId??""),
+                        ),
+                      );
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(

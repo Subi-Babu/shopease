@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:new_version_plus/new_version_plus.dart';
 import 'colors.dart';
 
 /*-----------Url Constants---------------*/
@@ -30,3 +31,28 @@ String? accessToken;
 
 String? city = "";
 String? state = "";
+
+Future<void> checkForUpdate(BuildContext context) async {
+  final newVersion = NewVersionPlus(
+    androidId:
+        "com.youbuilt.youbuiltcustomer", // replace with your package name
+    iOSId: "1234567890", // your App Store ID
+  );
+
+  final status = await newVersion.getVersionStatus();
+
+  if (status != null) {
+    if (status.canUpdate) {
+      newVersion.showUpdateDialog(
+        context: context,
+        versionStatus: status,
+        allowDismissal: false,
+        dialogTitle: "Update Available",
+        dialogText:
+            "A newer version (${status.storeVersion}) is available. Please update.",
+        updateButtonText: "Update",
+        dismissButtonText: "Later",
+      );
+    }
+  }
+}

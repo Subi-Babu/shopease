@@ -50,17 +50,22 @@ class Urls {
   static String cartDeleteUrl = "$kBaseUrl/users/cart";
   static String checkOutUrl = "$kBaseUrl/users/order";
   static String bookingUrl = "$kBaseUrl/users/servieBooking";
+  static String bookingRentalUrl = "$kBaseUrl/users/rentalServieBooking";
   static String serviceUrl = "$kBaseUrl/users/serviceList";
+  static String rentalUrl = "$kBaseUrl/users/rentalServiceList";
   static String serviceViewUrl = "$kBaseUrl/users/servicebyId";
+  static String rentalViewUrl = "$kBaseUrl/users/rentalServicebyId";
   static String payementUrl = "$kBaseUrl/users/placeOrder";
   static String sellerUrl = "$kBaseUrl/users/itemListByStore";
   static String serviceCatUrl = "$kBaseUrl/users/serviceCategoryList";
+  static String rentalCatUrl = "$kBaseUrl/users/rentalCategoryList";
   static String defaultAddressUrl = "$kBaseUrl/users/updateDefaultAddress";
   static String orderUrl = "$kBaseUrl/users/orderList";
   static String orderDetailUrl = "$kBaseUrl/users/order";
   static String serviceBookingUrl = "$kBaseUrl/users/servieBookingList";
   static String qtyEdit = "$kBaseUrl/users/editCartQty";
   static String walletDelete = "$kBaseUrl/users/deleteExpenses";
+  static String addressDelete = "$kBaseUrl/users/address";
   static String fundEdit = "$kBaseUrl/users/editMoney";
   static String expenseEdit = "$kBaseUrl/users/";
   static String searchHomeUrl = "$kBaseUrl/users/searchItemAndService";
@@ -71,7 +76,16 @@ class Urls {
   static String downloadQotesUrl = "$kBaseUrl/users/adminQuatationPDF";
   static String downloadSnagUrl = "$kBaseUrl/users/getSnagListPdf";
   static String downloadWalletUrl = "$kBaseUrl/users/getWalletPdf";
+  static String downloadOverviewUrl = "$kBaseUrl/users/projectOverview";
   static String projectIngleUrl = "$kBaseUrl/users/project";
-
   static String projectDeleteUrl = "$kBaseUrl/users/project";
+  static String projectServiceUrl = "$kBaseUrl/users/servieBooking";
+  static String viewEstimationUrl = "$kBaseUrl/users/estimation";
+  static String viewQuotesUrl = "$kBaseUrl/users/quatation";
+  static String serviceDetailUrl = "$kBaseUrl/users/servieBooking";
+  static String statusQuotesUrl = "$kBaseUrl/users/quatationStatus";
+  static String statusEstimationUrl = "$kBaseUrl/users/estimationStatus";
+  static String statusServiceUrl = "$kBaseUrl/users/servieBookingStatus";
+  static String downloadInvoiceUrl = "$kBaseUrl/users/storeInvoice";
+  static String approvalsUrl = "$kBaseUrl/users/ApprovalOrderList";
 }

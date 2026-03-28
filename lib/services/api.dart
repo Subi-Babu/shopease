@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'dart:math';
+import 'package:external_path/external_path.dart';
 import 'package:mime/mime.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:dio/dio.dart';
@@ -9,8 +11,10 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:youbuilt/model/activity_model.dart';
 import 'package:youbuilt/model/addressListModel.dart';
+import 'package:youbuilt/model/approval_model.dart';
 import 'package:youbuilt/model/assign_project_model.dart';
 import 'package:youbuilt/model/brandmodel.dart';
 import 'package:youbuilt/model/cart_list_model.dart';
@@ -19,6 +23,8 @@ import 'package:youbuilt/model/category_list_model.dart';
 import 'package:youbuilt/model/countrycode.dart';
 import 'package:youbuilt/model/estimaton.dart';
 import 'package:youbuilt/model/expense_model.dart';
+import 'package:youbuilt/model/invoice_view_model.dart';
+import 'package:youbuilt/model/invoice_view_quatation_model.dart';
 import 'package:youbuilt/model/item_details.dart';
 import 'package:youbuilt/model/item_list_model.dart';
 import 'package:youbuilt/model/orderlist_model.dart';
@@ -31,11 +37,16 @@ import 'package:youbuilt/model/project_type_model.dart';
 import 'package:youbuilt/model/project_view_model.dart';
 import 'package:youbuilt/model/projectfolder_model.dart';
 import 'package:youbuilt/model/quatation.dart';
+import 'package:youbuilt/model/rental.dart';
+import 'package:youbuilt/model/rental_cat_model.dart';
+import 'package:youbuilt/model/rental_view_model.dart';
 import 'package:youbuilt/model/sanp_drop_model.dart';
 import 'package:youbuilt/model/search_model.dart';
 import 'package:youbuilt/model/seller_model.dart.dart';
+import 'package:youbuilt/model/service.dart';
 import 'package:youbuilt/model/serviceCatmodel.dart';
 import 'package:youbuilt/model/service_booking_model.dart';
+import 'package:youbuilt/model/service_detail_model.dart';
 import 'package:youbuilt/model/servicemodel.dart';
 import 'package:youbuilt/model/serviceviewmodel.dart';
 import 'package:youbuilt/model/snaglist_model.dart';
@@ -48,6 +59,7 @@ import 'package:youbuilt/services/urls.dart';
 import 'package:youbuilt/utils/toast_util.dart';
 
 import '../model/oder_details.dart';
+import '../model/service_id_model.dart';
 import '../screen/login.dart';
 import '../utils/constants.dart';
 import 'netwrkscreen.dart';
@@ -711,7 +723,7 @@ class NetworkHelper {
     http.Response? response;
     response = await _getRequest(
       context: context,
-      url: "${Urls.snaglistUrl}/$id&page=$page&limit=$limit",
+      url: "${Urls.snaglistUrl}/$id?page=$page&limit=$limit",
     );
     if (response != null) {
       log("$response");
@@ -1302,6 +1314,25 @@ class NetworkHelper {
     }
   }
 
+  Future<RentalModel?> getRentalList(
+    BuildContext context,
+    String? id,
+    String? keywrd,
+  ) async {
+    http.Response? response;
+    response = await _getRequest(
+      context: context,
+      url: "${Urls.rentalUrl}?rentalCategoryId=$id&keyword=$keywrd",
+    );
+    if (response != null) {
+      log("$response");
+      return RentalModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
   Future<ServiceCategryListModel?> getServiceCatgryList(
     BuildContext context,
   ) async {
@@ -1313,6 +1344,18 @@ class NetworkHelper {
     if (response != null) {
       log("$response");
       return ServiceCategryListModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<RentalCategoryModel?> getRentalCatgryList(BuildContext context) async {
+    http.Response? response;
+    response = await _getRequest(context: context, url: "${Urls.rentalCatUrl}");
+    if (response != null) {
+      log("$response");
+      return RentalCategoryModel.fromJson(jsonDecode(response.body));
     } else {
       ToastUtil.show("Error in fetching details");
       return null;
@@ -1331,6 +1374,24 @@ class NetworkHelper {
     if (response != null) {
       log("$response");
       return ServiceViewModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<RentalViewModel?> getRentalView(
+    BuildContext context,
+    String? id,
+  ) async {
+    http.Response? response;
+    response = await _getRequest(
+      context: context,
+      url: "${Urls.rentalViewUrl}/$id",
+    );
+    if (response != null) {
+      log("$response");
+      return RentalViewModel.fromJson(jsonDecode(response.body));
     } else {
       ToastUtil.show("Error in fetching details");
       return null;
@@ -1635,24 +1696,39 @@ class NetworkHelper {
 
       request.fields['builtUpArea'] = buildarea;
       request.fields['categoryType'] = jsonEncode(categoryType);
-
-      // 📎 Optional file
+      // request.fields['categoryType'] = jsonEncode(categoryType);
       if (file != null) {
-        request.files.add(await http.MultipartFile.fromPath('file', file.path));
+        request.files.add(await getMultipartFile(file, 'drawings'));
       }
+
       if (siteplan != null) {
-        request.files.add(
-          await http.MultipartFile.fromPath('siteplan', siteplan.path),
-        );
+        request.files.add(await getMultipartFile(siteplan, 'sitePlan'));
       }
+
       if (govtaper != null) {
-        request.files.add(
-          await http.MultipartFile.fromPath('govtpaper', govtaper.path),
-        );
+        request.files.add(await getMultipartFile(govtaper, 'govPapers'));
       }
+
       if (boq != null) {
-        request.files.add(await http.MultipartFile.fromPath('boq', boq.path));
+        request.files.add(await getMultipartFile(boq, 'boq'));
       }
+      // 📎 Optional file
+      // if (file != null) {
+      //   request.files.add(await http.MultipartFile.fromPath('file', file.path));
+      // }
+      // if (siteplan != null) {
+      //   request.files.add(
+      //     await http.MultipartFile.fromPath('file', siteplan.path),
+      //   );
+      // }
+      // if (govtaper != null) {
+      //   request.files.add(
+      //     await http.MultipartFile.fromPath('file', govtaper.path),
+      //   );
+      // }
+      // if (boq != null) {
+      //   request.files.add(await http.MultipartFile.fromPath('file', boq.path));
+      // }
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
@@ -2055,14 +2131,22 @@ class NetworkHelper {
   }) async {
     try {
       http.Response? response;
+
+      // Create body map
+      Map<String, dynamic> body = {
+        "userAddressId": addressId,
+        "paymentMethod": pMethod,
+      };
+
+      // Add projectId only if pid is not null
+      if (pid != null && pid.isNotEmpty) {
+        body["projectId"] = pid;
+      }
+
       response = await _patchRequest(
         context: context,
         url: "${Urls.payementUrl}/$orderId",
-        body: {
-          "projectId": pid,
-          "userAddressId": addressId,
-          "paymentMethod": pMethod,
-        },
+        body: body,
       );
 
       if (response == null) {
@@ -2074,6 +2158,34 @@ class NetworkHelper {
       return {"status": false, "error": e.toString()};
     }
   }
+  // Future<Map<String, dynamic>> placeOrder({
+  //   required BuildContext context,
+  //   required String? pid,
+  //   required String? addressId,
+  //   required String? orderId,
+  //   required String? pMethod,
+  // }) async {
+  //   try {
+  //     http.Response? response;
+  //     response = await _patchRequest(
+  //       context: context,
+  //       url: "${Urls.payementUrl}/$orderId",
+  //       body: {
+  //         // "projectId": pid,
+  //         "userAddressId": addressId,
+  //         "paymentMethod": pMethod,
+  //       },
+  //     );
+  //
+  //     if (response == null) {
+  //       return {"status": false, "error": "No response from server"};
+  //     }
+  //
+  //     return jsonDecode(response.body);
+  //   } catch (e) {
+  //     return {"status": false, "error": e.toString()};
+  //   }
+  // }
 
   Future<Map<String, dynamic>> bookingSection({
     required BuildContext context,
@@ -2157,6 +2269,46 @@ class NetworkHelper {
     }
   }
 
+  Future<Map<String, dynamic>> rentalBooking({
+    required BuildContext context,
+    required String name,
+    required String phoneNumber,
+    required String rentalId,
+    required String pId,
+    required String addressid,
+    required String code,
+    required String pincode,
+    required String message,
+    required String date,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _postRequest(
+        context: context,
+        url: "${Urls.bookingRentalUrl}",
+        body: {
+          'rentalServiceId': rentalId,
+          'projectId': pId,
+          'userAddressId': addressid,
+          'name': name,
+          'code': code,
+          'phoneNumber': phoneNumber,
+          'message': message,
+          'pinCode': pincode,
+          'date': date,
+        },
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
   Future<ProjectWithIdModel?> getProjectSingle(
     BuildContext context,
     String? id,
@@ -2212,6 +2364,28 @@ class NetworkHelper {
       response = await _deleteRequest(
         context: context,
         url: "${Urls.walletDelete}/$eid",
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> addressDelete({
+    required BuildContext context,
+
+    required String? eid,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _deleteRequest(
+        context: context,
+        url: "${Urls.addressDelete}/$eid",
       );
 
       if (response == null) {
@@ -2349,10 +2523,50 @@ class NetworkHelper {
     }
   }
 
+  Future<Map<String, dynamic>> editAddress({
+    required BuildContext context,
+    required String? title,
+    required String? addressId,
+    required String? address,
+    required String? pincode,
+    required String? lat,
+    required String? lng,
+    required String? name,
+    required String? phone,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _patchRequest(
+        context: context,
+        url: "${Urls.addressDelete}/$addressId",
+        body: {
+          "address": address ?? "",
+          "addressTitle": title ?? "",
+          "pinCode": pincode ?? "",
+          "location": jsonEncode({
+            "lat": double.tryParse(lat ?? "") ?? 0.0,
+            "lng": double.tryParse(lng ?? "") ?? 0.0,
+          }),
+          "name": name ?? "",
+          "phoneNumber": phone ?? "",
+          "code": "91",
+        },
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
   Future<String?> downloadEstimationPdf(int id) async {
     try {
       final url = Uri.parse("${Urls.downloadUrl}/$id");
-
+      print("$url");
       final response = await http.get(
         url,
         headers: {"Authorization": "Bearer $accessToken"},
@@ -2374,33 +2588,104 @@ class NetworkHelper {
     }
   }
 
+  // import 'dart:io';
+  // import 'package:external_path/external_path.dart';
+  // import 'package:permission_handler/permission_handler.dart';
+
   Future<String?> downloadSnagReport(int id) async {
     try {
       final url = Uri.parse("${Urls.downloadSnagUrl}?projectId=$id");
-
+      log("$url");
       final response = await http.get(
         url,
         headers: {"Authorization": "Bearer $accessToken"},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final dir = await getApplicationDocumentsDirectory();
-        final file = File("${dir.path}/snag_report_$id.pdf");
+        // ✅ ADD PERMISSION HERE
+        if (Platform.isAndroid) {
+          if (!await Permission.manageExternalStorage.isGranted) {
+            final status = await Permission.manageExternalStorage.request();
+
+            if (!status.isGranted) {
+              print("Storage permission denied");
+              return null;
+            }
+          }
+        }
+
+        // ✅ THEN access storage
+        final path = await ExternalPath.getExternalStoragePublicDirectory(
+          ExternalPath.DIRECTORY_DOWNLOAD,
+        );
+
+        final file = File("$path/youbuilt_snag_report_$id.pdf");
 
         await file.writeAsBytes(response.bodyBytes);
 
-        print("Report downloaded to: ${file.path}");
-        return file.path; // return path
+        print("Downloaded: ${file.path}");
+        return file.path;
       } else {
-        print("Failed to download report");
         return null;
       }
     } catch (e) {
-      print("PDF Error: $e");
+      print("Error: $e");
       return null;
     }
   }
+  // Future<String?> downloadSnagReport(int id) async {
+  //   try {
+  //     final url = Uri.parse("${Urls.downloadSnagUrl}?projectId=$id");
+  //
+  //     final response = await http.get(
+  //       url,
+  //       headers: {"Authorization": "Bearer $accessToken"},
+  //     );
+  //
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       final dir = await getApplicationDocumentsDirectory();
+  //       final file = File("${dir.path}/snag_report_$id.pdf");
+  //
+  //       await file.writeAsBytes(response.bodyBytes);
+  //
+  //       print("Report downloaded to: ${file.path}");
+  //       return file.path; // return path
+  //     } else {
+  //       print("Failed to download report");
+  //       return null;
+  //     }
+  //   } catch (e) {
+  //     print("PDF Error: $e");
+  //     return null;
+  //   }
+  // }
 
+  // Future<String?> downloadWalletReport(int id) async {
+  //   try {
+  //     final url = Uri.parse("${Urls.downloadWalletUrl}?projectId=$id");
+  //
+  //     final response = await http.get(
+  //       url,
+  //       headers: {"Authorization": "Bearer $accessToken"},
+  //     );
+  //
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       final dir = await getApplicationDocumentsDirectory();
+  //       final file = File("${dir.path}/wallet_report_$id.pdf");
+  //
+  //       await file.writeAsBytes(response.bodyBytes);
+  //
+  //       print("Report downloaded to: ${file.path}");
+  //       return file.path; // return path
+  //     } else {
+  //       print("Failed to download report");
+  //       return null;
+  //     }
+  //   } catch (e) {
+  //     print("PDF Error: $e");
+  //     return null;
+  //   }
+  // }
   Future<String?> downloadWalletReport(int id) async {
     try {
       final url = Uri.parse("${Urls.downloadWalletUrl}?projectId=$id");
@@ -2411,20 +2696,220 @@ class NetworkHelper {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final dir = await getApplicationDocumentsDirectory();
-        final file = File("${dir.path}/wallet_report_$id.pdf");
+        // ✅ ADD PERMISSION HERE
+        if (Platform.isAndroid) {
+          if (!await Permission.manageExternalStorage.isGranted) {
+            final status = await Permission.manageExternalStorage.request();
+
+            if (!status.isGranted) {
+              print("Storage permission denied");
+              return null;
+            }
+          }
+        }
+
+        // ✅ Get Downloads folder
+        final path = await ExternalPath.getExternalStoragePublicDirectory(
+          ExternalPath.DIRECTORY_DOWNLOAD,
+        );
+
+        final file = File("$path/youbuilt_wallet_report_$id.pdf");
 
         await file.writeAsBytes(response.bodyBytes);
 
-        print("Report downloaded to: ${file.path}");
-        return file.path; // return path
+        print("Downloaded: ${file.path}");
+        return file.path;
       } else {
-        print("Failed to download report");
         return null;
       }
     } catch (e) {
-      print("PDF Error: $e");
+      print("Error: $e");
       return null;
+    }
+  }
+
+  Future<String?> downloadOverviewReport(int id) async {
+    try {
+      final url = Uri.parse("${Urls.downloadOverviewUrl}/$id");
+
+      final response = await http.get(
+        url,
+        headers: {"Authorization": "Bearer $accessToken"},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // ✅ ADD PERMISSION HERE
+        if (Platform.isAndroid) {
+          if (!await Permission.manageExternalStorage.isGranted) {
+            final status = await Permission.manageExternalStorage.request();
+
+            if (!status.isGranted) {
+              print("Storage permission denied");
+              return null;
+            }
+          }
+        }
+
+        // ✅ Get Downloads folder
+        final path = await ExternalPath.getExternalStoragePublicDirectory(
+          ExternalPath.DIRECTORY_DOWNLOAD,
+        );
+
+        final file = File("$path/youbuilt_overview_report_$id.pdf");
+
+        await file.writeAsBytes(response.bodyBytes);
+
+        print("Downloaded: ${file.path}");
+        return file.path;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("Error: $e");
+      return null;
+    }
+  }
+
+  Future<ServiceDetailsModelNew?> getProjectServiceDEtails(
+    BuildContext context,
+    String? id,
+  ) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.projectServiceUrl}/$id",
+    );
+
+    if (response != null) {
+      // log("URL: $uri");
+      log("Response: ${response.body}");
+      return ServiceDetailsModelNew.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<ApprovalOederModel?> getApprovals({
+    required BuildContext context,
+    required String? page,
+    required String? limit,
+    String? id,
+  }) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.approvalsUrl}/$id?page=$page&limit=$limit",
+    );
+
+    if (response != null) {
+      // log("URL: $uri");
+      log("Response: ${response.body}");
+      return ApprovalOederModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<InvoiceModel?> getEstimationInvoice(
+    BuildContext context,
+    String? id,
+  ) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.viewEstimationUrl}/$id",
+    );
+
+    if (response != null) {
+      // log("URL: $uri");
+      log("Response: ${response.body}");
+      return InvoiceModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<InvoiceQyotaionModel?> getQuotationInvoice(
+    BuildContext context,
+    String? id,
+  ) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.viewQuotesUrl}/$id",
+    );
+
+    if (response != null) {
+      // log("URL: $uri");
+      log("Response: ${response.body}");
+      return InvoiceQyotaionModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<ServiceDetailsModelNew?> getServiiceBookDetails(
+    BuildContext context,
+    String? id,
+  ) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.serviceDetailUrl}/$id",
+    );
+
+    if (response != null) {
+      // log("URL: $uri");
+      log("Response: ${response.body}");
+      return ServiceDetailsModelNew.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> estimationStatus({
+    required BuildContext context,
+    required String? statuss,
+    required String? id,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _postRequest(
+        context: context,
+        url: "${Urls.statusEstimationUrl}/$id",
+        body: {"status": statuss},
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> quotationStatus({
+    required BuildContext context,
+    required String? statuss,
+    required String? id,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _postRequest(
+        context: context,
+        url: "${Urls.statusQuotesUrl}/$id",
+        body: {"quatationStatus": statuss},
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
     }
   }
 
@@ -2439,7 +2924,7 @@ class NetworkHelper {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final dir = await getApplicationDocumentsDirectory();
-        final file = File("${dir.path}/estimation_$id.pdf");
+        final file = File("${dir.path}/quotation_$id.pdf");
 
         await file.writeAsBytes(response.bodyBytes);
 
@@ -2452,4 +2937,63 @@ class NetworkHelper {
       return null;
     }
   }
+
+  Future<String?> downloadInvoicePdf(int orderId, int storeid) async {
+    try {
+      final url = Uri.parse("${Urls.downloadInvoiceUrl}/$orderId/$storeid");
+      print("$url");
+      final response = await http.get(
+        url,
+        headers: {"Authorization": "Bearer $accessToken"},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File("${dir.path}/youbuilt_quotation_$orderId].pdf");
+
+        await file.writeAsBytes(response.bodyBytes);
+
+        return file.path;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("PDF Error: $e");
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> serviceStatus({
+    required BuildContext context,
+    required String? statuss,
+    required String? id,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _postRequest(
+        context: context,
+        url: "${Urls.statusServiceUrl}/$id",
+        body: {"status": statuss},
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+}
+
+Future<http.MultipartFile> getMultipartFile(File file, String fieldName) async {
+  final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+  final mimeParts = mimeType.split('/');
+
+  return await http.MultipartFile.fromPath(
+    fieldName,
+    file.path,
+    contentType: MediaType(mimeParts[0], mimeParts[1]),
+  );
 }

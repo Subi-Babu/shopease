@@ -94,47 +94,44 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                 final balance =
                     pay.selectedProjectBalance; // Keep as nullable double?
 
-                if (balance == null) {
-                  // Balance not yet fetched, optionally show a loading snackbar
-                  // ScaffoldMessenger.of(context).showSnackBar(
-                  //   const SnackBar(
-                  //     content: Text("Loading balance, please wait..."),
-                  //   ),
-                  // );
-                  return;
-                }
+                // ✅ Only check wallet balance if YB Wallet is selected
+                if (selectedPayment == "YBCash") {
+                  final balance = pay.selectedProjectBalance;
 
-                // ✅ pid exists + balance is zero → show popup
-                if (balance <= 0.0) {
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        content: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Image.asset(
-                              "assets/suff.jpg",
-                              height: 50,
-                              width: 50,
-                            ),
-                            const SizedBox(height: 10),
-                            const Text("Insufficient Wallet Amount"),
-                          ],
-                        ),
-                        actions: [
-                          CustomButton(
-                            text: "Close",
-                            onPress: () => Navigator.pop(context),
+                  if (balance == null) {
+                    return;
+                  }
+
+                  if (balance <= 0.0) {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          content: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Image.asset(
+                                "assets/suff.jpg",
+                                height: 50,
+                                width: 50,
+                              ),
+                              const SizedBox(height: 10),
+                              const Text("Insufficient Wallet Amount"),
+                            ],
                           ),
-                        ],
-                      );
-                    },
-                  );
-                  return;
+                          actions: [
+                            CustomButton(
+                              text: "Close",
+                              onPress: () => Navigator.pop(context),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                    return;
+                  }
                 }
-
                 log("----6----${balance}");
                 log("----7----${widget.pid}");
 
@@ -145,7 +142,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                   orderId: widget.orderId ?? "",
                   adddressId:
                       pay.addressListModel?.data?.first?.id.toString() ?? "",
-                  methodPay: "YBCash",
+                  methodPay: selectedPayment,
                 );
               },
             );
@@ -254,7 +251,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                _paymentOption("Pay Later", "Paylater"),
+                _paymentOption("Pay Later", "cod"),
 
                 const SizedBox(height: 10),
                 _paymentOption("Razor Pay", "RazorPay"),

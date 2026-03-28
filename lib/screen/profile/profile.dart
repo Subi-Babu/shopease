@@ -30,7 +30,7 @@ class _ProfileMenuPageState extends State<ProfileMenuPage> {
       final reg = Provider.of<ProjectProvider>(context, listen: false);
       await reg.fetchProfile(context: context);
       await reg.fetchOrderList(context: context, keyword: "");
-      await reg.fetchServiceBooking(context: context);
+          await reg.fetchServiceBooking(context: context);
     });
     // TODO: implement initState
     super.initState();

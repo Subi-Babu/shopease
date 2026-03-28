@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:youbuilt/screen/profile/service_book_details.dart';
 
 import '../../providers/signin/project_provider.dart';
 import '../../utils/colors.dart';
@@ -97,7 +98,19 @@ class MyServicePage extends StatelessWidget {
                         const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       return OrderCard3(
+                        ordertatus:
+                            order.serviceBookingModel?.data?[index]?.status
+                                ?.replaceAll("_", " ")
+                                .toString() ??
+                            "",
                         onTap: () async {
+                          await order.fetchServiceDetails(
+                            context: context,
+                            id:
+                                order.serviceBookingModel?.data?[index]?.id
+                                    .toString() ??
+                                "",
+                          );
                           // await order.fetchOrderView(
                           //   context: context,
                           //   id:
@@ -106,13 +119,24 @@ class MyServicePage extends StatelessWidget {
                           //       "",
                           // );
                         },
-                        imageUrl:
-                            order?.serviceBookingModel?.data?[index].file ?? "",
-                        orderId: "",
-                        items:
-                            order.serviceBookingModel?.data?[index]?.name ?? "",
-                        // total:
-                        total: formatDate(
+                        // imageUrl:
+                        //     order?.serviceBookingModel?.data?[index].file ?? "",
+                        orderId:
+                            order
+                                .serviceBookingModel
+                                ?.data?[index]
+                                ?.serviceBookingId
+                                .toString() ??
+                            "",
+                        // items:
+                        //     order.serviceBookingModel?.data?[index]?.name ?? "",
+                        total:
+                            order
+                                .serviceBookingModel
+                                ?.data?[index]
+                                ?.grandTotal ??
+                            "",
+                        items: formatDate(
                           order.serviceBookingModel?.data?[index]?.date
                                   .toString() ??
                               "",
@@ -133,67 +157,77 @@ class MyServicePage extends StatelessWidget {
 
 class OrderCard3 extends StatelessWidget {
   final String orderId;
+  final String ordertatus;
   final dynamic items;
   final dynamic total;
   final void Function()? onTap;
-  final String imageUrl;
 
   const OrderCard3({
     super.key,
     required this.orderId,
+    required this.ordertatus,
     required this.items,
     required this.total,
     required this.onTap,
-    required this.imageUrl,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Color(0xffF4F4F4),
+          color: const Color(0xffF4F4F4),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Color(0xffD1D5DB)),
+          border: Border.all(color: const Color(0xffD1D5DB)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Text(
-            //   "#${orderId}",
-            //   style: TextStyle(
-            //     color: Color(0xff737373),
-            //     fontFamily: "Manrope",
-            //     fontWeight: FontWeight.w500,
-            //     fontSize: 14.sp,
-            //   ),
-            // ),
-            // const SizedBox(height: 10),
             Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
               children: [
-                CachedNetworkImage(
-                  imageUrl: imageUrl,
-                  height: 50,
-                  width: 50,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => const SizedBox(
-                    height: 50,
-                    width: 50,
-                    child: Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    height: 50,
-                    width: 50,
-                    color: Colors.grey.shade300,
-                    child: const Icon(Icons.image_not_supported),
+                Text(
+                  "#$orderId",
+                  style: TextStyle(
+                    color: const Color(0xff737373),
+                    fontFamily: "Manrope",
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14.sp,
                   ),
                 ),
-                SizedBox(width: 15),
+                Container(
+                  padding: EdgeInsets.only(
+                    left: 4,
+                    right: 4,
+                    top: 2,
+                    bottom: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.green),
+                  ),
+                  child: Text(
+                    "$ordertatus",
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontFamily: "Manrope",
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14.sp,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 Text(
                   "$items",
                   style: TextStyle(
@@ -203,28 +237,19 @@ class OrderCard3 extends StatelessWidget {
                     fontSize: 16.sp,
                   ),
                 ),
-                Spacer(),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    "$total",
-                    style: TextStyle(
-                      color: primaryClr,
-                      fontFamily: "Manrope",
-                      fontWeight: FontWeight.w500,
-                      fontSize: 16.sp,
-                    ),
-                  ),
-                ),
+                (total == null || total.toString().isEmpty)
+                    ? const SizedBox()
+                    : Text(
+                        "Total: ₹${formatter.format(int.tryParse(total.toString()) ?? 0)}",
+                        style: TextStyle(
+                          color: primaryClr,
+                          fontFamily: "Manrope",
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16.sp,
+                        ),
+                      ),
               ],
             ),
-            const SizedBox(height: 4),
-            // Text(
-            //   deliveredDate,
-            //   style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-            // ),
-            // const SizedBox(height: 6),
-            //
           ],
         ),
       ),

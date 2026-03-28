@@ -12,48 +12,63 @@ class QuatationModel {
   bool? status;
   String? message;
   List<Datum>? data;
+  int? page;
+  int? totalQuatation;
+  int? totalPages;
 
   QuatationModel({
     this.status,
     this.message,
     this.data,
+    this.page,
+    this.totalQuatation,
+    this.totalPages,
   });
 
   factory QuatationModel.fromJson(Map<String, dynamic> json) => QuatationModel(
     status: json["status"],
     message: json["message"],
     data: json["data"] == null ? [] : List<Datum>.from(json["data"]!.map((x) => Datum.fromJson(x))),
+    page: json["page"],
+    totalQuatation: json["totalQuatation"],
+    totalPages: json["totalPages"],
   );
 
   Map<String, dynamic> toJson() => {
     "status": status,
     "message": message,
     "data": data == null ? [] : List<dynamic>.from(data!.map((x) => x.toJson())),
+    "page": page,
+    "totalQuatation": totalQuatation,
+    "totalPages": totalPages,
   };
 }
 
 class Datum {
   int? id;
+  String? quatationId;
   String? name;
   String? email;
   String? code;
   String? phoneNumber;
   String? projectType;
   int? builtUpArea;
-  int? plotArea;
-  int? budget;
+  dynamic plotArea;
+  dynamic budget;
   DateTime? date;
+  String? status;
   String? message;
   int? userId;
   bool? isActive;
   bool? isDelete;
   DateTime? createdAt;
-  dynamic location;
+  String? location;
   int? pinCode;
   Users? users;
 
   Datum({
     this.id,
+    this.quatationId,
     this.name,
     this.email,
     this.code,
@@ -63,6 +78,7 @@ class Datum {
     this.plotArea,
     this.budget,
     this.date,
+    this.status,
     this.message,
     this.userId,
     this.isActive,
@@ -75,6 +91,7 @@ class Datum {
 
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
     id: json["id"],
+    quatationId: json["quatationId"],
     name: json["name"],
     email: json["email"],
     code: json["code"],
@@ -84,6 +101,7 @@ class Datum {
     plotArea: json["plotArea"],
     budget: json["budget"],
     date: json["date"] == null ? null : DateTime.parse(json["date"]),
+    status: json["status"],
     message: json["message"],
     userId: json["userId"],
     isActive: json["isActive"],
@@ -96,6 +114,7 @@ class Datum {
 
   Map<String, dynamic> toJson() => {
     "id": id,
+    "quatationId": quatationId,
     "name": name,
     "email": email,
     "code": code,
@@ -105,6 +124,7 @@ class Datum {
     "plotArea": plotArea,
     "budget": budget,
     "date": date?.toIso8601String(),
+    "status": status,
     "message": message,
     "userId": userId,
     "isActive": isActive,

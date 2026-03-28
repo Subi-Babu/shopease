@@ -23,13 +23,34 @@ class _MyCartPageState extends State {
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = context.read<ProjectProvider>();
-      reg.selectedProjectId = null; // ✅ reset value so hint shows
+
+      reg.selectedProjectId = null;
 
       await reg.fetchCartList(context: context);
       await reg.fetchAddressList(context: context);
       await reg.fetchAssignProjectList(context: context);
 
-      /// ✅ Auto select first project
+      /// ✅ AUTO SELECT PROJECT FROM CART
+      final cartList = reg.cartListModel?.data ?? [];
+
+      if (cartList.isNotEmpty) {
+        final cartProjectId = cartList.first.projectId; // 👈 from API
+
+        if (cartProjectId != null) {
+          final projectList = reg.assignProjectModel?.projectDropDown ?? [];
+
+          final matchedProject = projectList.firstWhere(
+            (e) => e?.value == cartProjectId,
+          );
+
+          if (matchedProject != null) {
+            reg.setSelectedProject(
+              matchedProject.value,
+              matchedProject.walletBalance?.toDouble(),
+            );
+          }
+        }
+      }
     });
 
     super.initState();
@@ -90,13 +111,38 @@ class _MyCartPageState extends State {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Text(
-                  "Cart is empty",
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      "assets/emptycart.png",
+                      height: 150,
+                      width: 150,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      "No Products",
+                      style: TextStyle(
+                        fontFamily: "Manrope",
+
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                        color: primaryClr,
+                      ),
+                    ),
+                    Text(
+                      "Discover new products and start shopping",
+                      style: TextStyle(
+                        height: 3,
+                        fontFamily: "Manrope",
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xff737373),
+                      ),
+                    ),
+                    SizedBox(height: 50),
+                  ],
                 ),
               ),
             );

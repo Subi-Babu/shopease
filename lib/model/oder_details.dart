@@ -4,8 +4,7 @@
 
 import 'dart:convert';
 
-OrderViewModel orderViewModelFromJson(String str) =>
-    OrderViewModel.fromJson(json.decode(str));
+OrderViewModel orderViewModelFromJson(String str) => OrderViewModel.fromJson(json.decode(str));
 
 String orderViewModelToJson(OrderViewModel data) => json.encode(data.toJson());
 
@@ -14,7 +13,11 @@ class OrderViewModel {
   String? message;
   Data? data;
 
-  OrderViewModel({this.status, this.message, this.data});
+  OrderViewModel({
+    this.status,
+    this.message,
+    this.data,
+  });
 
   factory OrderViewModel.fromJson(Map<String, dynamic> json) => OrderViewModel(
     status: json["status"],
@@ -40,11 +43,15 @@ class Data {
   dynamic paidAmount;
   dynamic pendingAmount;
   UserAddress? userAddress;
+  String? orderStatus;
+  dynamic totalDeliveryCharge;
+  DateTime? createdAt;
   Users? users;
   dynamic projects;
   List<OrderItem>? orderItems;
   dynamic totalGst;
   dynamic totalCommision;
+  List<StoreList>? storeList;
 
   Data({
     this.userId,
@@ -57,11 +64,15 @@ class Data {
     this.paidAmount,
     this.pendingAmount,
     this.userAddress,
+    this.orderStatus,
+    this.totalDeliveryCharge,
+    this.createdAt,
     this.users,
     this.projects,
     this.orderItems,
     this.totalGst,
     this.totalCommision,
+    this.storeList,
   });
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
@@ -74,18 +85,16 @@ class Data {
     discount: json["discount"],
     paidAmount: json["paidAmount"],
     pendingAmount: json["pendingAmount"],
-    userAddress: json["userAddress"] == null
-        ? null
-        : UserAddress.fromJson(json["userAddress"]),
+    userAddress: json["userAddress"] == null ? null : UserAddress.fromJson(json["userAddress"]),
+    orderStatus: json["orderStatus"],
+    totalDeliveryCharge: json["totalDeliveryCharge"],
+    createdAt: json["createdAt"] == null ? null : DateTime.parse(json["createdAt"]),
     users: json["users"] == null ? null : Users.fromJson(json["users"]),
     projects: json["projects"],
-    orderItems: json["orderItems"] == null
-        ? []
-        : List<OrderItem>.from(
-            json["orderItems"]!.map((x) => OrderItem.fromJson(x)),
-          ),
+    orderItems: json["orderItems"] == null ? [] : List<OrderItem>.from(json["orderItems"]!.map((x) => OrderItem.fromJson(x))),
     totalGst: json["totalGST"],
     totalCommision: json["totalCommision"],
+    storeList: json["storeList"] == null ? [] : List<StoreList>.from(json["storeList"]!.map((x) => StoreList.fromJson(x))),
   );
 
   Map<String, dynamic> toJson() => {
@@ -99,13 +108,15 @@ class Data {
     "paidAmount": paidAmount,
     "pendingAmount": pendingAmount,
     "userAddress": userAddress?.toJson(),
+    "orderStatus": orderStatus,
+    "totalDeliveryCharge": totalDeliveryCharge,
+    "createdAt": createdAt?.toIso8601String(),
     "users": users?.toJson(),
     "projects": projects,
-    "orderItems": orderItems == null
-        ? []
-        : List<dynamic>.from(orderItems!.map((x) => x.toJson())),
+    "orderItems": orderItems == null ? [] : List<dynamic>.from(orderItems!.map((x) => x.toJson())),
     "totalGST": totalGst,
     "totalCommision": totalCommision,
+    "storeList": storeList == null ? [] : List<dynamic>.from(storeList!.map((x) => x.toJson())),
   };
 }
 
@@ -113,10 +124,10 @@ class OrderItem {
   int? id;
   int? storeId;
   int? itemId;
-  int? mrp;
-  int? calculatorPrice;
+  dynamic mrp;
+  dynamic calculatorPrice;
   int? qty;
-  int? categoryId;
+  dynamic categoryId;
   dynamic igst;
   dynamic sgst;
   dynamic cgst;
@@ -125,6 +136,8 @@ class OrderItem {
   AttributeName? attributeName;
   String? storeStatus;
   String? deliveryStatus;
+  dynamic deliveryCharge;
+  bool? isDelivaryfree;
   Store? store;
   Item? item;
 
@@ -144,6 +157,8 @@ class OrderItem {
     this.attributeName,
     this.storeStatus,
     this.deliveryStatus,
+    this.deliveryCharge,
+    this.isDelivaryfree,
     this.store,
     this.item,
   });
@@ -160,14 +175,12 @@ class OrderItem {
     sgst: json["SGST"],
     cgst: json["CGST"],
     commision: json["commision"],
-    attributecategory: json["attributecategory"] == null
-        ? []
-        : List<dynamic>.from(json["attributecategory"]!.map((x) => x)),
-    attributeName: json["attributeName"] == null
-        ? null
-        : AttributeName.fromJson(json["attributeName"]),
+    attributecategory: json["attributecategory"] == null ? [] : List<dynamic>.from(json["attributecategory"]!.map((x) => x)),
+    attributeName: json["attributeName"] == null ? null : AttributeName.fromJson(json["attributeName"]),
     storeStatus: json["storeStatus"],
     deliveryStatus: json["deliveryStatus"],
+    deliveryCharge: json["deliveryCharge"],
+    isDelivaryfree: json["isDelivaryfree"],
     store: json["store"] == null ? null : Store.fromJson(json["store"]),
     item: json["item"] == null ? null : Item.fromJson(json["item"]),
   );
@@ -184,12 +197,12 @@ class OrderItem {
     "SGST": sgst,
     "CGST": cgst,
     "commision": commision,
-    "attributecategory": attributecategory == null
-        ? []
-        : List<dynamic>.from(attributecategory!.map((x) => x)),
+    "attributecategory": attributecategory == null ? [] : List<dynamic>.from(attributecategory!.map((x) => x)),
     "attributeName": attributeName?.toJson(),
     "storeStatus": storeStatus,
     "deliveryStatus": deliveryStatus,
+    "deliveryCharge": deliveryCharge,
+    "isDelivaryfree": isDelivaryfree,
     "store": store?.toJson(),
     "item": item?.toJson(),
   };
@@ -198,16 +211,18 @@ class OrderItem {
 class AttributeName {
   AttributeName();
 
-  factory AttributeName.fromJson(Map<String, dynamic> json) => AttributeName();
+  factory AttributeName.fromJson(Map<String, dynamic> json) => AttributeName(
+  );
 
-  Map<String, dynamic> toJson() => {};
+  Map<String, dynamic> toJson() => {
+  };
 }
 
 class Item {
   int? id;
   String? name;
   String? units;
-  int? gst;
+  dynamic gst;
   String? description;
   List<ItemImage>? itemImages;
 
@@ -226,11 +241,7 @@ class Item {
     units: json["units"],
     gst: json["gst"],
     description: json["description"],
-    itemImages: json["itemImages"] == null
-        ? []
-        : List<ItemImage>.from(
-            json["itemImages"]!.map((x) => ItemImage.fromJson(x)),
-          ),
+    itemImages: json["itemImages"] == null ? [] : List<ItemImage>.from(json["itemImages"]!.map((x) => ItemImage.fromJson(x))),
   );
 
   Map<String, dynamic> toJson() => {
@@ -239,9 +250,7 @@ class Item {
     "units": units,
     "gst": gst,
     "description": description,
-    "itemImages": itemImages == null
-        ? []
-        : List<dynamic>.from(itemImages!.map((x) => x.toJson())),
+    "itemImages": itemImages == null ? [] : List<dynamic>.from(itemImages!.map((x) => x.toJson())),
   };
 }
 
@@ -276,12 +285,8 @@ class ItemImage {
     itemId: json["itemId"],
     isActive: json["isActive"],
     isDelete: json["isDelete"],
-    createdAt: json["createdAt"] == null
-        ? null
-        : DateTime.parse(json["createdAt"]),
-    updatedAt: json["updatedAt"] == null
-        ? null
-        : DateTime.parse(json["updatedAt"]),
+    createdAt: json["createdAt"] == null ? null : DateTime.parse(json["createdAt"]),
+    updatedAt: json["updatedAt"] == null ? null : DateTime.parse(json["updatedAt"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -298,6 +303,7 @@ class ItemImage {
 }
 
 class Store {
+  String? storeName;
   int? id;
   String? address1;
   String? address2;
@@ -310,6 +316,7 @@ class Store {
   Cluster? district;
 
   Store({
+    this.storeName,
     this.id,
     this.address1,
     this.address2,
@@ -323,6 +330,7 @@ class Store {
   });
 
   factory Store.fromJson(Map<String, dynamic> json) => Store(
+    storeName: json["storeName"],
     id: json["id"],
     address1: json["address1"],
     address2: json["address2"],
@@ -332,12 +340,11 @@ class Store {
     zone: json["zone"] == null ? null : Cluster.fromJson(json["zone"]),
     cluster: json["cluster"] == null ? null : Cluster.fromJson(json["cluster"]),
     states: json["states"] == null ? null : Cluster.fromJson(json["states"]),
-    district: json["district"] == null
-        ? null
-        : Cluster.fromJson(json["district"]),
+    district: json["district"] == null ? null : Cluster.fromJson(json["district"]),
   );
 
   Map<String, dynamic> toJson() => {
+    "storeName": storeName,
     "id": id,
     "address1": address1,
     "address2": address2,
@@ -355,12 +362,40 @@ class Cluster {
   int? id;
   String? name;
 
-  Cluster({this.id, this.name});
+  Cluster({
+    this.id,
+    this.name,
+  });
 
-  factory Cluster.fromJson(Map<String, dynamic> json) =>
-      Cluster(id: json["id"], name: json["name"]);
+  factory Cluster.fromJson(Map<String, dynamic> json) => Cluster(
+    id: json["id"],
+    name: json["name"],
+  );
 
-  Map<String, dynamic> toJson() => {"id": id, "name": name};
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "name": name,
+  };
+}
+
+class StoreList {
+  int? id;
+  int? storeId;
+
+  StoreList({
+    this.id,
+    this.storeId,
+  });
+
+  factory StoreList.fromJson(Map<String, dynamic> json) => StoreList(
+    id: json["id"],
+    storeId: json["storeId"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "storeId": storeId,
+  };
 }
 
 class UserAddress {
@@ -424,12 +459,8 @@ class UserAddress {
     isActive: json["isActive"],
     isDelete: json["isDelete"],
     isDefault: json["isDefault"],
-    createdAt: json["createdAt"] == null
-        ? null
-        : DateTime.parse(json["createdAt"]),
-    updatedAt: json["updatedAt"] == null
-        ? null
-        : DateTime.parse(json["updatedAt"]),
+    createdAt: json["createdAt"] == null ? null : DateTime.parse(json["createdAt"]),
+    updatedAt: json["updatedAt"] == null ? null : DateTime.parse(json["updatedAt"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -461,7 +492,12 @@ class Users {
   String? code;
   String? phoneNumber;
 
-  Users({this.id, this.name, this.code, this.phoneNumber});
+  Users({
+    this.id,
+    this.name,
+    this.code,
+    this.phoneNumber,
+  });
 
   factory Users.fromJson(Map<String, dynamic> json) => Users(
     id: json["id"],
