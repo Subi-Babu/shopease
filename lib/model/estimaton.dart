@@ -40,7 +40,7 @@ class Datum {
   String? phoneNumber;
   String? projectType;
   int? builtUpArea;
-  int? budget;
+  dynamic budget;
   DateTime? date;
   dynamic document;
   dynamic fileName;

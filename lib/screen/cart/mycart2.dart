@@ -17,16 +17,20 @@ class MyCartPage2 extends StatefulWidget {
 }
 
 class _MyCartPage2State extends State {
+  // @override
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = context.read<ProjectProvider>();
+      reg.selectedProjectId = null; // ✅ reset value so hint shows
 
       await reg.fetchCartList(context: context);
       await reg.fetchAddressList(context: context);
       await reg.fetchAssignProjectList(context: context);
-      reg.selectedProjectId = null;
+
+      /// ✅ Auto select first project
     });
+
     super.initState();
   }
 
@@ -36,7 +40,7 @@ class _MyCartPage2State extends State {
       backgroundColor: Color(0xffF4F4F4),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        leading: SizedBox(),
+
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
@@ -49,7 +53,7 @@ class _MyCartPage2State extends State {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
 
       // ✅ FIX: Checkout bar is now fixed at the bottom via bottomNavigationBar
@@ -513,7 +517,7 @@ class _MyCartPage2State extends State {
             decoration: const InputDecoration(border: InputBorder.none),
             hint: const Text(
               "Assign a project",
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.black),
             ),
             iconEnabledColor: Colors.black,
             style: const TextStyle(color: Colors.black),
@@ -540,7 +544,14 @@ class _MyCartPage2State extends State {
             }).toList(),
 
             onChanged: (value) {
-              project.setSelectedProject(value);
+              final selectedProject = projectList.firstWhere(
+                (element) => element?.value == value,
+              );
+
+              project.setSelectedProject(
+                value,
+                selectedProject?.walletBalance?.toDouble(),
+              );
             },
           ),
         );

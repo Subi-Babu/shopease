@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:math' hide log;
-
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:youbuilt/model/activity_model.dart';
 import 'package:youbuilt/model/addressListModel.dart';
 import 'package:youbuilt/model/assign_project_model.dart';
@@ -25,11 +26,13 @@ import 'package:youbuilt/model/profile_model.dart';
 import 'package:youbuilt/model/project_file_list_model.dart';
 import 'package:youbuilt/model/project_list_model.dart';
 import 'package:youbuilt/model/project_members.dart';
+import 'package:youbuilt/model/project_single_model.dart';
 import 'package:youbuilt/model/project_type_model.dart';
 import 'package:youbuilt/model/project_view_model.dart';
 import 'package:youbuilt/model/projectfolder_model.dart';
 import 'package:youbuilt/model/quatation.dart';
 import 'package:youbuilt/model/sanp_drop_model.dart';
+import 'package:youbuilt/model/search_model.dart';
 import 'package:youbuilt/model/seller_model.dart.dart';
 import 'package:youbuilt/model/serviceCatmodel.dart';
 import 'package:youbuilt/model/service_booking_model.dart';
@@ -300,12 +303,13 @@ class NetworkHelper {
     required BuildContext context,
     required String phonenumber,
     required String pwd,
+    required String code,
   }) async {
     try {
       final response = await _postRequest(
         context: context,
         url: Urls.loginUrl,
-        body: {"phoneNumber": phonenumber, "password": pwd},
+        body: {"phoneNumber": phonenumber, "password": pwd, "code": code},
       );
 
       if (response == null) {
@@ -345,6 +349,42 @@ class NetworkHelper {
     }
   }
 
+  Future<Map<String, dynamic>?> sendForgotOtp({
+    required BuildContext context,
+    required String? phonenumber,
+    required String? code,
+  }) async {
+    try {
+      log("Forgot OTP API called");
+      log("Phone Number: $phonenumber");
+      log("Code: $code");
+
+      final response = await _postRequest(
+        context: context,
+        showErrorToast: false,
+        url: Urls.fSendOtpUrl,
+        body: {"phoneNumber": phonenumber, "code": "+${code}"},
+      );
+
+      log("API Response Raw: ${response?.body}");
+      log("Status Code: ${response?.statusCode}");
+
+      if (response == null) {
+        log("Response is null");
+        return null;
+      }
+
+      var responseData = jsonDecode(response.body);
+
+      log("Decoded Response: $responseData");
+
+      return {"status": response.statusCode, "data": responseData};
+    } catch (e) {
+      log("Error in sendForgotOtp: $e");
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
   Future<Map<String, dynamic>?> verifyOtp({
     required BuildContext context,
     required String? phonenumber,
@@ -368,6 +408,79 @@ class NetworkHelper {
 
       return {"status": response.statusCode, "data": responseData};
     } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>?> forgotVerifyOtp({
+    required BuildContext context,
+    required String? phonenumber,
+    required String? code,
+    required String? otp,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _postRequest(
+        context: context,
+        url: Urls.fverifyUrl,
+        showErrorToast: false,
+        body: {"phoneNumber": phonenumber, "code": "+${code}", "otp": otp},
+      );
+
+      if (response == null) {
+        return null;
+      }
+
+      var responseData = jsonDecode(response.body);
+
+      return {"status": response.statusCode, "data": responseData};
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>?> forgotpwdUpdate({
+    required BuildContext context,
+    required String? phonenumber,
+    required String? code,
+    required String? pwd,
+  }) async {
+    try {
+      log("📤 Forgot Password Update API Called");
+      log("URL: ${Urls.fUpdateOtpUrl}");
+
+      final body = {
+        "phoneNumber": phonenumber,
+        "code": "${code ?? ""}",
+        "password": pwd,
+      };
+
+      log("Request Body: $body");
+
+      http.Response? response = await _postRequest(
+        context: context,
+        url: Urls.fUpdateOtpUrl,
+        showErrorToast: false,
+        body: body,
+      );
+
+      if (response == null) {
+        log("❌ Response is NULL");
+        return null;
+      }
+
+      log("📥 Status Code: ${response.statusCode}");
+      log("📥 Response Body: ${response.body}");
+
+      var responseData = jsonDecode(response.body);
+
+      log("📦 Decoded Response: $responseData");
+
+      return {"status": response.statusCode, "data": responseData};
+    } catch (e, stackTrace) {
+      log("❌ forgotpwdUpdate Exception: $e");
+      log("StackTrace: $stackTrace");
+
       return {"status": false, "error": e.toString()};
     }
   }
@@ -589,11 +702,16 @@ class NetworkHelper {
     }
   }
 
-  Future<SnagListModel?> getSnagList(BuildContext context, String? id) async {
+  Future<SnagListModel?> getSnagList(
+    BuildContext context, {
+    required String? page,
+    required String? limit,
+    required String? id,
+  }) async {
     http.Response? response;
     response = await _getRequest(
       context: context,
-      url: "${Urls.snaglistUrl}/$id",
+      url: "${Urls.snaglistUrl}/$id&page=$page&limit=$limit",
     );
     if (response != null) {
       log("$response");
@@ -918,11 +1036,16 @@ class NetworkHelper {
     }
   }
 
-  Future<WalletModel?> getWalletList(BuildContext context, String? id) async {
+  Future<WalletModel?> getWalletList(
+    BuildContext context,
+    String? id,
+    String? page,
+    String? limit,
+  ) async {
     http.Response? response;
     response = await _getRequest(
       context: context,
-      url: "${Urls.walletUrl}/$id",
+      url: "${Urls.walletUrl}/$id?page=$page&limit=$limit",
     );
     if (response != null) {
       log("$response");
@@ -1061,12 +1184,12 @@ class NetworkHelper {
     BuildContext context,
     String? catId,
     String? endPrice,
-    // String? pid,
+    String? keyword,
   ) async {
     http.Response? response;
     response = await _getRequest(
       context: context,
-      url: "${Urls.itemUrl}?SortBy=&categoryId=$catId",
+      url: "${Urls.itemUrl}?SortBy=&categoryId=$catId&keyword=$keyword",
     );
     if (response != null) {
       log("$response");
@@ -1160,11 +1283,15 @@ class NetworkHelper {
     }
   }
 
-  Future<ServiceModel?> getServiceList(BuildContext context, String? id) async {
+  Future<ServiceModel?> getServiceList(
+    BuildContext context,
+    String? id,
+    String? keywrd,
+  ) async {
     http.Response? response;
     response = await _getRequest(
       context: context,
-      url: "${Urls.serviceUrl}?serviceCategoryId=$id",
+      url: "${Urls.serviceUrl}?serviceCategoryId=$id&keyword=$keywrd",
     );
     if (response != null) {
       log("$response");
@@ -1284,6 +1411,24 @@ class NetworkHelper {
     if (response != null) {
       log("Response: ${response.body}");
       return ServiceBookingModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<SearchModel?> getSearchList(
+    BuildContext context,
+    String? keyword,
+  ) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.searchHomeUrl}?keyword=$keyword",
+    );
+
+    if (response != null) {
+      log("Response: ${response.body}");
+      return SearchModel.fromJson(jsonDecode(response.body));
     } else {
       ToastUtil.show("Error in fetching details");
       return null;
@@ -1552,6 +1697,7 @@ class NetworkHelper {
       request.fields['email'] = email;
       request.fields['name'] = clientName;
       request.fields['code'] = "+91";
+      request.fields['location'] = address;
       request.fields['projectType'] = projectTypeNAme;
       request.fields['phoneNumber'] = phoneNo;
       request.fields['date'] = date;
@@ -1562,11 +1708,32 @@ class NetworkHelper {
 
       // 📎 Optional file
       if (file != null) {
-        request.files.add(await http.MultipartFile.fromPath('file', file.path));
+        final mimeType =
+            lookupMimeType(file.path) ?? 'application/octet-stream';
+        final mimeParts = mimeType.split('/');
+
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'file',
+            file.path,
+            filename: file.path.split('/').last,
+            contentType: MediaType(mimeParts[0], mimeParts[1]),
+          ),
+        );
       }
+      print("FIELDS: ${request.fields}");
+      print("FILES: ${request.files.length}");
+      debugPrint("FILE PATH: ${file?.path}");
+      debugPrint("FILE EXISTS: ${await File(file!.path).exists()}");
+      debugPrint("FILE SIZE: ${await File(file.path).length()}");
+      // final response = await request.send();
+      // final respStr = await response.stream.bytesToString();
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
+
+      print("STATUS: ${response.statusCode}");
+      // print("BODY: $respStr");
       debugPrint(
         "url - $uri \n header  \n---tokenn00---$accessToken body - $request \n response Status - ${response.statusCode} \n response - ${response.body}",
       );
@@ -1684,6 +1851,62 @@ class NetworkHelper {
       http.Response? response = await _postRequest(
         context: context,
         url: Urls.cartUrl,
+        body: requestBody,
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      print("Add To Cart Error: $e");
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> buyNow({
+    required BuildContext context,
+    required String addressid,
+    required String total,
+    required String grandTotal,
+    required String storeId,
+    required String itemId,
+    required String mrp,
+    required String qty,
+    required String categoryId,
+    required String calPrice,
+    required List<Map<String, dynamic>> attributeCategory,
+    required Map<String, dynamic> attributeName,
+  }) async {
+    try {
+      final Map<String, dynamic> requestBody = {
+        "grandTotal": grandTotal,
+        "addressId": addressid,
+        "totalPrice": total,
+        "totalcalculatorPrice": calPrice,
+
+        "cart": [
+          {
+            "storeId": storeId,
+            "itemId": itemId,
+            "mrp": mrp,
+            "qty": qty,
+            "calculatorPrice": calPrice,
+            "categoryId": categoryId,
+            "attributecategory": attributeCategory,
+            "attributeName": attributeName,
+          },
+        ],
+      };
+
+      /// ✅ PRINT BODY
+      print("Add To Cart Request Body:");
+      print(jsonEncode(requestBody));
+
+      http.Response? response = await _postRequest(
+        context: context,
+        url: Urls.buynowUrl,
         body: requestBody,
       );
 
@@ -1934,6 +2157,25 @@ class NetworkHelper {
     }
   }
 
+  Future<ProjectWithIdModel?> getProjectSingle(
+    BuildContext context,
+    String? id,
+  ) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.projectIngleUrl}/$id",
+    );
+
+    if (response != null) {
+      // log("URL: $uri");
+      log("Response: ${response.body}");
+      return ProjectWithIdModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>> updateAddress({
     required BuildContext context,
     required String addressId,
@@ -1982,6 +2224,28 @@ class NetworkHelper {
     }
   }
 
+  Future<Map<String, dynamic>> projectDelete({
+    required BuildContext context,
+
+    required String? pid,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _deleteRequest(
+        context: context,
+        url: "${Urls.projectDeleteUrl}/$pid",
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
   Future<Map<String, dynamic>> editQty({
     required BuildContext context,
     required String? pid,
@@ -2004,6 +2268,188 @@ class NetworkHelper {
       return jsonDecode(response.body);
     } catch (e) {
       return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> editProjecct({
+    required BuildContext context,
+    required String? name,
+    required String? pid,
+    required String? dueDate,
+    required String? budget,
+    required String? description,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _patchRequest(
+        context: context,
+        url: "${Urls.projectIngleUrl}/$pid",
+        body: {
+          "name": name,
+          "dueDate": dueDate,
+          "budget": budget,
+          "description": description,
+        },
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<http.StreamedResponse?> editFund({
+    required String id,
+    required String amount,
+    required String details,
+    // required String catId,
+    required String date,
+    File? file,
+  }) async {
+    try {
+      var request = http.MultipartRequest(
+        'PATCH',
+        Uri.parse("${Urls.fundEdit}/$id"),
+      );
+
+      request.headers['Authorization'] = "Bearer $accessToken";
+
+      /// fields
+      request.fields['amount'] = amount;
+      request.fields['details'] = details;
+      // request.fields['expenseCategoryId'] = catId;
+      request.fields['date'] = date;
+
+      /// file
+      if (file != null) {
+        request.files.add(await http.MultipartFile.fromPath('file', file.path));
+      }
+
+      var response = await request.send();
+
+      final respStr = await response.stream.bytesToString();
+
+      debugPrint("Status : ${response.statusCode}");
+      debugPrint("Response : $respStr");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response;
+      } else {
+        final jsonResponse = jsonDecode(respStr);
+        ToastUtil.show(jsonResponse['message'] ?? "Something went wrong");
+        return null;
+      }
+    } catch (e) {
+      log("Edit Expense Error: $e");
+      return null;
+    }
+  }
+
+  Future<String?> downloadEstimationPdf(int id) async {
+    try {
+      final url = Uri.parse("${Urls.downloadUrl}/$id");
+
+      final response = await http.get(
+        url,
+        headers: {"Authorization": "Bearer $accessToken"},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File("${dir.path}/estimation_$id.pdf");
+
+        await file.writeAsBytes(response.bodyBytes);
+
+        return file.path;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("PDF Error: $e");
+      return null;
+    }
+  }
+
+  Future<String?> downloadSnagReport(int id) async {
+    try {
+      final url = Uri.parse("${Urls.downloadSnagUrl}?projectId=$id");
+
+      final response = await http.get(
+        url,
+        headers: {"Authorization": "Bearer $accessToken"},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File("${dir.path}/snag_report_$id.pdf");
+
+        await file.writeAsBytes(response.bodyBytes);
+
+        print("Report downloaded to: ${file.path}");
+        return file.path; // return path
+      } else {
+        print("Failed to download report");
+        return null;
+      }
+    } catch (e) {
+      print("PDF Error: $e");
+      return null;
+    }
+  }
+
+  Future<String?> downloadWalletReport(int id) async {
+    try {
+      final url = Uri.parse("${Urls.downloadWalletUrl}?projectId=$id");
+
+      final response = await http.get(
+        url,
+        headers: {"Authorization": "Bearer $accessToken"},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File("${dir.path}/wallet_report_$id.pdf");
+
+        await file.writeAsBytes(response.bodyBytes);
+
+        print("Report downloaded to: ${file.path}");
+        return file.path; // return path
+      } else {
+        print("Failed to download report");
+        return null;
+      }
+    } catch (e) {
+      print("PDF Error: $e");
+      return null;
+    }
+  }
+
+  Future<String?> downloadQuotesPdf(int id) async {
+    try {
+      final url = Uri.parse("${Urls.downloadQotesUrl}/$id");
+
+      final response = await http.get(
+        url,
+        headers: {"Authorization": "Bearer $accessToken"},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File("${dir.path}/estimation_$id.pdf");
+
+        await file.writeAsBytes(response.bodyBytes);
+
+        return file.path;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("PDF Error: $e");
+      return null;
     }
   }
 }

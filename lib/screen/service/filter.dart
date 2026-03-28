@@ -57,7 +57,7 @@ class _FilterPageState extends State<FilterPage> {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: Consumer<ProjectProvider>(
         builder: (context, items, _) {

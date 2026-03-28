@@ -9,8 +9,12 @@ import '../../providers/signin/project_provider.dart';
 import '../../utils/colors.dart';
 import '../cart/all_product.dart';
 
+final TextEditingController controller = TextEditingController();
+
 class ServicesPage extends StatefulWidget {
-  const ServicesPage({super.key});
+  final String? keyword;
+
+  const ServicesPage({super.key, this.keyword});
 
   @override
   State<ServicesPage> createState() => _ServicesPageState();
@@ -19,10 +23,16 @@ class ServicesPage extends StatefulWidget {
 class _ServicesPageState extends State<ServicesPage> {
   @override
   void initState() {
+    controller.text = widget.keyword ?? "";
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = Provider.of<ProjectProvider>(context, listen: false);
 
-      reg.fetchServiceList(context: context, id: "");
+      reg.fetchServiceList(
+        context: context,
+        id: "",
+        keywrd: widget.keyword ?? "",
+      );
       reg.fetchServiceCategry(context: context);
     });
     // TODO: implement initState
@@ -48,7 +58,7 @@ class _ServicesPageState extends State<ServicesPage> {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: Consumer<ProjectProvider>(
         builder: (context, service, _) {
@@ -66,43 +76,81 @@ class _ServicesPageState extends State<ServicesPage> {
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: Color(0xffDFDFDF)),
                   ),
-                  child: TextField(
-                    // controller: searchController,
-                    onChanged: (value) {
-                      // setDialogState(() {
-                      //   searchQuery = value;
-                      // });
-                    },
-                    decoration: InputDecoration(
-                      hintText: "Search members",
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 10,
-                      ),
-                      hintStyle: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: "Manrope",
-                      ),
-                      prefixIcon: Padding(
-                        padding: const EdgeInsets.only(left: 8),
-                        child: Image.asset(
-                          "assets/search.png",
-                          height: 20,
-                          width: 20,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: controller,
+                          onSubmitted: (value) async {
+                            if (value.isNotEmpty) {
+                              await context
+                                  .read<ProjectProvider>()
+                                  .fetchServiceList(
+                                    context: context,
+                                    id: "",
+                                    keywrd: value,
+                                  );
+                            }
+                          },
+                          onChanged: (value) async {
+                            if (value.isNotEmpty) {
+                              await context
+                                  .read<ProjectProvider>()
+                                  .fetchServiceList(
+                                    context: context,
+                                    id: "",
+                                    keywrd: value,
+                                  );
+                            }
+                          },
+                          decoration: InputDecoration(
+                            hintText: "Search services",
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 10,
+                            ),
+                            hintStyle: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: "Manrope",
+                            ),
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.only(
+                                left: 5,
+                                bottom: 5,
+                              ),
+                              child: Image.asset(
+                                "assets/search.png",
+                                height: 20,
+                                width: 20,
+                              ),
+                            ),
+                            prefixIconConstraints: BoxConstraints(
+                              minHeight: 20,
+                              minWidth: 30,
+                            ),
+                          ),
                         ),
                       ),
-                      prefixIconConstraints: BoxConstraints(
-                        minHeight: 20,
-                        minWidth: 30,
+                      GestureDetector(
+                        onTap: () async {
+                          controller.clear();
+                          await context
+                              .read<ProjectProvider>()
+                              .fetchServiceList(
+                                context: context,
+                                id: "",
+                                keywrd: "",
+                              );
+                        },
+                        child: const Icon(Icons.close, color: Colors.grey),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ),
 
-              // filterSortRow(context),
               const SizedBox(height: 10),
 
               /// 🧱 Categories
@@ -136,6 +184,7 @@ class _ServicesPageState extends State<ServicesPage> {
                             service.fetchServiceList(
                               context: context,
                               id: category?.id.toString() ?? "",
+                              keywrd: "",
                             );
                           },
                         );

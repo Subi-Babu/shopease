@@ -5,10 +5,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:youbuilt/providers/signin/login_provider.dart';
+import 'package:youbuilt/screen/forgot_otp.dart';
+import 'package:youbuilt/screen/forgot_otpsend.dart';
 import 'package:youbuilt/screen/home.dart';
 import 'package:youbuilt/screen/sign_up.dart';
 
 import 'package:youbuilt/utils/colors.dart';
+import 'package:youbuilt/utils/countrypicjker.dart';
 import 'package:youbuilt/utils/validates.dart';
 
 import '../custom_widgets/custom_button.dart';
@@ -21,6 +24,16 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final reg = Provider.of<LoginProvider>(context, listen: false);
+      reg.fetchCountryCode(context: context);
+    });
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     final formKey = GlobalKey<FormState>();
@@ -58,33 +71,95 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           titleText(isRequired: false, title: 'Phone Number'),
                           SizedBox(height: 8.h),
-                          CustomTextField(
-                            controller: sign.phoneCntrl,
-                            maxLine: 1,
-                            maxLength: 10,
-                            // maxLine: 1,
-                            keyboardType: TextInputType.number,
-                            validator: (value) {
-                              return ValidationUtil(
-                                context,
-                              ).phoneValidation(sign.phoneCntrl.text);
-                            },
-                            // validator: (value) {
-                            //   // // Skip if empty
-                            //   // if (value == null || value.isEmpty) {
-                            //   //   return null;
-                            //   // }
-                            //
-                            //   // Check format only if user entered something
-                            //   final emailRegex = RegExp(
-                            //     r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                            //   );
-                            //   if (!emailRegex.hasMatch(value!)) {
-                            //     return 'Enter a valid email';
-                            //   }
-                            //
-                            //   return null;
-                            // },
+                          // CustomTextField(
+                          //   controller: sign.phoneCntrl,
+                          //   maxLine: 1,
+                          //   maxLength: 10,
+                          //   // maxLine: 1,
+                          //   keyboardType: TextInputType.number,
+                          //   validator: (value) {
+                          //     return ValidationUtil(
+                          //       context,
+                          //     ).phoneValidation(sign.phoneCntrl.text);
+                          //   },
+                          //   // validator: (value) {
+                          //   //   // // Skip if empty
+                          //   //   // if (value == null || value.isEmpty) {
+                          //   //   //   return null;
+                          //   //   // }
+                          //   //
+                          //   //   // Check format only if user entered something
+                          //   //   final emailRegex = RegExp(
+                          //   //     r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                          //   //   );
+                          //   //   if (!emailRegex.hasMatch(value!)) {
+                          //   //     return 'Enter a valid email';
+                          //   //   }
+                          //   //
+                          //   //   return null;
+                          //   // },
+                          // ),
+                          Container(
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF5F5F5),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0XFFD0DAEA),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 80,
+                                  child: sign.isLoading
+                                      ? const CountryCodeShimmer()
+                                      : CountryPickerWidget(
+                                          countries: sign
+                                              .countryCodeModel
+                                              ?.countryCode,
+                                          selectedValue:
+                                              sign.selectedCountryCode,
+                                          isLoading: sign.isLoading,
+                                          isError: sign.isError,
+                                          onChanged: (value) {
+                                            if (value != null) {
+                                              sign.setSelectedCountryCode(
+                                                value,
+                                              );
+                                            }
+                                          },
+                                        ),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: double.infinity,
+                                  color: const Color(0XFFD0DAEA),
+                                ),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: sign.phoneCntrl,
+                                    keyboardType: TextInputType.phone,
+                                    decoration: const InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 14,
+                                      ),
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return "Mobile number required";
+                                      }
+                                      if (value.length < 10) {
+                                        return "Enter valid mobile number";
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           SizedBox(height: 10.h),
 
@@ -116,6 +191,31 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                             ),
+                          SizedBox(height: 10.h),
+                          Align(
+                            alignment: Alignment.topRight,
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        UserForfotSendOtpScreeen(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                "Forgot Password?",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  fontFamily: "Manrope",
+
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 20.h),
 
                           Padding(
@@ -136,7 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   sign.loginForm(
                                     context: context,
                                     phone: sign.phoneCntrl.text,
-
+                                    code: sign.selectedCountryCode ?? "",
                                     password: sign.pwdCntrl.text,
                                   );
 

@@ -130,9 +130,11 @@ class _ProfileMenuPageState extends State<ProfileMenuPage> {
                                     ),
                                     SizedBox(height: 4),
                                     Text(
-                                      "",
+                                      project?.profileModel?.data?.cuId
+                                              .toString() ??
+                                          "",
                                       style: TextStyle(
-                                        color: Color(0xffA3A3A3),
+                                        color: Colors.white,
                                         fontSize: 14,
                                         fontFamily: "Manrope",
                                         fontWeight: FontWeight.w500,
@@ -193,7 +195,7 @@ class _ProfileMenuPageState extends State<ProfileMenuPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => MyOrdersPage(),
+                                builder: (context) => MyOrdersPage(btn: false),
                               ),
                             );
                           },

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youbuilt/custom_widgets/custom_button.dart';
 import 'package:youbuilt/screen/profile/address.dart';
@@ -123,28 +124,91 @@ class _ProductViewPageState extends State<ProductViewPage> {
 
             return Padding(
               padding: const EdgeInsets.all(16.0),
-              child: CustomButton(
-                text: "Add to Cart",
-                onPress: () async {
-                  await item.addtoCart(
-                    context: context,
-                    projectId: "",
-                    calPrice:
-                        item.itemListDetailsModel?.data?.yourPrice.toString() ??
-                        "",
-                    storeId:
-                        item.selectedSellerStoreId?.toString() ??
-                        item.itemListDetailsModel?.data?.storeId.toString() ??
-                        "",
-                    itemId:
-                        item.itemListDetailsModel?.data?.id.toString() ?? "",
-                    mrp: item.itemListDetailsModel?.data?.mrp.toString() ?? "",
-                    qty: "1",
-                    categoryId: "",
-                    attributeCategory: item.selectedAttributeCategoryList,
-                    attributeName: item.selectedAttributeNameMap,
-                  );
-                },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: CustomButton(
+                      text: "Add to Cart",
+                      textColor: primaryClr,
+                      bgColor: Colors.white,
+                      borderSide: BorderSide(color: primaryClr),
+                      onPress: () async {
+                        await item.addtoCart(
+                          context: context,
+                          projectId: "",
+                          calPrice:
+                              item.itemListDetailsModel?.data?.yourPrice
+                                  .toString() ??
+                              "",
+                          storeId:
+                              item.selectedSellerStoreId?.toString() ??
+                              item.itemListDetailsModel?.data?.storeId
+                                  .toString() ??
+                              "",
+                          itemId:
+                              item.itemListDetailsModel?.data?.id.toString() ??
+                              "",
+                          mrp:
+                              item.itemListDetailsModel?.data?.mrp.toString() ??
+                              "",
+                          qty: "1",
+                          categoryId: "",
+                          attributeCategory: item.selectedAttributeCategoryList,
+                          attributeName: item.selectedAttributeNameMap,
+                        );
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: CustomButton(
+                      text: "Buy Now",
+                      onPress: () async {
+                        final addressList = item.addressListModel?.data ?? [];
+
+                        Datum? defaultAddress;
+
+                        if (addressList.isNotEmpty) {
+                          defaultAddress = addressList.firstWhere(
+                            (element) => element.isDefault == true,
+                            orElse: () => addressList.first,
+                          );
+                        }
+                        await item.buyNow(
+                          context: context,
+                          pid: "",
+                          total:
+                              item.itemListDetailsModel?.data?.mrp.toString() ??
+                              "",
+                          grandTotal:
+                              item.itemListDetailsModel?.data?.yourPrice
+                                  .toString() ??
+                              "",
+                          addressid: defaultAddress?.id.toString() ?? "",
+                          calPrice:
+                              item.itemListDetailsModel?.data?.yourPrice
+                                  .toString() ??
+                              "",
+                          storeId:
+                              item.selectedSellerStoreId?.toString() ??
+                              item.itemListDetailsModel?.data?.storeId
+                                  .toString() ??
+                              "",
+                          itemId:
+                              item.itemListDetailsModel?.data?.id.toString() ??
+                              "",
+                          mrp:
+                              item.itemListDetailsModel?.data?.mrp.toString() ??
+                              "",
+                          qty: "1",
+                          categoryId: "",
+                          attributeCategory: item.selectedAttributeCategoryList,
+                          attributeName: item.selectedAttributeNameMap,
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             );
           },
@@ -160,7 +224,7 @@ class _ProductViewPageState extends State<ProductViewPage> {
           child: const Icon(Icons.arrow_back, color: Colors.black),
         ),
         title: const Text("Product", style: TextStyle(color: Colors.black)),
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -234,10 +298,10 @@ class _ProductViewPageState extends State<ProductViewPage> {
                               child: CachedNetworkImage(
                                 imageUrl: imageUrl,
                                 fit: BoxFit.fill,
-                                placeholder: (_, __) => const Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
+                                placeholder: (_, __) => shimmerBox(
+                                  height: 270.h,
+                                  width: double.infinity,
+                                  radius: 14,
                                 ),
                                 errorWidget: (_, __, ___) =>
                                     const Icon(Icons.error),
@@ -679,7 +743,7 @@ class _ProductViewPageState extends State<ProductViewPage> {
         final sellerList = project.sellerModel?.data ?? [];
 
         if (project.itemLoading) {
-          return const Center(child: CircularProgressIndicator());
+          // return const Center(child: CircularProgressIndicator());
         }
 
         if (sellerList.isEmpty) {
@@ -851,6 +915,21 @@ Widget _shareOption({
         const SizedBox(height: 6),
         Text(label),
       ],
+    ),
+  );
+}
+
+Widget shimmerBox({double? height, double? width, double radius = 8}) {
+  return Shimmer.fromColors(
+    baseColor: Colors.grey.shade300,
+    highlightColor: Colors.grey.shade100,
+    child: Container(
+      height: height,
+      width: width,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(radius),
+      ),
     ),
   );
 }

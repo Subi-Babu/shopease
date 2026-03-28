@@ -24,17 +24,61 @@ class _SnaglistState extends State<Snaglist> {
   // ✅ Track expanded state for each snag
   Map<String, bool> expandedSnags = {};
 
+  int page = 1;
+  bool isLoadingMore = false;
+  bool hasMoreData = true;
+
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _scrollController.addListener(_scrollListener);
       final reg = Provider.of<ProjectProvider>(context, listen: false);
       await reg.fetchSnagDropdown(context: context);
-      await reg.fetchSnagList(context: context, id: widget.projectId ?? "");
+      await reg.fetchSnagList(
+        context: context,
+        id: widget.projectId ?? "",
+        pge: page.toString(),
+        limit: "10",
+      );
 
       // ✅ INITIALIZE PRIORITY DROPDOWNS FROM API DATA
       _initializePriorityDropdowns(reg);
     });
     super.initState();
+  }
+
+  void _scrollListener() async {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (!isLoadingMore && hasMoreData) {
+        isLoadingMore = true;
+
+        page++;
+
+        final project = Provider.of<ProjectProvider>(context, listen: false);
+
+        await project.fetchSnagList(
+          context: context,
+          id: widget.projectId ?? "",
+          pge: page.toString(),
+          limit: "10",
+        );
+
+        if ((project.snagListModel?.projectSnagList?.length ?? 0) < page * 10) {
+          hasMoreData = false;
+        }
+
+        isLoadingMore = false;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   // ✅ FIXED: Proper initialization with type-safe comparison
@@ -92,7 +136,95 @@ class _SnaglistState extends State<Snaglist> {
       child: Scaffold(
         backgroundColor: const Color(0xffF4F4F4),
 
-        body: Column(children: [Expanded(child: _headerSection())]),
+        body: DefaultTabController(
+          length: 2,
+          child: NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverToBoxAdapter(
+                  child: _topHeader(), // Snag List + Progress
+                ),
+
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _TabBarDelegate(
+                    TabBar(
+                      labelColor: primaryClr,
+                      unselectedLabelColor: const Color(0xffC1C1C1),
+                      indicatorColor: const Color(0xffFF3B30),
+                      tabs: [
+                        Tab(
+                          child: Consumer<ProjectProvider>(
+                            builder: (context, project, _) => Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  "Pending",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: "Manrope",
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                CircleAvatar(
+                                  radius: 15,
+                                  backgroundColor: const Color(0xffFFEAE9),
+                                  child: Text(
+                                    "${project.snagListModel?.pendingSnags ?? "0"}",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xffFF766A),
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: "Manrope",
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Tab(
+                          child: Consumer<ProjectProvider>(
+                            builder: (context, project, _) => Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  "Completed",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: "Manrope",
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                CircleAvatar(
+                                  radius: 15,
+                                  backgroundColor: const Color(0xffD9F3DB),
+                                  child: Text(
+                                    "${project.snagListModel?.completedSnags ?? "0"}",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xff00AF11),
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: "Manrope",
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ];
+            },
+
+            body: _tabBarView(), // Only list scrolls
+          ),
+        ),
 
         bottomNavigationBar: Padding(
           padding: EdgeInsets.all(16.w),
@@ -209,6 +341,12 @@ class _SnaglistState extends State<Snaglist> {
                                 id: project.selectedSnagId.toString() ?? "",
                                 pid: widget.projectId,
                               );
+                              project.fetchSnagList(
+                                context: context,
+                                id: widget.projectId ?? "",
+                                pge: page.toString(),
+                                limit: "10",
+                              );
                               project.titleController.clear();
                               // ✅ Reset to null instead of 1
                               project.selectedSnagStatus = null;
@@ -224,6 +362,98 @@ class _SnaglistState extends State<Snaglist> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _topHeader() {
+    return Consumer<ProjectProvider>(
+      builder: (context, project, _) {
+        double progressValue = 0.0;
+
+        final percentageList = project.snagListModel?.percentage;
+
+        if (percentageList != null && percentageList.isNotEmpty) {
+          progressValue = (double.tryParse(percentageList.first) ?? 0) / 100;
+        }
+
+        return Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xffDFDFDF)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Snag List",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: primaryClr,
+                    ),
+                  ),
+                  Spacer(),
+                  InkWell(
+                    onTap: () async {
+                      await project.downloadSnagPdf(
+                        id: int.parse(widget.projectId.toString()) ?? 0,
+                        context: context,
+                      );
+                    },
+                    child: const Text(
+                      "Download",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: primaryClr,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  InkWell(
+                    onTap: () async {
+                      await project.downloadSnagPdf(
+                        id: int.parse(widget.projectId.toString()) ?? 0,
+                        context: context,
+                      );
+                    },
+                    child: Icon(
+                      Icons.file_download_outlined,
+                      color: primaryClr,
+                      size: 14,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 10),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Progress", style: TextStyle(fontSize: 12)),
+                  Text("${percentageList?.first ?? "0"}%"),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              LinearProgressIndicator(
+                value: progressValue,
+                minHeight: 6,
+                backgroundColor: Colors.grey.shade300,
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -320,10 +550,12 @@ class _SnaglistState extends State<Snaglist> {
       labelColor: primaryClr,
       unselectedLabelColor: const Color(0xffC1C1C1),
       indicatorColor: const Color(0xffFF3B30),
+      isScrollable: false,
+      tabAlignment: TabAlignment.start,
+      // labelPadding: const EdgeInsets.only(right: 20),
 
-      tabAlignment: TabAlignment.fill,
-      indicatorSize: TabBarIndicatorSize.tab,
-
+      // tabAlignment: TabAlignment.fill,
+      indicatorSize: TabBarIndicatorSize.label,
       tabs: [
         Tab(
           child: Row(
@@ -409,230 +641,274 @@ class _SnaglistState extends State<Snaglist> {
             .where((e) => e.isComplete == true)
             .toList();
 
-        return TabBarView(
-          children: [
-            // 🔴 Pending list with priority-based border color and expandable text
-            ListView.separated(
-              itemCount: pendingList.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final snag = pendingList[index];
+        return Container(
+          color: Colors.white,
+          child: TabBarView(
+            children: [
+              // 🔴 Pending list with priority-based border color and expandable text
+              ListView.separated(
+                controller: _scrollController,
+                // physics: NeverScrollableScrollPhysics(),
+                itemCount: pendingList.length + (isLoadingMore ? 1 : 0),
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 16,
+                  bottom: 20,
+                ),
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final snag = pendingList[index];
 
-                // Find the actual index in the full allSnags list
-                final actualIndex = allSnags.indexOf(snag);
+                  // Find the actual index in the full allSnags list
+                  final actualIndex = allSnags.indexOf(snag);
 
-                // ✅ Get percentage value
-                String percentageValue = "${snag.completePercentage ?? 0}%";
-                if (project.selectedPercentages.length > actualIndex &&
-                    project.selectedPercentages[actualIndex] != "0%") {
-                  percentageValue = project.selectedPercentages[actualIndex];
-                }
+                  // ✅ Get percentage value
+                  String percentageValue = "${snag.completePercentage ?? 0}%";
+                  if (project.selectedPercentages.length > actualIndex &&
+                      project.selectedPercentages[actualIndex] != "0%") {
+                    percentageValue = project.selectedPercentages[actualIndex];
+                  }
 
-                // ✅ Get priority dropdown value for this snag's actual index
-                SnagStatusDropDown? priorityValue;
-                if (project.selectedSnagStatusDropList.length > actualIndex) {
-                  priorityValue =
-                      project.selectedSnagStatusDropList[actualIndex];
-                } else {
-                  // Fallback: match by snagStatusId using string comparison
-                  final list =
-                      project.snagDropdownModel?.snagStatusDropDown ?? [];
-                  priorityValue = list.firstWhere(
-                    (item) =>
-                        item.value?.toString() == snag.snagStatusId?.toString(),
-                    orElse: () =>
-                        list.isNotEmpty ? list.first : SnagStatusDropDown(),
-                  );
-                }
-
-                return _snagCard(
-                  data: snag.details ?? "",
-                  borderColor: _priorityColor(priorityValue?.label),
-                  checked: snag.isComplete ?? false,
-                  deleteTap: () async {
-                    await project.deleteSnag(
-                      context: context,
-                      pid: widget.projectId ?? "",
-                      snagId: snag.id.toString(),
+                  // ✅ Get priority dropdown value for this snag's actual index
+                  SnagStatusDropDown? priorityValue;
+                  if (project.selectedSnagStatusDropList.length > actualIndex) {
+                    priorityValue =
+                        project.selectedSnagStatusDropList[actualIndex];
+                  } else {
+                    // Fallback: match by snagStatusId using string comparison
+                    final list =
+                        project.snagDropdownModel?.snagStatusDropDown ?? [];
+                    priorityValue = list.firstWhere(
+                      (item) =>
+                          item.value?.toString() ==
+                          snag.snagStatusId?.toString(),
+                      orElse: () =>
+                          list.isNotEmpty ? list.first : SnagStatusDropDown(),
                     );
-                  },
-                  snagId: snag.id.toString(),
-                  // Percentage dropdown handler
-                  onChanged: (val) async {
-                    if (val != null) {
-                      while (project.selectedPercentages.length <=
-                          actualIndex) {
-                        project.selectedPercentages.add("0%");
-                      }
-                      project.updatePercentage(value: val, index: actualIndex);
-                      print("----------%valuee--$val");
-                      await project.updatePercentSnagList(
+                  }
+
+                  return _snagCard(
+                    data: snag.details ?? "",
+                    borderColor: _priorityColor(priorityValue?.label),
+                    checked: snag.isComplete ?? false,
+                    deleteTap: () async {
+                      await project.deleteSnag(
                         context: context,
+                        pid: widget.projectId ?? "",
                         snagId: snag.id.toString(),
-                        completePercentage: val,
                       );
-                    }
-                  },
-                  dataVal: percentageValue,
-
-                  // ✅ FIXED: Priority dropdown handler with debug logging
-                  onChangedDrop: (val) async {
-                    if (val != null) {
-                      // ✅ Debug logging
-                      debugPrint("=== PRIORITY CHANGE DEBUG ===");
-                      debugPrint("Selected label: ${val.label}");
-                      debugPrint("Selected value: ${val.value}");
-                      debugPrint(
-                        "Selected value type: ${val.value.runtimeType}",
-                      );
-                      debugPrint("Snag ID: ${snag.id}");
-                      debugPrint("Current snagStatusId: ${snag.snagStatusId}");
-                      debugPrint(
-                        "Current snagStatusId type: ${snag.snagStatusId.runtimeType}",
-                      );
-
-                      // Ensure list is large enough
-                      while (project.selectedSnagStatusDropList.length <=
-                          actualIndex) {
-                        project.selectedSnagStatusDropList.add(
-                          project
-                                  .snagDropdownModel
-                                  ?.snagStatusDropDown
-                                  ?.first ??
-                              SnagStatusDropDown(),
+                    },
+                    snagId: snag.id.toString(),
+                    // Percentage dropdown handler
+                    onChanged: (val) async {
+                      if (val != null) {
+                        while (project.selectedPercentages.length <=
+                            actualIndex) {
+                          project.selectedPercentages.add("0%");
+                        }
+                        project.updatePercentage(
+                          value: val,
+                          index: actualIndex,
+                        );
+                        print("----------%valuee--$val");
+                        await project.updatePercentSnagList(
+                          context: context,
+                          snagId: snag.id.toString(),
+                          completePercentage: val,
                         );
                       }
+                    },
+                    dataVal: percentageValue,
 
-                      // Update the priority for this specific index
-                      project.setSnagStatusDrop(value: val, index: actualIndex);
-                      await project.updatePercentSnagStatus(
-                        context: context,
-                        snagId: snag.id.toString(),
-                        completePercentage: "",
-                        snagStatus: val.value.toString(),
-                      );
+                    // ✅ FIXED: Priority dropdown handler with debug logging
+                    onChangedDrop: (val) async {
+                      if (val != null) {
+                        // ✅ Debug logging
+                        debugPrint("=== PRIORITY CHANGE DEBUG ===");
+                        debugPrint("Selected label: ${val.label}");
+                        debugPrint("Selected value: ${val.value}");
+                        debugPrint(
+                          "Selected value type: ${val.value.runtimeType}",
+                        );
+                        debugPrint("Snag ID: ${snag.id}");
+                        debugPrint(
+                          "Current snagStatusId: ${snag.snagStatusId}",
+                        );
+                        debugPrint(
+                          "Current snagStatusId type: ${snag.snagStatusId.runtimeType}",
+                        );
 
-                      print(
-                        "----------Priority changed at index $actualIndex--${val.label}",
-                      );
-
-                      // ✅ Refresh data after update to ensure sync
-                      await project.fetchSnagList(
-                        context: context,
-                        id: widget.projectId ?? "",
-                      );
-                      _initializePriorityDropdowns(project);
-                    }
-                  },
-                  datadrop: priorityValue,
-
-                  // ✅ Checkbox handler for pending items
-                  onCheckboxChanged: (bool? value) async {
-                    if (value != null) {
-                      await project.updateSnagCompleteStatus(
-                        context: context,
-                        completeStatus: value,
-                        snagId: snag.id.toString(),
-                      );
-
-                      // Refresh the snag list after update
-                      await project.fetchSnagList(
-                        context: context,
-                        id: widget.projectId ?? "",
-                      );
-
-                      // Re-initialize priority dropdowns after refresh
-                      _initializePriorityDropdowns(project);
-                    }
-                  },
-
-                  // ✅ NEW: Pass expanded state
-                  isExpanded: expandedSnags[snag.id.toString()] ?? false,
-                  onToggleExpand: () {
-                    setState(() {
-                      expandedSnags[snag.id.toString()] =
-                          !(expandedSnags[snag.id.toString()] ?? false);
-                    });
-                  },
-                );
-              },
-            ),
-
-            // 🟢 Completed list with priority-based border color and expandable text
-            ListView.separated(
-              itemCount: completedList.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final snag = completedList[index];
-
-                // Find the actual index in the full allSnags list
-                final actualIndex = allSnags.indexOf(snag);
-
-                // ✅ Get priority for completed items with string comparison
-                SnagStatusDropDown? priorityValue;
-                if (project.selectedSnagStatusDropList.length > actualIndex) {
-                  priorityValue =
-                      project.selectedSnagStatusDropList[actualIndex];
-                } else {
-                  final list =
-                      project.snagDropdownModel?.snagStatusDropDown ?? [];
-                  priorityValue = list.firstWhere(
-                    (item) =>
-                        item.value?.toString() == snag.snagStatusId?.toString(),
-                    orElse: () =>
-                        list.isNotEmpty ? list.first : SnagStatusDropDown(),
-                  );
-                }
-
-                return project.loading1 == true
-                    ? SizedBox()
-                    : _snagCard(
-                        data: snag.details ?? "",
-                        borderColor: _priorityColor(priorityValue?.label),
-                        dataVal: "${snag.completePercentage ?? 100}%",
-                        checked: true,
-                        snagId: snag.id.toString(),
-                        onChanged: (val) {},
-                        onChangedDrop: (val) {},
-                        datadrop: priorityValue,
-                        deleteTap: () async {
-                          await project.deleteSnag(
-                            context: context,
-                            pid: widget.projectId ?? "",
-                            snagId: snag.id.toString(),
+                        // Ensure list is large enough
+                        while (project.selectedSnagStatusDropList.length <=
+                            actualIndex) {
+                          project.selectedSnagStatusDropList.add(
+                            project
+                                    .snagDropdownModel
+                                    ?.snagStatusDropDown
+                                    ?.first ??
+                                SnagStatusDropDown(),
                           );
-                        },
-                        // ✅ Enable checkbox for completed items to allow unchecking
-                        onCheckboxChanged: (bool? value) async {
-                          if (value != null) {
-                            await project.updateSnagCompleteStatus(
-                              context: context,
-                              completeStatus: value,
-                              snagId: snag.id.toString(),
-                            );
+                        }
 
-                            // Refresh the snag list after update
-                            await project.fetchSnagList(
-                              context: context,
-                              id: widget.projectId ?? "",
-                            );
+                        // Update the priority for this specific index
+                        project.setSnagStatusDrop(
+                          value: val,
+                          index: actualIndex,
+                        );
+                        await project.updatePercentSnagStatus(
+                          context: context,
+                          snagId: snag.id.toString(),
+                          completePercentage: "",
+                          snagStatus: val.value.toString(),
+                        );
 
-                            // Re-initialize priority dropdowns after refresh
-                            _initializePriorityDropdowns(project);
-                          }
-                        },
-                        // ✅ NEW: Enable expand/collapse for completed items too
-                        isExpanded: expandedSnags[snag.id.toString()] ?? false,
-                        onToggleExpand: () {
-                          setState(() {
-                            expandedSnags[snag.id.toString()] =
-                                !(expandedSnags[snag.id.toString()] ?? false);
-                          });
-                        },
+                        print(
+                          "----------Priority changed at index $actualIndex--${val.label}",
+                        );
+
+                        // ✅ Refresh data after update to ensure sync
+                        await project.fetchSnagList(
+                          context: context,
+                          id: widget.projectId ?? "",
+                          pge: page.toString(),
+                          limit: "10",
+                        );
+                        _initializePriorityDropdowns(project);
+                      }
+                    },
+                    datadrop: priorityValue,
+
+                    // ✅ Checkbox handler for pending items
+                    onCheckboxChanged: (bool? value) async {
+                      if (value != null) {
+                        await project.updateSnagCompleteStatus(
+                          context: context,
+                          completeStatus: value,
+                          snagId: snag.id.toString(),
+                        );
+
+                        // Refresh the snag list after update
+                        await project.fetchSnagList(
+                          context: context,
+                          id: widget.projectId ?? "",
+                          pge: page.toString(),
+
+                          limit: "10",
+                        );
+
+                        // Re-initialize priority dropdowns after refresh
+                        _initializePriorityDropdowns(project);
+                      }
+                    },
+
+                    // ✅ NEW: Pass expanded state
+                    isExpanded: expandedSnags[snag.id.toString()] ?? false,
+                    onToggleExpand: () {
+                      setState(() {
+                        expandedSnags[snag.id.toString()] =
+                            !(expandedSnags[snag.id.toString()] ?? false);
+                      });
+                    },
+                  );
+                },
+              ),
+
+              // 🟢 Completed list with priority-based border color and expandable text
+              Container(
+                color: Colors.white,
+                child: ListView.separated(
+                  controller: _scrollController,
+
+                  // physics: NeverScrollableScrollPhysics(),
+                  itemCount: completedList.length + (isLoadingMore ? 1 : 0),
+                  padding: EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 16,
+                    bottom: 20,
+                  ),
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final snag = completedList[index];
+
+                    // Find the actual index in the full allSnags list
+                    final actualIndex = allSnags.indexOf(snag);
+
+                    // ✅ Get priority for completed items with string comparison
+                    SnagStatusDropDown? priorityValue;
+                    if (project.selectedSnagStatusDropList.length >
+                        actualIndex) {
+                      priorityValue =
+                          project.selectedSnagStatusDropList[actualIndex];
+                    } else {
+                      final list =
+                          project.snagDropdownModel?.snagStatusDropDown ?? [];
+                      priorityValue = list.firstWhere(
+                        (item) =>
+                            item.value?.toString() ==
+                            snag.snagStatusId?.toString(),
+                        orElse: () =>
+                            list.isNotEmpty ? list.first : SnagStatusDropDown(),
                       );
-              },
-            ),
-          ],
+                    }
+
+                    return project.loading1 == true
+                        ? SizedBox()
+                        : _snagCard(
+                            data: snag.details ?? "",
+                            borderColor: _priorityColor(priorityValue?.label),
+                            dataVal: "${snag.completePercentage ?? 100}%",
+                            checked: true,
+                            snagId: snag.id.toString(),
+                            onChanged: (val) {},
+                            onChangedDrop: (val) {},
+                            datadrop: priorityValue,
+                            deleteTap: () async {
+                              await project.deleteSnag(
+                                context: context,
+                                pid: widget.projectId ?? "",
+                                snagId: snag.id.toString(),
+                              );
+                            },
+                            // ✅ Enable checkbox for completed items to allow unchecking
+                            onCheckboxChanged: (bool? value) async {
+                              if (value != null) {
+                                await project.updateSnagCompleteStatus(
+                                  context: context,
+                                  completeStatus: value,
+                                  snagId: snag.id.toString(),
+                                );
+
+                                // Refresh the snag list after update
+                                await project.fetchSnagList(
+                                  context: context,
+                                  id: widget.projectId ?? "",
+                                  pge: page.toString(),
+
+                                  limit: "10",
+                                );
+
+                                // Re-initialize priority dropdowns after refresh
+                                _initializePriorityDropdowns(project);
+                              }
+                            },
+                            // ✅ NEW: Enable expand/collapse for completed items too
+                            isExpanded:
+                                expandedSnags[snag.id.toString()] ?? false,
+                            onToggleExpand: () {
+                              setState(() {
+                                expandedSnags[snag.id.toString()] =
+                                    !(expandedSnags[snag.id.toString()] ??
+                                        false);
+                              });
+                            },
+                          );
+                  },
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -656,6 +932,7 @@ class _SnaglistState extends State<Snaglist> {
       builder: (context, project, _) {
         return Container(
           padding: const EdgeInsets.all(12),
+
           decoration: BoxDecoration(
             color: const Color(0xffF4F4F4),
             borderRadius: BorderRadius.circular(10),
@@ -865,6 +1142,36 @@ class _SnaglistState extends State<Snaglist> {
       },
     );
   }
+}
+
+class _TabBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar tabBar;
+
+  _TabBarDelegate(this.tabBar);
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16, right: 16), // ✅ left padding
+        child: tabBar,
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => tabBar.preferredSize.height;
+
+  @override
+  double get minExtent => tabBar.preferredSize.height;
+
+  @override
+  bool shouldRebuild(_TabBarDelegate oldDelegate) => false;
 }
 
 Color _priorityColor(String? label) {

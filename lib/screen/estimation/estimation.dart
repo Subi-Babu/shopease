@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -70,7 +72,7 @@ class _EstimationPageState extends State<EstimationPage>
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
         bottom: TabBar(
           controller: _tabController,
           unselectedLabelColor: const Color(0xff737373),
@@ -1080,14 +1082,17 @@ Widget _addedItem(String title, String count) {
 }
 
 Widget _estimationTab() {
-  return Padding(
-    padding: const EdgeInsets.all(16),
-    child: Consumer<ProjectProvider>(
-      builder: (context, project, _) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
+  return Consumer<ProjectProvider>(
+    builder: (context, project, _) {
+      return ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount:
+            (project?.estimationModel?.data?.length ?? 0) + 1, // +1 for header
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          // First item is the header text
+          if (index == 0) {
+            return const Text(
               "Get a professional cost estimation based on your project type, area, scope, and budget – quick, transparent, and reliable.",
               style: TextStyle(
                 fontSize: 15,
@@ -1095,46 +1100,96 @@ Widget _estimationTab() {
                 fontWeight: FontWeight.w600,
                 color: Color(0xff737373),
               ),
-            ),
-            const SizedBox(height: 16),
+            );
+          }
 
-            /// Separated ListView
-            Expanded(
-              child: ListView.separated(
-                itemCount: project?.estimationModel?.data?.length ?? 0,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final item = project?.estimationModel?.data?[index];
-
-                  return EstimationCard(
-                    title: item?.name ?? "",
-                    subtitle:
-                        "${item?.location ?? ""} . ${item?.builtUpArea ?? ""}sq.ft",
-                    date:
-                        "${item?.date?.day ?? ""}/${item?.date?.month ?? ""}/${item?.date?.year ?? ""}",
-                    // status: item.status,
-                    showActions: true,
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    ),
+          final item = project?.estimationModel?.data?[index - 1];
+          return EstimationCard(
+            title: item?.name ?? "",
+            subtitle:
+                "${item?.location ?? ""} . ${item?.builtUpArea ?? ""}sq.ft",
+            date:
+                "${item?.date?.day ?? ""}/${item?.date?.month ?? ""}/${item?.date?.year ?? ""}",
+            showActions: true,
+            onPress: () {
+              Provider.of<ProjectProvider>(
+                context,
+                listen: false,
+              ).downloadPdf(context: context, id: item?.id ?? 0);
+            },
+          );
+        },
+      );
+    },
   );
 }
 
+// Widget _estimationTab() {
+//   return Padding(
+//     padding: const EdgeInsets.all(16),
+//     child: Consumer<ProjectProvider>(
+//       builder: (context, project, _) {
+//         return Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             const Text(
+//               "Get a professional cost estimation based on your project type, area, scope, and budget – quick, transparent, and reliable.",
+//               style: TextStyle(
+//                 fontSize: 15,
+//                 fontFamily: "Manrope",
+//                 fontWeight: FontWeight.w600,
+//                 color: Color(0xff737373),
+//               ),
+//             ),
+//             const SizedBox(height: 16),
+//
+//             /// Separated ListView
+//             Expanded(
+//               child: ListView.separated(
+//                 itemCount: project?.estimationModel?.data?.length ?? 0,
+//                 separatorBuilder: (context, index) =>
+//                     const SizedBox(height: 12),
+//                 itemBuilder: (context, index) {
+//                   final item = project?.estimationModel?.data?[index];
+//
+//                   return EstimationCard(
+//                     title: item?.name ?? "",
+//                     subtitle:
+//                         "${item?.location ?? ""} . ${item?.builtUpArea ?? ""}sq.ft",
+//                     date:
+//                         "${item?.date?.day ?? ""}/${item?.date?.month ?? ""}/${item?.date?.year ?? ""}",
+//                     // status: item.status,
+//                     showActions: true,
+//                     onPress: () {
+//                       log("message1");
+//
+//                       Provider.of<ProjectProvider>(
+//                         context,
+//                         listen: false,
+//                       ).downloadPdf(context: context, id: item?.id ?? 0);
+//                     },
+//                   );
+//                 },
+//               ),
+//             ),
+//           ],
+//         );
+//       },
+//     ),
+//   );
+// }
 Widget _quoteTab() {
-  return Padding(
-    padding: const EdgeInsets.all(16),
-    child: Consumer<ProjectProvider>(
-      builder: (context, project, _) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
+  return Consumer<ProjectProvider>(
+    builder: (context, project, _) {
+      return ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount:
+            (project?.quatationModel?.data?.length ?? 0) + 1, // +1 for header
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          // First item is the header text
+          if (index == 0) {
+            return const Text(
               "Get a professional cost estimation based on your project type, area, scope, and budget – quick, transparent, and reliable.",
               style: TextStyle(
                 fontSize: 15,
@@ -1142,37 +1197,83 @@ Widget _quoteTab() {
                 fontWeight: FontWeight.w600,
                 color: Color(0xff737373),
               ),
-            ),
-            const SizedBox(height: 16),
+            );
+          }
 
-            /// Separated ListView
-            Expanded(
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: project?.quatationModel?.data?.length ?? 0,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final item = project?.quatationModel?.data?[index];
-
-                  return EstimationCard(
-                    title: item?.name ?? "",
-                    subtitle:
-                        "${item?.location ?? ""} . ${item?.builtUpArea ?? ""}sq.ft",
-                    date:
-                        "${item?.date?.day ?? ""}/${item?.date?.month ?? ""}/${item?.date?.year ?? ""}",
-                    // status: item.status,
-                    showActions: true,
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    ),
+          final item = project?.quatationModel?.data?[index - 1];
+          return EstimationCard(
+            title: item?.name ?? "",
+            subtitle:
+                "${item?.location ?? ""} . ${item?.builtUpArea ?? ""}sq.ft",
+            date:
+                "${item?.date?.day ?? ""}/${item?.date?.month ?? ""}/${item?.date?.year ?? ""}",
+            showActions: true,
+            onPress: () {
+              Provider.of<ProjectProvider>(
+                context,
+                listen: false,
+              ).downloadQuotesPdf(context: context, id: item?.id ?? 0);
+            },
+          );
+        },
+      );
+    },
   );
 }
+// Widget _quoteTab() {
+//   return Padding(
+//     padding: const EdgeInsets.all(16),
+//     child: Consumer<ProjectProvider>(
+//       builder: (context, project, _) {
+//         return Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             const Text(
+//               "Get a professional cost estimation based on your project type, area, scope, and budget – quick, transparent, and reliable.",
+//               style: TextStyle(
+//                 fontSize: 15,
+//                 fontFamily: "Manrope",
+//                 fontWeight: FontWeight.w600,
+//                 color: Color(0xff737373),
+//               ),
+//             ),
+//             const SizedBox(height: 16),
+//
+//             /// Separated ListView
+//             Expanded(
+//               child: ListView.separated(
+//                 shrinkWrap: true,
+//                 itemCount: project?.quatationModel?.data?.length ?? 0,
+//                 separatorBuilder: (context, index) =>
+//                     const SizedBox(height: 12),
+//                 itemBuilder: (context, index) {
+//                   final item = project?.quatationModel?.data?[index];
+//
+//                   return EstimationCard(
+//                     title: item?.name ?? "",
+//                     subtitle:
+//                         "${item?.location ?? ""} . ${item?.builtUpArea ?? ""}sq.ft",
+//                     date:
+//                         "${item?.date?.day ?? ""}/${item?.date?.month ?? ""}/${item?.date?.year ?? ""}",
+//                     // status: item.status,
+//                     showActions: true,
+//                     onPress: () {
+//                       log("message2");
+//                       Provider.of<ProjectProvider>(
+//                         context,
+//                         listen: false,
+//                       ).downloadQuotesPdf(context: context, id: item?.id ?? 0);
+//                     },
+//                   );
+//                 },
+//               ),
+//             ),
+//           ],
+//         );
+//       },
+//     ),
+//   );
+// }
 
 class EstimationCard extends StatelessWidget {
   final String title;
@@ -1180,6 +1281,7 @@ class EstimationCard extends StatelessWidget {
   final String date;
   final String? status;
   final bool showActions;
+  final void Function()? onPress;
 
   const EstimationCard({
     super.key,
@@ -1188,6 +1290,7 @@ class EstimationCard extends StatelessWidget {
     required this.date,
     this.status,
     this.showActions = false,
+    required this.onPress,
   });
 
   @override
@@ -1281,7 +1384,7 @@ class EstimationCard extends StatelessWidget {
                 Flexible(
                   child: SizedBox(
                     height: 38,
-                    child: CustomButton(text: "Download", onPress: () {}),
+                    child: CustomButton(text: "Download", onPress: onPress),
                   ),
                 ),
               ],

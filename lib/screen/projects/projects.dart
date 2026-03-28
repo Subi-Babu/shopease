@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:youbuilt/custom_widgets/custom_button.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
 import 'package:youbuilt/screen/projects/project_view.dart';
+import 'package:youbuilt/screen/sign_up.dart';
 // import 'package:youbuilt/projects/add_projects.dart';
 import 'package:youbuilt/utils/colors.dart';
 
@@ -43,7 +44,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        leading: SizedBox(),
+        // leading: SizedBox(),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
@@ -56,7 +57,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
         actions: [
           GestureDetector(
             // onTap: () {
@@ -406,6 +407,12 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                               ?.projectList?[index]
                                               .id
                                               .toString(),
+                                          projectName:
+                                              project
+                                                  .projectListModel
+                                                  ?.projectList?[index]
+                                                  .name ??
+                                              "",
                                         ),
                                       ),
                                     );
@@ -520,11 +527,366 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                 Icons.more_horiz,
                                                 color: Color(0xff737373),
                                               ),
-                                              onSelected: (value) {
+                                              onSelected: (value) async {
                                                 if (value == 'edit') {
-                                                  // Edit action
+                                                  await project.fetchSingleProject(
+                                                    context: context,
+                                                    id:
+                                                        project
+                                                            .projectListModel
+                                                            ?.projectList?[index]
+                                                            .id
+                                                            .toString() ??
+                                                        "",
+                                                  );
+                                                  TextEditingController
+                                                  nameController =
+                                                      TextEditingController(
+                                                        text:
+                                                            project
+                                                                .projectListModel
+                                                                ?.projectList?[index]
+                                                                .name ??
+                                                            "",
+                                                      );
+
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (context) {
+                                                      return AlertDialog(
+                                                        backgroundColor:
+                                                            Colors.white,
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                12,
+                                                              ),
+                                                        ),
+                                                        title: Row(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .spaceBetween,
+                                                          children: [
+                                                            const Text(
+                                                              "Edit Project",
+                                                              style: TextStyle(
+                                                                fontFamily:
+                                                                    "Manrope",
+                                                                fontSize: 16,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w700,
+                                                              ),
+                                                            ),
+                                                            InkWell(
+                                                              onTap: () {
+                                                                Navigator.pop(
+                                                                  context,
+                                                                );
+                                                              },
+                                                              child: Icon(
+                                                                Icons.close,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        // contentPadding:
+                                                        //     EdgeInsets.all(0),
+                                                        content: Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            CustomTextField(
+                                                              hintText:
+                                                                  "Project Title",
+                                                              fillColor:
+                                                                  Colors.white,
+                                                              controller: project
+                                                                  .titlePCntrl,
+                                                            ),
+                                                            const SizedBox(
+                                                              height: 8,
+                                                            ),
+
+                                                            CustomTextField(
+                                                              hintText:
+                                                                  "Budget",
+                                                              fillColor:
+                                                                  Colors.white,
+                                                              controller: project
+                                                                  .budgetPCntrl,
+                                                            ),
+                                                            const SizedBox(
+                                                              height: 8,
+                                                            ),
+
+                                                            GestureDetector(
+                                                              onTap: () async {
+                                                                DateTime?
+                                                                picked = await showDatePicker(
+                                                                  context:
+                                                                      context,
+                                                                  initialDate:
+                                                                      DateTime.now(),
+                                                                  firstDate:
+                                                                      DateTime(
+                                                                        2000,
+                                                                      ),
+                                                                  lastDate:
+                                                                      DateTime(
+                                                                        2100,
+                                                                      ),
+                                                                );
+
+                                                                if (picked !=
+                                                                    null) {
+                                                                  project
+                                                                          .dueDatePCntrl
+                                                                          .text =
+                                                                      DateFormat(
+                                                                        'dd MMM yyyy',
+                                                                      ).format(
+                                                                        picked,
+                                                                      );
+                                                                }
+                                                              },
+                                                              child: AbsorbPointer(
+                                                                child: CustomTextField(
+                                                                  hintText:
+                                                                      "Due Date",
+                                                                  fillColor:
+                                                                      Colors
+                                                                          .white,
+                                                                  controller:
+                                                                      project
+                                                                          .dueDatePCntrl,
+                                                                  suffixIcon: const Icon(
+                                                                    Icons
+                                                                        .calendar_month_outlined,
+                                                                    color: Color(
+                                                                      0xff737373,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            const SizedBox(
+                                                              height: 8,
+                                                            ),
+
+                                                            CustomTextField(
+                                                              hintText:
+                                                                  "Description",
+                                                              fillColor:
+                                                                  Colors.white,
+                                                              maxLine: 4,
+                                                              controller: project
+                                                                  .desPCntrl,
+                                                              // controller: projectProvider.desCntrl,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        actions: [
+                                                          ElevatedButton(
+                                                            style: ElevatedButton.styleFrom(
+                                                              elevation: 0,
+                                                              backgroundColor:
+                                                                  Color(
+                                                                    0xffF4F4F4,
+                                                                  ),
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      8,
+                                                                    ),
+                                                              ),
+                                                            ),
+
+                                                            onPressed: () {
+                                                              Navigator.pop(
+                                                                context,
+                                                              ); // close dialog
+                                                            },
+                                                            child: const Text(
+                                                              "Cancel",
+                                                              style: TextStyle(
+                                                                fontFamily:
+                                                                    "Manrope",
+                                                                color:
+                                                                    primaryClr,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          ElevatedButton(
+                                                            style: ElevatedButton.styleFrom(
+                                                              elevation: 0,
+                                                              backgroundColor:
+                                                                  Colors.black,
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      8,
+                                                                    ),
+                                                              ),
+                                                            ),
+
+                                                            onPressed: () async {
+                                                              await project.editProject(
+                                                                context:
+                                                                    context,
+                                                                pid:
+                                                                    project
+                                                                        .projectListModel
+                                                                        ?.projectList?[index]
+                                                                        .id
+                                                                        .toString() ??
+                                                                    "",
+                                                                name: project
+                                                                    .titlePCntrl
+                                                                    .text,
+                                                                budget: project
+                                                                    .budgetPCntrl
+                                                                    .text,
+                                                                dueDate: project
+                                                                    .dueDatePCntrl
+                                                                    .text,
+                                                                description:
+                                                                    project
+                                                                        .desPCntrl
+                                                                        .text,
+                                                              );
+                                                              if (context
+                                                                  .mounted)
+                                                                Navigator.pop(
+                                                                  context,
+                                                                );
+                                                            },
+                                                            // Navigator.pop(
+                                                            //   context,
+                                                            // );
+                                                            // },
+                                                            child: const Text(
+                                                              "Update",
+                                                              style: TextStyle(
+                                                                fontFamily:
+                                                                    "Manrope",
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                  );
                                                 } else if (value == 'delete') {
-                                                  // Delete action
+                                                  showDialog(
+                                                    context: context,
+                                                    barrierDismissible: false,
+                                                    builder: (context) {
+                                                      return AlertDialog(
+                                                        backgroundColor:
+                                                            Colors.white,
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                12,
+                                                              ),
+                                                        ),
+                                                        title: const Text(
+                                                          "Delete",
+                                                          style: TextStyle(
+                                                            fontFamily:
+                                                                "Manrope",
+                                                            fontSize: 16,
+                                                            color: Colors.red,
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                          ),
+                                                        ),
+                                                        content: const Text(
+                                                          "Do you want to delete this project?",
+                                                          style: TextStyle(
+                                                            fontFamily:
+                                                                "Manrope",
+                                                            fontSize: 14,
+                                                            fontWeight:
+                                                                FontWeight.w400,
+                                                          ),
+                                                        ),
+                                                        actions: [
+                                                          ElevatedButton(
+                                                            style: ElevatedButton.styleFrom(
+                                                              elevation: 0,
+                                                              backgroundColor:
+                                                                  Color(
+                                                                    0xffF4F4F4,
+                                                                  ),
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      8,
+                                                                    ),
+                                                              ),
+                                                            ),
+
+                                                            onPressed: () {
+                                                              Navigator.pop(
+                                                                context,
+                                                              ); // close dialog
+                                                            },
+                                                            child: const Text(
+                                                              "Cancel",
+                                                              style: TextStyle(
+                                                                fontFamily:
+                                                                    "Manrope",
+                                                                color:
+                                                                    primaryClr,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          ElevatedButton(
+                                                            style: ElevatedButton.styleFrom(
+                                                              elevation: 0,
+                                                              backgroundColor:
+                                                                  Colors.black,
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      8,
+                                                                    ),
+                                                              ),
+                                                            ),
+                                                            onPressed: () async {
+                                                              await project.deleteProject(
+                                                                context:
+                                                                    context,
+                                                                pid:
+                                                                    project
+                                                                        .projectListModel
+                                                                        ?.projectList?[index]
+                                                                        .id
+                                                                        .toString() ??
+                                                                    "",
+                                                              );
+                                                              Navigator.pop(
+                                                                context,
+                                                              );
+                                                            },
+                                                            child: const Text(
+                                                              "Delete",
+                                                              style: TextStyle(
+                                                                fontFamily:
+                                                                    "Manrope",
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                  );
                                                 }
                                               },
                                               itemBuilder:

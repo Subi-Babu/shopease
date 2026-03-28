@@ -47,7 +47,7 @@ class _ProductViewSectionPageState extends State<ProductViewSectionPage> {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16),

@@ -4,26 +4,25 @@
 
 import 'dart:convert';
 
-ProjectMembersModel projectMembersModelFromJson(String str) => ProjectMembersModel.fromJson(json.decode(str));
+ProjectMembersModel projectMembersModelFromJson(String str) =>
+    ProjectMembersModel.fromJson(json.decode(str));
 
-String projectMembersModelToJson(ProjectMembersModel data) => json.encode(data.toJson());
+String projectMembersModelToJson(ProjectMembersModel data) =>
+    json.encode(data.toJson());
 
 class ProjectMembersModel {
   bool? status;
   String? message;
   Data? data;
 
-  ProjectMembersModel({
-    this.status,
-    this.message,
-    this.data,
-  });
+  ProjectMembersModel({this.status, this.message, this.data});
 
-  factory ProjectMembersModel.fromJson(Map<String, dynamic> json) => ProjectMembersModel(
-    status: json["status"],
-    message: json["message"],
-    data: json["data"] == null ? null : Data.fromJson(json["data"]),
-  );
+  factory ProjectMembersModel.fromJson(Map<String, dynamic> json) =>
+      ProjectMembersModel(
+        status: json["status"],
+        message: json["message"],
+        data: json["data"] == null ? null : Data.fromJson(json["data"]),
+      );
 
   Map<String, dynamic> toJson() => {
     "status": status,
@@ -36,24 +35,25 @@ class Data {
   String? projectName;
   List<Member>? members;
 
-  Data({
-    this.projectName,
-    this.members,
-  });
+  Data({this.projectName, this.members});
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
     projectName: json["projectName"],
-    members: json["members"] == null ? [] : List<Member>.from(json["members"]!.map((x) => Member.fromJson(x))),
+    members: json["members"] == null
+        ? []
+        : List<Member>.from(json["members"]!.map((x) => Member.fromJson(x))),
   );
 
   Map<String, dynamic> toJson() => {
     "projectName": projectName,
-    "members": members == null ? [] : List<dynamic>.from(members!.map((x) => x.toJson())),
+    "members": members == null
+        ? []
+        : List<dynamic>.from(members!.map((x) => x.toJson())),
   };
 }
 
 class Member {
-  int? projectId;
+  dynamic projectId;
   String? projectName;
   int? userId;
   String? userName;

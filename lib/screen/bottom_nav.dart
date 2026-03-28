@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:liquid_glass_bottom_bar/liquid_glass_bottom_bar.dart';
 import 'package:youbuilt/screen/cart/addcart.dart';
 import 'package:youbuilt/screen/cart/all_product.dart';
+import 'package:youbuilt/screen/profile/orders.dart';
 import 'package:youbuilt/screen/profile/profile.dart';
 import 'package:youbuilt/screen/projects/projects.dart';
 
 import 'home.dart';
+import 'order/order_tab_Page.dart';
 
 class BottomNavScreen extends StatefulWidget {
   const BottomNavScreen({Key? key}) : super(key: key);
@@ -21,7 +23,8 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   final List<Widget> _pages = const [
     HomeScreen(),
     MyCartPage(),
-    ProjectScreen(),
+    OrderTabPage(),
+    // ProjectScreen(),
     ProfileMenuPage(),
   ];
 
@@ -74,7 +77,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                   LiquidGlassBottomBarItem(
                     icon: Icons.work_outline,
                     activeIcon: Icons.work,
-                    label: "Projects",
+                    label: "Orders",
                   ),
                   LiquidGlassBottomBarItem(
                     icon: Icons.person_outline,

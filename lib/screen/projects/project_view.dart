@@ -12,7 +12,12 @@ import 'package:youbuilt/utils/constants.dart';
 
 class ProjectView extends StatefulWidget {
   final String? projectId;
-  const ProjectView({super.key, required this.projectId});
+  final String? projectName;
+  const ProjectView({
+    super.key,
+    required this.projectId,
+    required this.projectName,
+  });
 
   @override
   State<ProjectView> createState() => _ProjectViewState();
@@ -43,7 +48,7 @@ class _ProjectViewState extends State<ProjectView> {
           shadowColor: Colors.transparent,
           elevation: 0,
           title: Text(
-            "Home Renovation",
+            "${widget.projectName}",
             style: TextStyle(
               color: primaryClr,
               fontFamily: "Manrope",
@@ -52,7 +57,7 @@ class _ProjectViewState extends State<ProjectView> {
             ),
           ),
 
-          centerTitle: true,
+          centerTitle: false,
           bottom: TabBar(
             unselectedLabelColor: Color(0xff737373),
             indicatorColor: Color(0xffFF3B30),
@@ -63,7 +68,7 @@ class _ProjectViewState extends State<ProjectView> {
             isScrollable: true,
             labelStyle: TextStyle(
               fontFamily: "Manrope",
-              fontWeight: FontWeight.w400,
+              fontWeight: FontWeight.w600,
               fontSize: 12.sp,
             ),
             tabs: [

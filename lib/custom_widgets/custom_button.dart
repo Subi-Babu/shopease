@@ -64,16 +64,17 @@ class _CustomButtonState extends State<CustomButton> {
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (widget.icon1 != null) const SizedBox(width: 8),
+                    if (widget.icon1 != null) const SizedBox(width: 5),
                     widget.icon1 ?? const SizedBox.shrink(),
-                    if (widget.icon1 != null) const SizedBox(width: 8),
+                    if (widget.icon1 != null) const SizedBox(width: 5),
 
                     Flexible(
                       child: Text(
                         widget.text,
+                        maxLines: 1,
                         style: TextStyle(
                           fontFamily: "Manrope",
-                          fontSize: 17,
+                          fontSize: 16,
                           color: widget.textColor ?? backgroundColor,
                           fontWeight: FontWeight.w600,
                         ),

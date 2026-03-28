@@ -4,9 +4,13 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:youbuilt/model/countrycode.dart';
 import 'package:youbuilt/screen/bottom_nav.dart';
+import 'package:youbuilt/screen/forgot_otp.dart';
+import 'package:youbuilt/screen/forgot_otpsend.dart';
+import 'package:youbuilt/screen/login.dart';
 import 'package:youbuilt/screen/otp.dart';
 import 'package:youbuilt/utils/constants.dart';
 
+import '../../screen/forgot_update.dart';
 import '../../services/api.dart';
 import '../../utils/sharedpref_util.dart';
 import '../../utils/toast_util.dart';
@@ -17,12 +21,15 @@ class LoginProvider with ChangeNotifier {
   TextEditingController phoneCntrl = TextEditingController();
   TextEditingController pwdCntrl = TextEditingController();
   TextEditingController otpContrl = TextEditingController();
+  TextEditingController fotpContrl = TextEditingController();
   String? loginErrorMessage; // 👈 Add this in your provider
 
   Future<void> loginForm({
     required BuildContext context,
     String? phone,
+    // required String pwd,
     String? password,
+    String? code,
   }) async {
     signInLoading = true;
     loginErrorMessage = null;
@@ -33,6 +40,7 @@ class LoginProvider with ChangeNotifier {
         context: context,
         phonenumber: phone ?? "",
         pwd: password ?? "",
+        code: code ?? "+91",
       );
 
       if (response == null) {
@@ -208,6 +216,71 @@ class LoginProvider with ChangeNotifier {
   }
 
   String? otpErrorMessage;
+  String? otpErrorMessage3;
+  String? otpErrorMessage4;
+  Future<void> otpForgotSend({
+    required BuildContext context,
+    String? code,
+    String? phone,
+  }) async {
+    signUpLoading = true;
+    otpErrorMessage3 = null; // ✅ clear old error
+    notifyListeners();
+
+    try {
+      var responseData = await NetworkHelper().sendForgotOtp(
+        context: context,
+        phonenumber: phone ?? "",
+        code: code ?? "",
+      );
+
+      log("LOG MESSAGE222222:");
+
+      if (responseData == null) {
+        otpErrorMessage3 = "Something went wrong. Please try again.";
+        ToastUtil.show(otpErrorMessage!);
+        return;
+      }
+
+      // ✅ SUCCESS
+      if (responseData["status"] == 200 || responseData["status"] == true) {
+        otpErrorMessage3 = null; // clear error
+
+        ToastUtil.show("Otp Send Successfully!");
+
+        if (!context.mounted) return;
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => UserForfotOtpScreeen()),
+        );
+      }
+      // ✅ PHONE ALREADY USED
+      else if (responseData["status"] == 404) {
+        otpErrorMessage3 =
+            responseData["error"] ?? "Phone Number is already used";
+        // ToastUtil.show(otpErrorMessage2!);
+      }
+      // ✅ OTHER ERRORS
+      else {
+        otpErrorMessage3 =
+            responseData["message"] ??
+            responseData["error"] ??
+            "SignIn failed. Please try again.";
+
+        ToastUtil.show(otpErrorMessage2!);
+        log("SignIn failed: $otpErrorMessage2");
+      }
+    } catch (e, stack) {
+      log("❌ Login exception: $e\n$stack");
+
+      otpErrorMessage3 = "An error occurred. Please try again.";
+      ToastUtil.show(otpErrorMessage!);
+    } finally {
+      signUpLoading = false;
+      notifyListeners(); // ✅ notify after updating error
+    }
+  }
 
   Future<void> otpVerify({
     required BuildContext context,
@@ -255,6 +328,120 @@ class LoginProvider with ChangeNotifier {
       log(stackTrace.toString());
 
       otpErrorMessage = "An error occurred. Please try again.";
+      notifyListeners();
+    } finally {
+      signUpLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> forgotOtpVerify({
+    required BuildContext context,
+    String? code,
+    String? phone,
+    String? otp,
+  }) async {
+    signUpLoading = true;
+    otpErrorMessage3 = null; // Reset previous error
+    notifyListeners();
+
+    try {
+      final responseData = await NetworkHelper().forgotVerifyOtp(
+        context: context,
+        phonenumber: phone ?? "",
+        code: code ?? "",
+        otp: otp ?? "",
+      );
+
+      log("OTP Verify Response: ${responseData?["error"]}");
+
+      if (responseData?["status"] == 200 || responseData?["status"] == true) {
+        // OTP Success → Call signup
+        // await signupForm(
+        //   context: context,
+        //   phone: phoneNoCntrl.text,
+        //   code: selectedCountryCode ?? "+91",
+        //   name: nameCntrl.text,
+        //   password: passwdCntrl.text,
+        // );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ForgotUpdate()),
+        );
+
+        if (!context.mounted) return;
+
+        log("Navigating to UserOtpScreen...");
+      } else {
+        otpErrorMessage3 =
+            responseData?["error"] ??
+            "Otp not match" ?? // ← unreachable
+            "OTP verification failed";
+        log("OTP verification failed: $otpErrorMessage3");
+        notifyListeners();
+      }
+    } catch (e, stackTrace) {
+      log("❌ OTP Verify Exception: $e");
+      log(stackTrace.toString());
+
+      otpErrorMessage3 = "An error occurred. Please try again.";
+      notifyListeners();
+    } finally {
+      signUpLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> forgotOtpUpdate({
+    required BuildContext context,
+    String? code,
+    String? phone,
+    String? pwd,
+  }) async {
+    signUpLoading = true;
+    otpErrorMessage4 = null; // Reset previous error
+    notifyListeners();
+
+    try {
+      final responseData = await NetworkHelper().forgotpwdUpdate(
+        context: context,
+        phonenumber: phone ?? "",
+        code: "${code}" ?? "",
+        pwd: pwd ?? "",
+      );
+
+      log("OTP Verify Response: ${responseData?["error"]}");
+
+      if (responseData?["status"] == 200 || responseData?["status"] == true) {
+        // OTP Success → Call signup
+        // await signupForm(
+        //   context: context,
+        //   phone: phoneNoCntrl.text,
+        //   code: selectedCountryCode ?? "+91",
+        //   name: nameCntrl.text,
+        //   password: passwdCntrl.text,
+        // );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
+
+        if (!context.mounted) return;
+
+        log("Navigating to UserOtpScreen...");
+      } else {
+        otpErrorMessage4 =
+            responseData?["error"] ??
+            "" ?? // ← unreachable
+            "update failed";
+        log("OTP verification failed: $otpErrorMessage3");
+        notifyListeners();
+      }
+    } catch (e, stackTrace) {
+      log("❌ OTP Verify Exception: $e");
+      log(stackTrace.toString());
+
+      otpErrorMessage4 = "An error occurred. Please try again.";
       notifyListeners();
     } finally {
       signUpLoading = false;

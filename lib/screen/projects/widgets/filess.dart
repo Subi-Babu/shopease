@@ -40,68 +40,70 @@ class _ProjectFilesPageState extends State<ProjectFilesPage> {
       length: 5,
       child: Scaffold(
         backgroundColor: const Color(0xffF4F4F4),
-        body: Column(
-          children: [
-            const SizedBox(height: 8),
-            _storageCard(),
-            const SizedBox(height: 12),
-            _fileActions(context, widget.pid ?? ""),
-            _searchBar(),
-            const SizedBox(height: 8),
-            Consumer<ProjectProvider>(
-              builder: (context, provider, _) {
-                return Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "${provider.selectedFolderName ?? "General"}",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black,
-                          fontFamily: "Manrope",
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(width: 15),
-                      InkWell(
-                        onTap: () {
-                          _showUploadFileDialog(context, widget.pid ?? "");
-                        },
-                        child: Container(
-                          width: 180.h,
-                          height: 45.h,
-                          padding: EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: primaryClr,
-                            borderRadius: BorderRadius.circular(8),
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 8),
+              _storageCard(),
+              const SizedBox(height: 12),
+              _fileActions(context, widget.pid ?? ""),
+              _searchBar(),
+              const SizedBox(height: 8),
+              Consumer<ProjectProvider>(
+                builder: (context, provider, _) {
+                  return Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "${provider.selectedFolderName ?? "General"}",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black,
+                            fontFamily: "Manrope",
+                            fontWeight: FontWeight.w600,
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.add, color: Colors.white, size: 18),
-                              SizedBox(width: 5),
-                              Text(
-                                "Upload File",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: "Manrope",
+                        ),
+                        SizedBox(width: 15),
+                        InkWell(
+                          onTap: () {
+                            _showUploadFileDialog(context, widget.pid ?? "");
+                          },
+                          child: Container(
+                            width: 150.h,
+                            height: 44.h,
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: primaryClr,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add, color: Colors.white, size: 18),
+                                SizedBox(width: 5),
+                                Text(
+                                  "Upload File",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: "Manrope",
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            Expanded(child: _filesList()),
-          ],
+                      ],
+                    ),
+                  );
+                },
+              ),
+              _filesList(),
+            ],
+          ),
         ),
       ),
     );
@@ -110,6 +112,28 @@ class _ProjectFilesPageState extends State<ProjectFilesPage> {
   Widget _storageCard() {
     return Consumer<ProjectProvider>(
       builder: (context, provider, _) {
+        // Example: API returns size in bytes
+        double usedBytes =
+            double.tryParse(
+              provider.projectFileListModel?.totalSize?.toString() ?? "0",
+            ) ??
+            0;
+
+        double maxBytes = 1073741824; // 1 GB
+
+        double progress = usedBytes / maxBytes;
+
+        progress = progress.clamp(0.0, 1.0);
+
+        // if (progress > 1) progress = 1;
+
+        if (progress > 1) {
+          progress = 1;
+        }
+
+        // Convert to MB for display
+        double usedMB = usedBytes / (1024 * 1024);
+
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
           padding: const EdgeInsets.all(12),
@@ -139,11 +163,13 @@ class _ProjectFilesPageState extends State<ProjectFilesPage> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 4),
+
               Row(
                 children: [
                   Text(
-                    provider.projectFileListModel?.totalSize ?? "",
+                    "${usedMB.toStringAsFixed(2)} MB",
                     style: TextStyle(
                       fontSize: 14,
                       fontFamily: "Manrope",
@@ -152,7 +178,7 @@ class _ProjectFilesPageState extends State<ProjectFilesPage> {
                     ),
                   ),
                   const Text(
-                    "/ 10 GB",
+                    " / 1 GB",
                     style: TextStyle(
                       fontSize: 14,
                       fontFamily: "Manrope",
@@ -162,13 +188,16 @@ class _ProjectFilesPageState extends State<ProjectFilesPage> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 8),
+
               LinearProgressIndicator(
-                value: 0.25,
+                value: progress,
                 backgroundColor: Color(0xffF4F4F4),
                 color: primaryClr,
                 minHeight: 5,
               ),
+
               const SizedBox(height: 8),
             ],
           ),
@@ -449,6 +478,8 @@ class _ProjectFilesPageState extends State<ProjectFilesPage> {
                 ),
               )
             : ListView.separated(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16),
                 itemCount:
                     file.projectFileListModel?.projectFileList?.length ?? 0,

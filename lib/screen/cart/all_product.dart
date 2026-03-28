@@ -10,8 +10,12 @@ import '../../providers/signin/project_provider.dart';
 import '../../utils/colors.dart';
 import 'mycart2.dart';
 
+final TextEditingController searchController = TextEditingController();
+
 class AllProductsPage extends StatefulWidget {
-  const AllProductsPage({super.key});
+  final String? keyword;
+
+  const AllProductsPage({super.key, this.keyword});
 
   @override
   State<AllProductsPage> createState() => _AllProductsPageState();
@@ -20,9 +24,20 @@ class AllProductsPage extends StatefulWidget {
 class _AllProductsPageState extends State<AllProductsPage> {
   @override
   void initState() {
+    searchController.text = widget.keyword ?? "";
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = Provider.of<ProjectProvider>(context, listen: false);
-      reg.fetchItemLists(context: context, endPrice: "", catid: "");
+      // reg.fetchItemLists(context: context, endPrice: "", catid: "", keywrd: "");
+      // searchController = TextEditingController(
+      //   text: widget.keyword ?? "",
+      // );
+      reg.fetchItemLists(
+        context: context,
+        endPrice: "",
+        catid: "",
+        keywrd: widget.keyword ?? "",
+      );
+
       reg.fetchCategoryLists(context: context);
       reg.fetchBrand(context: context);
       reg.fetchCartList(context: context);
@@ -124,7 +139,7 @@ class _AllProductsPageState extends State<AllProductsPage> {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: Consumer<ProjectProvider>(
         builder: (context, items, _) {
@@ -151,33 +166,80 @@ class _AllProductsPageState extends State<AllProductsPage> {
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Color(0xffDFDFDF)),
                     ),
-                    child: TextField(
-                      onChanged: (value) {},
-                      decoration: InputDecoration(
-                        hintText: "Search products",
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 10,
-                        ),
-                        hintStyle: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          fontFamily: "Manrope",
-                        ),
-                        prefixIcon: Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: Image.asset(
-                            "assets/search.png",
-                            height: 20,
-                            width: 20,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: searchController,
+                            onSubmitted: (value) async {
+                              if (value.isNotEmpty) {
+                                await context
+                                    .read<ProjectProvider>()
+                                    .fetchItemLists(
+                                      context: context,
+                                      catid: "",
+                                      endPrice: "",
+                                      keywrd: value,
+                                    );
+                              }
+                            },
+                            onChanged: (value) async {
+                              if (value.isNotEmpty) {
+                                await context
+                                    .read<ProjectProvider>()
+                                    .fetchItemLists(
+                                      context: context,
+                                      catid: "",
+                                      endPrice: "",
+                                      keywrd: value,
+                                    );
+                              }
+                            },
+                            decoration: InputDecoration(
+                              hintText: "Search products",
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 10,
+                              ),
+                              hintStyle: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                fontFamily: "Manrope",
+                              ),
+                              prefixIcon: Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 8,
+                                  bottom: 2,
+                                ),
+                                child: Image.asset(
+                                  "assets/search.png",
+                                  height: 20,
+                                  width: 20,
+                                ),
+                              ),
+                              prefixIconConstraints: BoxConstraints(
+                                minHeight: 20,
+                                minWidth: 30,
+                              ),
+                            ),
                           ),
                         ),
-                        prefixIconConstraints: BoxConstraints(
-                          minHeight: 20,
-                          minWidth: 30,
+                        GestureDetector(
+                          onTap: () async {
+                            searchController.clear();
+                            await context
+                                .read<ProjectProvider>()
+                                .fetchItemLists(
+                                  context: context,
+                                  endPrice: "",
+                                  catid: "",
+                                  keywrd: "",
+                                );
+                          },
+                          child: const Icon(Icons.close, color: Colors.grey),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
@@ -209,6 +271,7 @@ class _AllProductsPageState extends State<AllProductsPage> {
                                   context: context,
                                   endPrice: "",
                                   catid: "",
+                                  keywrd: "",
                                 );
                                 items.setSelectedCategory(""); //
                               },
@@ -236,6 +299,7 @@ class _AllProductsPageState extends State<AllProductsPage> {
                               await items.fetchItemLists(
                                 context: context,
                                 endPrice: "",
+                                keywrd: "",
                                 catid: category.id.toString(),
                               );
                               items.setSelectedCategory(category.id.toString());

@@ -123,6 +123,8 @@ class OrderItem {
   dynamic commision;
   List<dynamic>? attributecategory;
   AttributeName? attributeName;
+  String? storeStatus;
+  String? deliveryStatus;
   Store? store;
   Item? item;
 
@@ -140,6 +142,8 @@ class OrderItem {
     this.commision,
     this.attributecategory,
     this.attributeName,
+    this.storeStatus,
+    this.deliveryStatus,
     this.store,
     this.item,
   });
@@ -162,6 +166,8 @@ class OrderItem {
     attributeName: json["attributeName"] == null
         ? null
         : AttributeName.fromJson(json["attributeName"]),
+    storeStatus: json["storeStatus"],
+    deliveryStatus: json["deliveryStatus"],
     store: json["store"] == null ? null : Store.fromJson(json["store"]),
     item: json["item"] == null ? null : Item.fromJson(json["item"]),
   );
@@ -182,6 +188,8 @@ class OrderItem {
         ? []
         : List<dynamic>.from(attributecategory!.map((x) => x)),
     "attributeName": attributeName?.toJson(),
+    "storeStatus": storeStatus,
+    "deliveryStatus": deliveryStatus,
     "store": store?.toJson(),
     "item": item?.toJson(),
   };

@@ -47,7 +47,7 @@ class _AddressPageState extends State<AddressPage> {
             fontSize: 18.sp,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -162,72 +162,92 @@ class _AddressPageState extends State<AddressPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Checkbox(
-              value: isSelected,
-              activeColor: primaryClr,
-              onChanged: (_) => onChanged(),
-            ),
-            const SizedBox(width: 8),
-
+            // Checkbox(
+            //   value: isSelected,
+            //   activeColor: primaryClr,
+            //   onChanged: (_) => onChanged(),
+            // ),
+            // const SizedBox(width: 8),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: const Color(0xff8A8A8A),
-                      fontFamily: "Manrope",
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16.sp,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            color: const Color(0xff8A8A8A),
+                            fontFamily: "Manrope",
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      isSelected == false
+                          ? SizedBox()
+                          : Container(
+                              padding: EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(color: Colors.green),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                "Default",
+                                style: TextStyle(
+                                  color: Colors.green,
+                                  fontFamily: "Manrope",
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14.sp,
+                                ),
+                              ),
+                            ),
+                    ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    name,
-                    style: TextStyle(
-                      color: const Color(0xff131313),
-                      fontFamily: "Manrope",
-                      fontWeight: FontWeight.w500,
-                      fontSize: 16.sp,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    address,
-                    style: TextStyle(
-                      color: primaryClr,
-                      fontFamily: "Manrope",
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14.sp,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: TextStyle(
+                                color: const Color(0xff131313),
+                                fontFamily: "Manrope",
+                                fontWeight: FontWeight.w500,
+                                fontSize: 16.sp,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              address,
+                              maxLines: 3,
+                              style: TextStyle(
+                                color: primaryClr,
+                                fontFamily: "Manrope",
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14.sp,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // const SizedBox(width: 10),
+                      const Icon(Icons.more_vert, color: Colors.grey),
+                    ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 10),
-            isSelected == false
-                ? SizedBox()
-                : Container(
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: Colors.green),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      "Default",
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontFamily: "Manrope",
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.sp,
-                      ),
-                    ),
-                  ),
-            const SizedBox(width: 10),
-
-            const Icon(Icons.more_vert, color: Colors.grey),
           ],
         ),
       ),

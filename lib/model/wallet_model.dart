@@ -4,7 +4,8 @@
 
 import 'dart:convert';
 
-WalletModel walletModelFromJson(String str) => WalletModel.fromJson(json.decode(str));
+WalletModel walletModelFromJson(String str) =>
+    WalletModel.fromJson(json.decode(str));
 
 String walletModelToJson(WalletModel data) => json.encode(data.toJson());
 
@@ -46,7 +47,9 @@ class WalletModel {
     limit: json["limit"],
     totalPages: json["totalPages"],
     totalRecords: json["totalRecords"],
-    data: json["data"] == null ? [] : List<Datum>.from(json["data"]!.map((x) => Datum.fromJson(x))),
+    data: json["data"] == null
+        ? []
+        : List<Datum>.from(json["data"]!.map((x) => Datum.fromJson(x))),
   );
 
   Map<String, dynamic> toJson() => {
@@ -60,7 +63,9 @@ class WalletModel {
     "limit": limit,
     "totalPages": totalPages,
     "totalRecords": totalRecords,
-    "data": data == null ? [] : List<dynamic>.from(data!.map((x) => x.toJson())),
+    "data": data == null
+        ? []
+        : List<dynamic>.from(data!.map((x) => x.toJson())),
   };
 }
 
@@ -69,7 +74,7 @@ class Datum {
   String? details;
   int? amount;
   DateTime? createdAt;
-  int? projectId;
+  dynamic projectId;
   String? projectName;
   String? type;
   int? expenseCategoryId;
@@ -91,7 +96,9 @@ class Datum {
     id: json["id"],
     details: json["details"],
     amount: json["amount"],
-    createdAt: json["createdAt"] == null ? null : DateTime.parse(json["createdAt"]),
+    createdAt: json["createdAt"] == null
+        ? null
+        : DateTime.parse(json["createdAt"]),
     projectId: json["projectId"],
     projectName: json["projectName"],
     type: json["type"],

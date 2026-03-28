@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +26,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   late TextEditingController phonecodeController;
   late TextEditingController emailController;
   late TextEditingController genderController;
+  late TextEditingController gstController;
 
   String selectedGender = "";
   File? selectedImage;
@@ -40,6 +42,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     phonecodeController = TextEditingController();
     emailController = TextEditingController();
     genderController = TextEditingController();
+    gstController = TextEditingController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = Provider.of<ProjectProvider>(context, listen: false);
@@ -55,6 +58,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           emailController.text = data?.email ?? "";
           selectedGender = data?.gender ?? "";
           genderController.text = selectedGender;
+          gstController.text = data?.gst ?? "";
         });
       }
     });
@@ -66,6 +70,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     phoneController.dispose();
     emailController.dispose();
     genderController.dispose();
+    gstController.dispose();
     super.dispose();
   }
 
@@ -83,8 +88,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   void _showImagePicker() {
+    final ctx = context;
     showModalBottomSheet(
-      context: context,
+      context: ctx,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -150,7 +156,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     ),
 
                     Positioned(
-                      top: 50.h,
+                      top: 60.h,
                       left: 16.w,
                       right: 16.w,
                       child: Row(
@@ -178,53 +184,130 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
                     /// PROFILE IMAGE (Tap To Edit)
                     Positioned(
-                      bottom: -40.h,
+                      bottom: -60.h,
                       left: 0,
                       right: 0,
-                      child: Center(
-                        child: GestureDetector(
-                          onTap: isEditing ? _showImagePicker : null,
-                          child: CircleAvatar(
-                            radius: 45,
-                            backgroundColor: const Color(0xffE0E0E0),
-                            child: ClipOval(
-                              child: selectedImage != null
-                                  ? Image.file(
-                                      selectedImage!,
-                                      height: 90,
-                                      width: 90,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : CachedNetworkImage(
-                                      imageUrl:
-                                          profile
-                                              .profileModel
-                                              ?.data
-                                              ?.profileImage ??
-                                          '',
-                                      height: 90,
-                                      width: 90,
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) =>
-                                          const CircularProgressIndicator(),
-                                      errorWidget: (context, url, error) =>
-                                          Center(
-                                            child: Text(
-                                              nameController.text.isNotEmpty
-                                                  ? nameController.text[0]
-                                                        .toUpperCase()
-                                                  : "",
-                                              style: TextStyle(
-                                                color: primaryClr,
-                                                fontSize: 22,
-                                              ),
-                                            ),
+                      child:
+                          /// HEADER
+                          Column(
+                            children: [
+                              Stack(
+                                children: [
+                                  Image.asset(
+                                    "assets/Group 1000004378.png",
+                                    width: double.infinity,
+                                    height: 180.h,
+                                    fit: BoxFit.cover,
+                                  ),
+                                  Positioned(
+                                    top: 50.h,
+                                    left: 16.w,
+                                    right: 16.w,
+                                    child: Row(
+                                      children: [
+                                        InkWell(
+                                          onTap: () => Navigator.pop(context),
+                                          child: const Icon(
+                                            Icons.arrow_back,
+                                            color: Colors.white,
                                           ),
+                                        ),
+                                        const Spacer(),
+                                        Text(
+                                          "User Profile",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18.sp,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                      ],
                                     ),
-                            ),
+                                  ),
+                                ],
+                              ),
+
+                              /// PROFILE IMAGE OUTSIDE THE STACK
+                              Transform.translate(
+                                offset: Offset(0, -40.h),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    print("TAPPED"); // test this first
+                                    if (isEditing) {
+                                      _showImagePicker();
+                                    }
+                                  },
+                                  child: Stack(
+                                    alignment: Alignment.bottomRight,
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 45,
+                                        backgroundColor: const Color(
+                                          0xffE0E0E0,
+                                        ),
+                                        child: ClipOval(
+                                          child: selectedImage != null
+                                              ? Image.file(
+                                                  selectedImage!,
+                                                  height: 90,
+                                                  width: 90,
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : CachedNetworkImage(
+                                                  imageUrl:
+                                                      profile
+                                                          .profileModel
+                                                          ?.data
+                                                          ?.profileImage ??
+                                                      '',
+                                                  height: 90,
+                                                  width: 90,
+                                                  fit: BoxFit.cover,
+                                                  placeholder: (context, url) =>
+                                                      const CircularProgressIndicator(),
+                                                  errorWidget:
+                                                      (
+                                                        context,
+                                                        url,
+                                                        error,
+                                                      ) => Center(
+                                                        child: Text(
+                                                          nameController
+                                                                  .text
+                                                                  .isNotEmpty
+                                                              ? nameController
+                                                                    .text[0]
+                                                                    .toUpperCase()
+                                                              : "",
+                                                          style: TextStyle(
+                                                            color: primaryClr,
+                                                            fontSize: 22,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                ),
+                                        ),
+                                      ),
+                                      if (isEditing)
+                                        Container(
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.edit,
+                                            size: 18,
+                                            color: Colors.red,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
                     ),
                   ],
                 ),
@@ -319,7 +402,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           SizedBox(height: 12),
                           CustomTextField(
                             hintText: "Gst Number",
-                            // readonly: true,
+                            readonly: !isEditing,
+                            controller: gstController,
                             // controller: genderController,
                           ),
                         ],

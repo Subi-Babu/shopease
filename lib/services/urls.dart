@@ -43,6 +43,7 @@ class Urls {
   static String addressListUrl = "$kBaseUrl/users/addressList";
   static String catDropdownUrl = "$kBaseUrl/users/categoryDropDown";
   static String cartUrl = "$kBaseUrl/users/cart";
+  static String buynowUrl = "$kBaseUrl/users/buyNow";
   static String profileEditUrl = "$kBaseUrl/users/profile";
   static String cartlistUrl = "$kBaseUrl/users/cartList";
   static String projectAssignlistUrl = "$kBaseUrl/users/usersProjectDropDown";
@@ -60,4 +61,17 @@ class Urls {
   static String serviceBookingUrl = "$kBaseUrl/users/servieBookingList";
   static String qtyEdit = "$kBaseUrl/users/editCartQty";
   static String walletDelete = "$kBaseUrl/users/deleteExpenses";
+  static String fundEdit = "$kBaseUrl/users/editMoney";
+  static String expenseEdit = "$kBaseUrl/users/";
+  static String searchHomeUrl = "$kBaseUrl/users/searchItemAndService";
+  static String fSendOtpUrl = "$kBaseUrl/users/forgetPasswordSendOtp";
+  static String fverifyUrl = "$kBaseUrl/users/forgetPasswordVerifyOtp";
+  static String fUpdateOtpUrl = "$kBaseUrl/users/updateForgetPassword";
+  static String downloadUrl = "$kBaseUrl/users/adminEstimationPDF";
+  static String downloadQotesUrl = "$kBaseUrl/users/adminQuatationPDF";
+  static String downloadSnagUrl = "$kBaseUrl/users/getSnagListPdf";
+  static String downloadWalletUrl = "$kBaseUrl/users/getWalletPdf";
+  static String projectIngleUrl = "$kBaseUrl/users/project";
+
+  static String projectDeleteUrl = "$kBaseUrl/users/project";
 }

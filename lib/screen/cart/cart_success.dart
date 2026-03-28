@@ -68,7 +68,9 @@ class OrderSuccessPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => MyOrdersPage()),
+                    MaterialPageRoute(
+                      builder: (context) => MyOrdersPage(btn: false),
+                    ),
                   );
                   ;
                   // Or navigate to Orders Page
