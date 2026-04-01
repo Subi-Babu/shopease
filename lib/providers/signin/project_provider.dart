@@ -11,6 +11,7 @@ import 'package:youbuilt/model/activity_model.dart';
 import 'package:youbuilt/model/addressListModel.dart' hide Datum;
 import 'package:youbuilt/model/approval_model.dart';
 import 'package:youbuilt/model/assign_project_model.dart';
+import 'package:youbuilt/model/banner_model.dart' as banner;
 import 'package:youbuilt/model/brandmodel.dart';
 import 'package:youbuilt/model/category_dropdown.dart';
 import 'package:youbuilt/model/category_list_model.dart';
@@ -30,6 +31,7 @@ import 'package:youbuilt/model/project_view_model.dart';
 import 'package:youbuilt/model/projectfolder_model.dart';
 import 'package:youbuilt/model/quatation.dart' hide Datum;
 import 'package:youbuilt/model/rental.dart' hide Datum;
+import 'package:youbuilt/model/rental_book_model.dart' as book;
 import 'package:youbuilt/model/rental_cat_model.dart' as rent;
 import 'package:youbuilt/model/rental_view_model.dart';
 import 'package:youbuilt/model/sanp_drop_model.dart';
@@ -2123,6 +2125,52 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> rentalbook({
+    required BuildContext context,
+    required String name,
+    required String phoneNumber,
+    required String rentalId,
+    required String pId,
+    required String addressid,
+    required String code,
+    required String pincode,
+    required String message,
+    required String date,
+  }) async {
+    memberLoads = true;
+    notifyListeners();
+
+    try {
+      var responseData = await NetworkHelper().rentalBooking(
+        context: context,
+        name: name,
+        phoneNumber: phoneNumber,
+        pId: pId,
+        date: DateFormat('dd-MM-yyyy').format(DateTime.now()),
+        pincode: pincode,
+        code: code,
+        rentalId: rentalId,
+        addressid: addressid,
+        message: message,
+      );
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(responseData["message"] ?? "");
+      } else {
+        ToastUtil.show(
+          responseData["message"] ??
+              responseData["error"] ??
+              "Please try again.",
+        );
+      }
+    } catch (e) {
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      memberLoads = false; // ✅ FIXED
+      notifyListeners();
+    }
+  }
+
   File? govtPaper;
   Future<void> pickGovtFile() async {
     final result = await FilePicker.platform.pickFiles(
@@ -2182,6 +2230,7 @@ class ProjectProvider extends ChangeNotifier {
     required File? file,
     required String gender,
     required String email,
+    required String gst,
   }) async {
     expense = true;
     notifyListeners();
@@ -2194,6 +2243,7 @@ class ProjectProvider extends ChangeNotifier {
         gender: gender,
         number: number,
         file: file,
+        gst: gst,
       );
 
       if (responseData["status"] == true) {
@@ -2236,6 +2286,54 @@ class ProjectProvider extends ChangeNotifier {
       log("Error fetching : $e");
     } finally {
       itemLoading = false;
+      notifyListeners();
+    }
+  }
+
+  banner.BannerModel? bannerModel;
+  Future fetchBannerList({required BuildContext context}) async {
+    load = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getBanner(context: context);
+
+      if (response != null) {
+        bannerModel = response; // Store fetched subcategories
+
+        log("Fetched details successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      load = false;
+      notifyListeners();
+    }
+  }
+
+  book.RentalBookListModel? rentalBookListModel;
+  Future fetchRentalBookList({required BuildContext context}) async {
+    load = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getRentalBookList(
+        context: context,
+      );
+
+      if (response != null) {
+        rentalBookListModel = response; // Store fetched subcategories
+
+        log("Fetched details successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      load = false;
       notifyListeners();
     }
   }
@@ -2661,6 +2759,9 @@ class ProjectProvider extends ChangeNotifier {
   TextEditingController bNameCntrl = TextEditingController();
   TextEditingController bphoneCntrl = TextEditingController();
   TextEditingController bMsgCntrl = TextEditingController();
+  TextEditingController rNameCntrl = TextEditingController();
+  TextEditingController rphoneCntrl = TextEditingController();
+  TextEditingController rMsgCntrl = TextEditingController();
   Future<void> bookNow({
     required BuildContext context,
     required String name,
@@ -3360,21 +3461,56 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  // Future<void> downloadInvoicePdf({
+  //   required BuildContext context,
+  //   required int Orderid,
+  //   required int storeId,
+  // }) async {
+  //   isLoading = true;
+  //   notifyListeners();
+  //
+  //   final path = await NetworkHelper().downloadInvoicePdf(Orderid, storeId);
+  //
+  //   isLoading = false;
+  //   notifyListeners();
+  //
+  //   if (path != null) {
+  //     await OpenFilex.open(path);
+  //   }
+  // }
   Future<void> downloadInvoicePdf({
     required BuildContext context,
     required int Orderid,
     required int storeId,
   }) async {
-    isLoading = true;
-    notifyListeners();
+    try {
+      isLoading = true;
+      notifyListeners();
 
-    final path = await NetworkHelper().downloadInvoicePdf(Orderid, storeId);
+      final path = await NetworkHelper().downloadInvoicePdf(Orderid, storeId);
 
-    isLoading = false;
-    notifyListeners();
+      isLoading = false;
+      notifyListeners();
 
-    if (path != null) {
-      await OpenFilex.open(path);
+      if (path != null) {
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(content: Text("Report downloaded successfully")),
+        ToastUtil.show("Invoice downloaded successfully");
+        // );
+      } else {
+        ToastUtil.show("Failed to download report");
+
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(content: Text("Failed to download report")),
+        // );
+      }
+    } catch (e) {
+      isLoading = false;
+      notifyListeners();
+
+      // ScaffoldMessenger.of(
+      //   context,
+      // ).showSnackBar(const SnackBar(content: Text("Something went wrong")));
     }
   }
 

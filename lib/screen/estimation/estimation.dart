@@ -1136,7 +1136,7 @@ Widget _estimationTab() {
             date:
                 "${item?.date?.day ?? ""}/${item?.date?.month ?? ""}/${item?.date?.year ?? ""}",
             showActions: true,
-            status: item?.status,
+            status: item?.status?.replaceAll("_", " "),
             onPress: () {
               log("message");
               Provider.of<ProjectProvider>(
@@ -1382,43 +1382,71 @@ class EstimationCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            subtitle,
-            maxLines: 3,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xff737373),
-              fontWeight: FontWeight.w500,
-              fontFamily: "Manrope",
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                subtitle,
+                maxLines: 3,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xff737373),
+                  fontWeight: FontWeight.w500,
+                  fontFamily: "Manrope",
+                ),
+              ),
+              if (status != "null")
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.red),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      status ?? "",
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xffFF3B30),
+                        fontWeight: FontWeight.w600,
+                        fontFamily: "Manrope",
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 12),
 
           /// Status or Actions
-          if (status != "null")
-            Align(
-              alignment: Alignment.centerRight,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.red),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  status ?? "",
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xffFF3B30),
-                    fontWeight: FontWeight.w600,
-                    fontFamily: "Manrope",
-                  ),
-                ),
-              ),
-            ),
-          SizedBox(height: 5),
+          // if (status != "null")
+          //   Align(
+          //     alignment: Alignment.centerRight,
+          //     child: Container(
+          //       padding: const EdgeInsets.symmetric(
+          //         horizontal: 10,
+          //         vertical: 4,
+          //       ),
+          //       decoration: BoxDecoration(
+          //         border: Border.all(color: Colors.red),
+          //         borderRadius: BorderRadius.circular(6),
+          //       ),
+          //       child: Text(
+          //         status ?? "",
+          //         style: const TextStyle(
+          //           fontSize: 12,
+          //           color: Color(0xffFF3B30),
+          //           fontWeight: FontWeight.w600,
+          //           fontFamily: "Manrope",
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // SizedBox(height: 5),
           if (showActions && status != "New_Enquiry" && status != "pending")
             Row(
               mainAxisAlignment: MainAxisAlignment.end,

@@ -325,7 +325,7 @@ class OrderCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Items ($items)",
+                  "$items",
                   style: TextStyle(
                     color: primaryClr,
                     fontFamily: "Manrope",

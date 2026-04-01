@@ -700,54 +700,54 @@ Widget filterSortRow(BuildContext context) {
         const SizedBox(width: 12),
 
         /// Sort By Button
-        Consumer<ProjectProvider>(
-          builder: (context, items, _) {
-            return Container(
-              height: 45,
-              width: 130,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xffE5E5E5)),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: items.selectedSort,
-                  hint: const Text(
-                    "Sort By",
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
-                  isExpanded: true,
-                  items: const [
-                    DropdownMenuItem(
-                      value: "low-to-high",
-                      child: Text("Low to High"),
-                    ),
-                    DropdownMenuItem(
-                      value: "high-to-low",
-                      child: Text("High to Low"),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      items.setSelectedSort(value);
-                      print("$value");
-                      items.fetchItemLists2(
-                        context: context,
-                        startPrice: "",
-                        endPrice: "",
-                        catid: "",
-                        brandiid: "",
-                        sort: value,
-                      );
-                    }
-                  },
-                ),
-              ),
-            );
-          },
-        ),
+        // Consumer<ProjectProvider>(
+        //   builder: (context, items, _) {
+        //     return Container(
+        //       height: 45,
+        //       width: 130,
+        //       padding: const EdgeInsets.symmetric(horizontal: 12),
+        //       decoration: BoxDecoration(
+        //         color: Colors.white,
+        //         borderRadius: BorderRadius.circular(10),
+        //         border: Border.all(color: const Color(0xffE5E5E5)),
+        //       ),
+        //       child: DropdownButtonHideUnderline(
+        //         child: DropdownButton<String>(
+        //           value: items.selectedSort,
+        //           hint: const Text(
+        //             "Sort By",
+        //             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        //           ),
+        //           isExpanded: true,
+        //           items: const [
+        //             DropdownMenuItem(
+        //               value: "low-to-high",
+        //               child: Text("Low to High"),
+        //             ),
+        //             DropdownMenuItem(
+        //               value: "high-to-low",
+        //               child: Text("High to Low"),
+        //             ),
+        //           ],
+        //           onChanged: (value) {
+        //             if (value != null) {
+        //               items.setSelectedSort(value);
+        //               print("$value");
+        //               items.fetchItemLists2(
+        //                 context: context,
+        //                 startPrice: "",
+        //                 endPrice: "",
+        //                 catid: "",
+        //                 brandiid: "",
+        //                 sort: value,
+        //               );
+        //             }
+        //           },
+        //         ),
+        //       ),
+        //     );
+        //   },
+        // ),
       ],
     ),
   );

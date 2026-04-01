@@ -57,20 +57,27 @@ class _RentalPageViewState extends State<RentalPageView> {
               text: "Confirm Booking",
               onPress: () async {
                 HapticFeedback.heavyImpact();
-                await service.bookNow(
+                await service.rentalbook(
                   context: context,
-                  name: service.bNameCntrl.text ?? "",
-                  phoneNumber: service.bphoneCntrl.text ?? "",
-                  file: service.bookFile,
-                  serviceId:
-                      service.serviceViewModel?.data?.id.toString() ?? "",
+                  name: service.rNameCntrl.text ?? "",
+                  phoneNumber: service.rphoneCntrl.text ?? "",
+
+                  rentalId: service.rentalViewModel?.data?.id.toString() ?? "",
                   addressid:
                       service.addressListModel?.data?.first?.id.toString() ??
                       "",
                   code: "91",
-                  message: service.bMsgCntrl.text ?? "",
+                  message: service.rMsgCntrl.text ?? "",
                   date: "",
+                  pincode:
+                      service.addressListModel?.data?.first?.pinCode
+                          .toString() ??
+                      "",
+                  pId: "",
                 );
+                service.rNameCntrl.clear();
+                service.rphoneCntrl.clear();
+                service.rMsgCntrl.clear();
               },
             );
           },
@@ -176,45 +183,22 @@ class _RentalPageViewState extends State<RentalPageView> {
                       CustomTextField(
                         hintText: "Full Name",
                         fillColor: Colors.white,
-                        controller: service.bNameCntrl,
+                        controller: service.rNameCntrl,
                       ),
                       const SizedBox(height: 12),
                       CustomTextField(
                         hintText: "Phone Number",
                         keyboardType: TextInputType.number,
                         fillColor: Colors.white,
-                        controller: service.bphoneCntrl,
+                        controller: service.rphoneCntrl,
                       ),
-                      // const SizedBox(height: 12),
-                      // Row(
-                      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      //   children: [
-                      //     const Text(
-                      //       "Upload Image (If any)",
-                      //       style: TextStyle(
-                      //         fontWeight: FontWeight.w500,
-                      //         fontFamily: "Manrope",
-                      //         fontSize: 14,
-                      //         color: Color(0xff737373),
-                      //       ),
-                      //     ),
-                      //   ],
-                      // ),
-                      // const SizedBox(height: 8),
-                      // uploadFileBox(
-                      //   title: service.bookFile == null
-                      //       ? "Upload file"
-                      //       : service.bookFile!.path.split('/').last,
-                      //   onTap: () {
-                      //     service.pickBookFileSection();
-                      //   },
-                      // ),
+
                       const SizedBox(height: 12),
                       CustomTextField(
                         hintText: "Message",
                         maxLine: 3,
                         fillColor: Colors.white,
-                        controller: service.bMsgCntrl,
+                        controller: service.rMsgCntrl,
                       ),
                     ],
                   ),
@@ -255,21 +239,6 @@ class _RentalPageViewState extends State<RentalPageView> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _textField(String hint, {int maxLines = 1}) {
-    return TextField(
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        hintText: hint,
-        filled: true,
-        fillColor: const Color(0xffF4F4F4),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
-        ),
       ),
     );
   }

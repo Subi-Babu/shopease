@@ -88,4 +88,6 @@ class Urls {
   static String statusServiceUrl = "$kBaseUrl/users/servieBookingStatus";
   static String downloadInvoiceUrl = "$kBaseUrl/users/storeInvoice";
   static String approvalsUrl = "$kBaseUrl/users/ApprovalOrderList";
+  static String bannersUrl = "$kBaseUrl/users/shopBanners";
+  static String rentalLidtUrl = "$kBaseUrl/users/rentalServieBookingList";
 }

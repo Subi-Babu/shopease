@@ -432,6 +432,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 gender: selectedGender,
                                 number: phoneController.text.trim(),
                                 file: selectedImage,
+                                gst: gstController.text.trim(),
                               );
 
                               await profile.fetchProfile(context: context);

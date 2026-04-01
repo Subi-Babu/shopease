@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:math';
+// import 'dart:math';math
 import 'package:external_path/external_path.dart';
 import 'package:mime/mime.dart';
 import 'package:http_parser/http_parser.dart';
@@ -16,6 +16,7 @@ import 'package:youbuilt/model/activity_model.dart';
 import 'package:youbuilt/model/addressListModel.dart';
 import 'package:youbuilt/model/approval_model.dart';
 import 'package:youbuilt/model/assign_project_model.dart';
+import 'package:youbuilt/model/banner_model.dart';
 import 'package:youbuilt/model/brandmodel.dart';
 import 'package:youbuilt/model/cart_list_model.dart';
 import 'package:youbuilt/model/category_dropdown.dart';
@@ -38,6 +39,7 @@ import 'package:youbuilt/model/project_view_model.dart';
 import 'package:youbuilt/model/projectfolder_model.dart';
 import 'package:youbuilt/model/quatation.dart';
 import 'package:youbuilt/model/rental.dart';
+import 'package:youbuilt/model/rental_book_model.dart';
 import 'package:youbuilt/model/rental_cat_model.dart';
 import 'package:youbuilt/model/rental_view_model.dart';
 import 'package:youbuilt/model/sanp_drop_model.dart';
@@ -2052,6 +2054,7 @@ class NetworkHelper {
     required File? file,
     required String gender,
     required String email,
+    required String gst,
   }) async {
     try {
       final uri = Uri.parse("${Urls.profileEditUrl}");
@@ -2067,6 +2070,7 @@ class NetworkHelper {
         "name": name,
         "email": email,
         "gender": gender,
+        "gst": gst,
       });
 
       // 📎 File
@@ -2282,21 +2286,27 @@ class NetworkHelper {
     required String date,
   }) async {
     try {
-      http.Response? response;
-      response = await _postRequest(
+      // Build the request body
+      final body = {
+        'rentalServiceId': rentalId,
+        // 'projectId': pId,
+        'userAddressId': addressid,
+        'name': name,
+        'code': "+${code}",
+        'phoneNumber': phoneNumber,
+        'message': message,
+        'pinCode': pincode,
+        'date': date,
+      };
+
+      // ✅ Print the body for debugging
+      print("Rental Booking Body: $body");
+
+      // Send the request
+      http.Response? response = await _postRequest(
         context: context,
         url: "${Urls.bookingRentalUrl}",
-        body: {
-          'rentalServiceId': rentalId,
-          'projectId': pId,
-          'userAddressId': addressid,
-          'name': name,
-          'code': code,
-          'phoneNumber': phoneNumber,
-          'message': message,
-          'pinCode': pincode,
-          'date': date,
-        },
+        body: body,
       );
 
       if (response == null) {
@@ -2305,6 +2315,7 @@ class NetworkHelper {
 
       return jsonDecode(response.body);
     } catch (e) {
+      print("Rental Booking Error: $e");
       return {"status": false, "error": e.toString()};
     }
   }
@@ -2595,31 +2606,22 @@ class NetworkHelper {
   Future<String?> downloadSnagReport(int id) async {
     try {
       final url = Uri.parse("${Urls.downloadSnagUrl}?projectId=$id");
-      log("$url");
+
       final response = await http.get(
         url,
         headers: {"Authorization": "Bearer $accessToken"},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // ✅ ADD PERMISSION HERE
-        if (Platform.isAndroid) {
-          if (!await Permission.manageExternalStorage.isGranted) {
-            final status = await Permission.manageExternalStorage.request();
+        Directory? dir;
 
-            if (!status.isGranted) {
-              print("Storage permission denied");
-              return null;
-            }
-          }
+        if (Platform.isAndroid) {
+          dir = Directory('/storage/emulated/0/Download'); // public Downloads
+        } else {
+          dir = await getApplicationDocumentsDirectory();
         }
 
-        // ✅ THEN access storage
-        final path = await ExternalPath.getExternalStoragePublicDirectory(
-          ExternalPath.DIRECTORY_DOWNLOAD,
-        );
-
-        final file = File("$path/youbuilt_snag_report_$id.pdf");
+        final file = File("${dir.path}/youbuilt_snag_report_$id.pdf");
 
         await file.writeAsBytes(response.bodyBytes);
 
@@ -2686,6 +2688,47 @@ class NetworkHelper {
   //     return null;
   //   }
   // }
+  // Future<String?> downloadWalletReport(int id) async {
+  //   try {
+  //     final url = Uri.parse("${Urls.downloadWalletUrl}?projectId=$id");
+  //
+  //     final response = await http.get(
+  //       url,
+  //       headers: {"Authorization": "Bearer $accessToken"},
+  //     );
+  //
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       // ✅ ADD PERMISSION HERE
+  //       if (Platform.isAndroid) {
+  //         if (!await Permission.manageExternalStorage.isGranted) {
+  //           final status = await Permission.manageExternalStorage.request();
+  //
+  //           if (!status.isGranted) {
+  //             print("Storage permission denied");
+  //             return null;
+  //           }
+  //         }
+  //       }
+  //
+  //       // ✅ Get Downloads folder
+  //       final path = await ExternalPath.getExternalStoragePublicDirectory(
+  //         ExternalPath.DIRECTORY_DOWNLOAD,
+  //       );
+  //
+  //       final file = File("$path/youbuilt_wallet_report_$id.pdf");
+  //
+  //       await file.writeAsBytes(response.bodyBytes);
+  //
+  //       print("Downloaded: ${file.path}");
+  //       return file.path;
+  //     } else {
+  //       return null;
+  //     }
+  //   } catch (e) {
+  //     print("Error: $e");
+  //     return null;
+  //   }
+  // }null
   Future<String?> downloadWalletReport(int id) async {
     try {
       final url = Uri.parse("${Urls.downloadWalletUrl}?projectId=$id");
@@ -2696,24 +2739,15 @@ class NetworkHelper {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // ✅ ADD PERMISSION HERE
-        if (Platform.isAndroid) {
-          if (!await Permission.manageExternalStorage.isGranted) {
-            final status = await Permission.manageExternalStorage.request();
+        Directory? dir;
 
-            if (!status.isGranted) {
-              print("Storage permission denied");
-              return null;
-            }
-          }
+        if (Platform.isAndroid) {
+          dir = Directory('/storage/emulated/0/Download'); // public Downloads
+        } else {
+          dir = await getApplicationDocumentsDirectory();
         }
 
-        // ✅ Get Downloads folder
-        final path = await ExternalPath.getExternalStoragePublicDirectory(
-          ExternalPath.DIRECTORY_DOWNLOAD,
-        );
-
-        final file = File("$path/youbuilt_wallet_report_$id.pdf");
+        final file = File("${dir.path}/youbuilt_wallet_report_$id.pdf");
 
         await file.writeAsBytes(response.bodyBytes);
 
@@ -2728,34 +2762,66 @@ class NetworkHelper {
     }
   }
 
+  // Future<String?> downloadOverviewReport(int id) async {
+  //   try {
+  //     final url = Uri.parse("${Urls.downloadOverviewUrl}/$id");
+  //
+  //     final response = await http.get(
+  //       url,
+  //       headers: {"Authorization": "Bearer $accessToken"},
+  //     );
+  //
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       // ✅ ADD PERMISSION HERE
+  //       if (Platform.isAndroid) {
+  //         if (!await Permission.manageExternalStorage.isGranted) {
+  //           final status = await Permission.manageExternalStorage.request();
+  //
+  //           if (!status.isGranted) {
+  //             print("Storage permission denied");
+  //             return null;
+  //           }
+  //         }
+  //       }
+  //
+  //       // ✅ Get Downloads folder
+  //       final path = await ExternalPath.getExternalStoragePublicDirectory(
+  //         ExternalPath.DIRECTORY_DOWNLOAD,
+  //       );
+  //
+  //       final file = File("$path/youbuilt_overview_report_$id.pdf");
+  //
+  //       await file.writeAsBytes(response.bodyBytes);
+  //
+  //       print("Downloaded: ${file.path}");
+  //       return file.path;
+  //     } else {
+  //       return null;
+  //     }
+  //   } catch (e) {
+  //     print("Error: $e");
+  //     return null;
+  //   }
+  // }
   Future<String?> downloadOverviewReport(int id) async {
     try {
       final url = Uri.parse("${Urls.downloadOverviewUrl}/$id");
-
+      // Uri.parse("${Urls.downloadOverviewUrl}/$id");
       final response = await http.get(
         url,
         headers: {"Authorization": "Bearer $accessToken"},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // ✅ ADD PERMISSION HERE
-        if (Platform.isAndroid) {
-          if (!await Permission.manageExternalStorage.isGranted) {
-            final status = await Permission.manageExternalStorage.request();
+        Directory? dir;
 
-            if (!status.isGranted) {
-              print("Storage permission denied");
-              return null;
-            }
-          }
+        if (Platform.isAndroid) {
+          dir = Directory('/storage/emulated/0/Download'); // public Downloads
+        } else {
+          dir = await getApplicationDocumentsDirectory();
         }
 
-        // ✅ Get Downloads folder
-        final path = await ExternalPath.getExternalStoragePublicDirectory(
-          ExternalPath.DIRECTORY_DOWNLOAD,
-        );
-
-        final file = File("$path/youbuilt_overview_report_$id.pdf");
+        final file = File("${dir.path}/youbuilt_overview_report_$id.pdf");
 
         await file.writeAsBytes(response.bodyBytes);
 
@@ -2804,6 +2870,48 @@ class NetworkHelper {
       // log("URL: $uri");
       log("Response: ${response.body}");
       return ApprovalOederModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<BannerModel?> getBanner({
+    required BuildContext context,
+    // required String? page,
+    // required String? limit,
+    // String? id,id
+  }) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.bannersUrl}",
+    );
+
+    if (response != null) {
+      // log("URL: $uri");
+      log("Response: ${response.body}");
+      return BannerModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<RentalBookListModel?> getRentalBookList({
+    required BuildContext context,
+    // required String? page,
+    // required String? limit,
+    // String? id,id
+  }) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.rentalLidtUrl}",
+    );
+
+    if (response != null) {
+      // log("URL: $uri");
+      log("Response: ${response.body}");
+      return RentalBookListModel.fromJson(jsonDecode(response.body));
     } else {
       ToastUtil.show("Error in fetching details");
       return null;
@@ -2938,27 +3046,59 @@ class NetworkHelper {
     }
   }
 
+  // Future<String?> downloadInvoicePdf(int orderId, int storeid) async {
+  //   try {
+  //     final url = Uri.parse("${Urls.downloadInvoiceUrl}/$orderId/$storeid");
+  //     print("$url");
+  //     final response = await http.get(
+  //       url,
+  //       headers: {"Authorization": "Bearer $accessToken"},
+  //     );
+  //
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       final dir = await getApplicationDocumentsDirectory();
+  //       final file = File("${dir.path}/youbuilt_quotation_$orderId].pdf");
+  //
+  //       await file.writeAsBytes(response.bodyBytes);
+  //
+  //       return file.path;
+  //     } else {
+  //       return null;
+  //     }
+  //   } catch (e) {
+  //     print("PDF Error: $e");
+  //     return null;
+  //   }
+  // }null
   Future<String?> downloadInvoicePdf(int orderId, int storeid) async {
     try {
       final url = Uri.parse("${Urls.downloadInvoiceUrl}/$orderId/$storeid");
-      print("$url");
+
       final response = await http.get(
         url,
         headers: {"Authorization": "Bearer $accessToken"},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final dir = await getApplicationDocumentsDirectory();
-        final file = File("${dir.path}/youbuilt_quotation_$orderId].pdf");
+        Directory? dir;
+
+        if (Platform.isAndroid) {
+          dir = Directory('/storage/emulated/0/Download'); // public Downloads
+        } else {
+          dir = await getApplicationDocumentsDirectory();
+        }
+
+        final file = File("${dir.path}/youbuilt_order_invoice_$storeid.pdf");
 
         await file.writeAsBytes(response.bodyBytes);
 
+        print("Downloaded: ${file.path}");
         return file.path;
       } else {
         return null;
       }
     } catch (e) {
-      print("PDF Error: $e");
+      print("Error: $e");
       return null;
     }
   }

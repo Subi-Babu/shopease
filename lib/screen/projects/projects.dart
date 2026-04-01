@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:youbuilt/custom_widgets/custom_button.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
+import 'package:youbuilt/screen/projects/inivitation.dart';
 import 'package:youbuilt/screen/projects/project_view.dart';
 import 'package:youbuilt/screen/sign_up.dart';
 // import 'package:youbuilt/projects/add_projects.dart';
@@ -60,6 +61,12 @@ class _ProjectScreenState extends State<ProjectScreen> {
         centerTitle: false,
         actions: [
           GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => InvitationsPage()),
+              );
+            },
             // onTap: () {
             //   showDialog(
             //     context: context,

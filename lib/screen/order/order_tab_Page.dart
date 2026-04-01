@@ -32,6 +32,7 @@ class _OrderTabPageState extends State<OrderTabPage> {
       await reg.fetchOrderList(context: context, keyword: "");
       // await reg.fetchServiceBookView(context: context, id: widget.id ?? "");
       await reg.fetchServiceBooking(context: context);
+      await reg.fetchRentalBookList(context: context);
     });
   }
 
@@ -59,7 +60,7 @@ class _OrderTabPageState extends State<OrderTabPage> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
@@ -104,11 +105,14 @@ class _OrderTabPageState extends State<OrderTabPage> {
               tabs: const [
                 Tab(text: "Products"),
                 Tab(text: "Services"),
+                Tab(text: "Rentals"),
               ],
             ),
           ),
         ),
-        body: TabBarView(children: [productOrders(), serviceOrders()]),
+        body: TabBarView(
+          children: [productOrders(), serviceOrders(), rentalOrders()],
+        ),
       ),
     );
   }
@@ -273,7 +277,8 @@ class _OrderTabPageState extends State<OrderTabPage> {
                                 id: item.id?.toString() ?? "",
                               );
                             },
-                            ordertatus: item.orderStatus ?? "",
+                            ordertatus:
+                                item.orderStatus?.replaceAll("_", " ") ?? "",
                             orderId: item.orderId?.toString() ?? "",
                             items: item.cCount?.orderItems ?? "0",
                             total: item.totalPrice ?? "",
@@ -380,6 +385,112 @@ class _OrderTabPageState extends State<OrderTabPage> {
                           "",
                       items: formatDate(
                         order.serviceBookingModel?.data?[index]?.date
+                                .toString() ??
+                            "",
+                      ),
+                      // deliveredDate: orders[index]["date"] as String,
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget rentalOrders() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Consumer<ProjectProvider>(
+        builder: (context, order, _) {
+          return Column(
+            children: [
+              /// SEARCH
+              Container(
+                padding: const EdgeInsets.all(12),
+                height: 45,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xffDFDFDF)),
+                ),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: "Search Rentals",
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 10,
+                    ),
+                    hintStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: "Manrope",
+                    ),
+                    prefixIcon: Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Image.asset(
+                        "assets/search.png",
+                        height: 20,
+                        width: 20,
+                      ),
+                    ),
+                    prefixIconConstraints: const BoxConstraints(
+                      minHeight: 20,
+                      minWidth: 30,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              Expanded(
+                child: ListView.separated(
+                  itemCount: order.rentalBookListModel?.data?.length ?? 0,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final item = order.rentalBookListModel?.data?[index];
+
+                    return OrderCard3(
+                      ordertatus:
+                          order.rentalBookListModel?.data?[index]?.status
+                              ?.replaceAll("_", " ")
+                              .toString() ??
+                          "",
+                      onTap: () async {
+                        await order.fetchServiceDetails(
+                          context: context,
+                          id:
+                              order.rentalBookListModel?.data?[index]?.id
+                                  .toString() ??
+                              "",
+                        );
+                        // await order.fetchOrderView(
+                        //   context: context,
+                        //   id:
+                        //       order.orderListModel?.data?[index].id
+                        //           .toString() ??
+                        //       "",
+                        // );
+                      },
+                      // imageUrl:
+                      //     order?.serviceBookingModel?.data?[index].file ?? "",
+                      orderId:
+                          order
+                              .rentalBookListModel
+                              ?.data?[index]
+                              ?.rentalBookingId
+                              .toString() ??
+                          "",
+                      // items:
+                      //     order.serviceBookingModel?.data?[index]?.name ?? "",
+                      total:
+                          // orderId.rentalBookListModel?.data?[index]?. ??
+                          "",
+                      items: formatDate(
+                        order.rentalBookListModel?.data?[index]?.date
                                 .toString() ??
                             "",
                       ),

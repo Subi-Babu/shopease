@@ -19,7 +19,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.youbuilt.youbuiltcustomer"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "26.1.10909125"
 
     lint {
         checkReleaseBuilds = false
@@ -50,7 +50,7 @@ android {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"]?.toString()
             keyPassword = keystoreProperties["keyPassword"]?.toString()
-            storeFile = file(keystoreProperties["storeFile"]?.toString())
+            storeFile = file(keystoreProperties["storeFile"] as String? ?: "")
             storePassword = keystoreProperties["storePassword"]?.toString()
         }
     }

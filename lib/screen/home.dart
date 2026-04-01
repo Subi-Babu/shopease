@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_controller.dart';
 import 'package:carousel_slider/carousel_options.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -24,6 +25,7 @@ import 'package:youbuilt/utils/colors.dart';
 import 'package:youbuilt/utils/constants.dart';
 
 import '../model/addressListModel.dart';
+import 'cart/view_cart.dart';
 
 final List<String> imagecarousel = [
   'assets/Mask Group.png',
@@ -57,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await reg.fetchServiceCategry(context: context);
       // await reg.fetchSearch(context: context, keyword: "");
       reg.fetchProjectList(context: context, status: "");
+      await reg.fetchBannerList(context: context);
     });
     getCurrentLocation();
   }
@@ -415,7 +418,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   );
                                 },
                                 child: _QuickActionTile(
-                                  image: "assets/solar_clipboard-bold.png",
+                                  image: "assets/codicon_tools.png",
                                   label: "Rental",
                                 ),
                               ),
@@ -707,94 +710,52 @@ class OfferCarouselWidget extends StatelessWidget {
     return ValueListenableBuilder(
       valueListenable: _current,
       builder: (context, int newIndex, _) {
-        return Column(
-          children: [
-            CarouselSlider(
-              carouselController: _controller,
-              items: imageCarousel
-                  .map(
-                    (e) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10, left: 15),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Stack(
-                          children: [
-                            Image.asset(
-                              e,
-                              fit: BoxFit.cover,
+        // final banners = project.bannerModel?.data ?? [];
+
+        return Consumer<ProjectProvider>(
+          builder: (context, service, _) {
+            return Column(
+              children: [
+                CarouselSlider.builder(
+                  itemCount: service.bannerModel?.data?.length ?? 0,
+                  itemBuilder: (context, index, realIndex) {
+                    final banner = service.bannerModel?.data?[index];
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10, left: 10),
+                      child: InkWell(
+                        onTap: () {},
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: CachedNetworkImage(
+                            imageUrl: banner?.image.toString() ?? "",
+                            fit: BoxFit.fill,
+                            placeholder: (_, __) => shimmerBox(
+                              height: 270.h,
                               width: double.infinity,
-                              height: double.infinity,
+                              radius: 14,
                             ),
-                            Positioned.fill(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.centerLeft,
-                                    end: Alignment.centerRight,
-                                    colors: [
-                                      Colors.black.withOpacity(0.6),
-                                      Colors.transparent,
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              left: 16,
-                              top: 10,
-                              child: Image.asset(
-                                "assets/Logo2 1.png",
-                                height: 25,
-                                width: 90,
-                              ),
-                            ),
-                            Positioned(
-                              left: 16,
-                              bottom: 0,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
-                                  Text(
-                                    "40% Off",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 21.1,
-                                      fontFamily: "Manrope",
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  SizedBox(height: 6),
-                                  Text(
-                                    "On First Deep Cleaning Service",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontFamily: "Manrope",
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 25),
-                                ],
-                              ),
-                            ),
-                          ],
+                            errorWidget: (_, __, ___) =>
+                                const Icon(Icons.error),
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                  .toList(),
-              options: CarouselOptions(
-                autoPlay: false,
-                height: 180,
-                viewportFraction: 0.75,
-                padEnds: false,
-                enlargeCenterPage: false,
-                onPageChanged: (index, _) {
-                  _current.value = index;
-                },
-              ),
-            ),
-          ],
+                    );
+                  },
+                  options: CarouselOptions(
+                    autoPlay: false,
+                    enableInfiniteScroll: false,
+                    height: 180,
+                    viewportFraction: 0.65,
+                    padEnds: false,
+                    onPageChanged: (index, _) {
+                      _current.value = index;
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
