@@ -200,7 +200,25 @@ class _ServicesPageState extends State<ServicesPage> {
                 const SizedBox(height: 10),
 
                 /// Grid
-                service.serviceModel?.serviceList?.length == 0
+                service.itemLoading == true
+                    ? GridView.builder(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        // padding: ,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 6, // number of shimmer cards
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 0.63,
+                            ),
+                        itemBuilder: (context, index) {
+                          return const ProductCardShimmer();
+                        },
+                      )
+                    : service.serviceModel?.serviceList?.length == 0
                     ? Text("No Service Available")
                     : GridView.builder(
                         physics: NeverScrollableScrollPhysics(),
@@ -213,7 +231,7 @@ class _ServicesPageState extends State<ServicesPage> {
                               crossAxisCount: 2,
                               crossAxisSpacing: 12,
                               mainAxisSpacing: 12,
-                              childAspectRatio: 0.7,
+                              childAspectRatio: 0.76,
                             ),
                         itemBuilder: (context, index) {
                           final serviceItem =

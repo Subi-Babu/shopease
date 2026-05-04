@@ -9,6 +9,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <!-- Required for Android 11+ -->
 <!--    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>-->
@@ -48,10 +49,10 @@
             android:name="flutterEmbedding"
             android:value="2" />
         <meta-data android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAX_1lQpTBdnMvEOpeXdu9txMXrGU0mJy8"/>
+            android:value="AIzaSyBzkjw0M0HEP9GotqUUa3rReiEPENwBoyE"/>
     </application>
     <!-- Required to query activities that can process text, see:
-         https://developer.android.com/training/package-visibility and
+         https://developer.android.com/training/package-visibility and AIzaSyAX_1lQpTBdnMvEOpeXdu9txMXrGU0mJy8
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->

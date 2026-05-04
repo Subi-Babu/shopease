@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
 import 'package:youbuilt/screen/cart/all_product.dart';
 import 'package:youbuilt/screen/estimation/estimation.dart';
+import 'package:youbuilt/screen/notication.dart';
 import 'package:youbuilt/screen/profile/address.dart';
 import 'package:youbuilt/screen/profile/edit_profile.dart';
 import 'package:youbuilt/screen/profile/profile.dart';
@@ -58,7 +59,9 @@ class _HomeScreenState extends State<HomeScreen> {
       await reg.fetchServiceList(context: context, id: "", keywrd: "");
       await reg.fetchServiceCategry(context: context);
       // await reg.fetchSearch(context: context, keyword: "");
-      reg.fetchProjectList(context: context, status: "");
+      await reg.fetchNotificationList(context: context);
+
+      reg.fetchProjectList(context: context, status: "", keywrd: "");
       await reg.fetchBannerList(context: context);
     });
     getCurrentLocation();
@@ -470,13 +473,23 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             const Spacer(),
-                            Text(
-                              "View All",
-                              style: TextStyle(
-                                color: const Color(0xffFF3B30),
-                                fontFamily: "Manrope",
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12.sp,
+                            InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ServicesPage(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                "View All",
+                                style: TextStyle(
+                                  color: const Color(0xffFF3B30),
+                                  fontFamily: "Manrope",
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12.sp,
+                                ),
                               ),
                             ),
                           ],
@@ -531,60 +544,66 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
 
                       // ── Free consultation card
-                      Container(
-                        margin: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xffDFDFDF),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Row(
-                          children: [
-                            Image.asset(
-                              "assets/172 1.png",
-                              height: 140.h,
-                              width: 157,
-                              fit: BoxFit.cover,
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 12,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Book your free\nconsultation",
-                                      style: TextStyle(
-                                        color: primaryClr,
-                                        fontFamily: "Manrope",
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 18.sp,
+                      InkWell(
+                        // onTap: (){
+                        onTap: () => launchContactUs(),
+
+                        child: Container(
+                          margin: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xffDFDFDF),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Row(
+                            children: [
+                              Image.asset(
+                                "assets/172 1.png",
+                                height: 140.h,
+                                width: 157,
+                                fit: BoxFit.cover,
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 12,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Book your free\nconsultation",
+                                        style: TextStyle(
+                                          color: primaryClr,
+                                          fontFamily: "Manrope",
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 18.sp,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      "Get expert guidance for your\nconstruction project — absolutely free!",
-                                      style: TextStyle(
-                                        color: primaryClr,
-                                        fontFamily: "Manrope",
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 10.sp,
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        "Get expert guidance for your\nconstruction project — absolutely free!",
+                                        style: TextStyle(
+                                          color: primaryClr,
+                                          fontFamily: "Manrope",
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 10.sp,
+                                        ),
                                       ),
-                                    ),
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: Icon(
-                                        Icons.arrow_forward_sharp,
-                                        color: primaryClr,
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Icon(
+                                          Icons.arrow_forward_sharp,
+                                          color: primaryClr,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
 
@@ -633,10 +652,54 @@ class _HomeScreenState extends State<HomeScreen> {
                             height: 34,
                             width: 120.w,
                           ),
-                          Image.asset(
-                            "assets/Frame 81.png",
-                            height: 30.h,
-                            width: 30.w,
+                          Consumer<ProjectProvider>(
+                            builder: (context, project, _) {
+                              final unreadCount =
+                                  project.notificationModel?.notifications
+                                      ?.where((e) => e.isRead == false)
+                                      .length ??
+                                  0;
+
+                              return GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => NotificationPage(),
+                                  ),
+                                ),
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Image.asset(
+                                      "assets/Frame 81.png",
+                                      height: 40.h,
+                                      width: 30.w,
+                                    ),
+
+                                    // 🔴 Badge
+                                    if (unreadCount > 0)
+                                      Positioned(
+                                        right: -2,
+                                        top: -2,
+                                        child: CircleAvatar(
+                                          radius: 8, // adjust size here
+                                          backgroundColor: Colors.red,
+                                          child: Text(
+                                            unreadCount > 9
+                                                ? "9+"
+                                                : unreadCount.toString(),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -724,14 +787,19 @@ class OfferCarouselWidget extends StatelessWidget {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 10, left: 10),
                       child: InkWell(
-                        onTap: () {},
+                        onTap: () async {
+                          await service.fetchServiceView(
+                            context: context,
+                            id: banner?.serviceId.toString() ?? "",
+                          );
+                        },
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(14),
                           child: CachedNetworkImage(
                             imageUrl: banner?.image.toString() ?? "",
                             fit: BoxFit.fill,
                             placeholder: (_, __) => shimmerBox(
-                              height: 270.h,
+                              height: 250.h,
                               width: double.infinity,
                               radius: 14,
                             ),
@@ -774,7 +842,7 @@ class SupportTeamCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(left: 40, right: 40),
+      margin: const EdgeInsets.only(left: 16, right: 16),
       padding: const EdgeInsets.all(30),
       decoration: BoxDecoration(
         color: const Color(0xffF4F4F4),
@@ -825,7 +893,7 @@ class SupportTeamCard extends StatelessWidget {
                   onTap: () async {
                     final Uri phoneUri = Uri(
                       scheme: 'tel',
-                      path: '+91 9778083067',
+                      path: '+91 9249501715',
                     );
                     if (await canLaunchUrl(phoneUri)) {
                       await launchUrl(phoneUri);
@@ -848,7 +916,7 @@ class SupportTeamCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             const Text(
-              "Working Hour : 7PM – 9AM",
+              "Working Hour : 9AM – 5PM",
               style: TextStyle(
                 fontFamily: "Manrope",
                 fontSize: 12,

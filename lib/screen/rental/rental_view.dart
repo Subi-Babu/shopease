@@ -49,40 +49,40 @@ class _RentalPageViewState extends State<RentalPageView> {
         ),
         centerTitle: false,
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Consumer<ProjectProvider>(
-          builder: (context, service, _) {
-            return CustomButton(
-              text: "Confirm Booking",
-              onPress: () async {
-                HapticFeedback.heavyImpact();
-                await service.rentalbook(
-                  context: context,
-                  name: service.rNameCntrl.text ?? "",
-                  phoneNumber: service.rphoneCntrl.text ?? "",
-
-                  rentalId: service.rentalViewModel?.data?.id.toString() ?? "",
-                  addressid:
-                      service.addressListModel?.data?.first?.id.toString() ??
-                      "",
-                  code: "91",
-                  message: service.rMsgCntrl.text ?? "",
-                  date: "",
-                  pincode:
-                      service.addressListModel?.data?.first?.pinCode
-                          .toString() ??
-                      "",
-                  pId: "",
-                );
-                service.rNameCntrl.clear();
-                service.rphoneCntrl.clear();
-                service.rMsgCntrl.clear();
-              },
-            );
-          },
-        ),
-      ),
+      //   bottomNavigationBar: Padding(
+      //     padding: const EdgeInsets.all(16),
+      //     child: Consumer<ProjectProvider>(
+      //       builder: (context, service, _) {
+      //         return CustomButton(
+      //           text: "Confirm Booking",
+      //           onPress: () async {
+      //             HapticFeedback.heavyImpact();
+      //             await service.rentalbook(
+      //               context: context,
+      //               name: service.rNameCntrl.text ?? "",
+      //               phoneNumber: service.rphoneCntrl.text ?? "",
+      //
+      //               rentalId: service.rentalViewModel?.data?.id.toString() ?? "",
+      //               addressid:
+      //                   service.addressListModel?.data?.first?.id.toString() ??
+      //                   "",
+      //               code: "91",
+      //               message: service.rMsgCntrl.text ?? "",
+      //               date: "",
+      //               pincode:
+      //                   service.addressListModel?.data?.first?.pinCode
+      //                       .toString() ??
+      //                   "",
+      //               pId: "",
+      //             );
+      //             service.rNameCntrl.clear();
+      //             service.rphoneCntrl.clear();
+      //             service.rMsgCntrl.clear();
+      //           },
+      //         );
+      //       },
+      //     ),
+      //   ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Consumer<ProjectProvider>(
@@ -199,6 +199,47 @@ class _RentalPageViewState extends State<RentalPageView> {
                         maxLine: 3,
                         fillColor: Colors.white,
                         controller: service.rMsgCntrl,
+                      ),
+                      const SizedBox(height: 12),
+
+                      Consumer<ProjectProvider>(
+                        builder: (context, service, _) {
+                          return CustomButton(
+                            text: "Confirm Booking",
+                            onPress: () async {
+                              HapticFeedback.heavyImpact();
+                              await service.rentalbook(
+                                context: context,
+                                name: service.rNameCntrl.text ?? "",
+                                phoneNumber: service.rphoneCntrl.text ?? "",
+
+                                rentalId:
+                                    service.rentalViewModel?.data?.id
+                                        .toString() ??
+                                    "",
+                                addressid:
+                                    service.addressListModel?.data?.first?.id
+                                        .toString() ??
+                                    "",
+                                code: "91",
+                                message: service.rMsgCntrl.text ?? "",
+                                date: "",
+                                pincode:
+                                    service
+                                        .addressListModel
+                                        ?.data
+                                        ?.first
+                                        ?.pinCode
+                                        .toString() ??
+                                    "",
+                                pId: "",
+                              );
+                              service.rNameCntrl.clear();
+                              service.rphoneCntrl.clear();
+                              service.rMsgCntrl.clear();
+                            },
+                          );
+                        },
                       ),
                     ],
                   ),

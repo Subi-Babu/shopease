@@ -36,12 +36,13 @@ class Data {
   dynamic totalcalculatorPrice;
   dynamic grandTotal;
   dynamic discount;
-  int? projectId;
+  dynamic projectId;
   dynamic paidAmount;
   dynamic pendingAmount;
   String? orderStatus;
   String? deliveryStatus;
   String? paymentStatus;
+  String? createdAt;
   Users? users;
   Count? cCount;
 
@@ -60,6 +61,7 @@ class Data {
     this.orderStatus,
     this.deliveryStatus,
     this.paymentStatus,
+    this.createdAt,
     this.users,
     this.cCount,
   });
@@ -79,6 +81,7 @@ class Data {
     orderStatus = json['orderStatus'];
     deliveryStatus = json['deliveryStatus'];
     paymentStatus = json['paymentStatus'];
+    createdAt = json['createdAt'];
     users = json['users'] != null ? new Users.fromJson(json['users']) : null;
     cCount = json['_count'] != null ? new Count.fromJson(json['_count']) : null;
   }
@@ -99,6 +102,7 @@ class Data {
     data['orderStatus'] = orderStatus;
     data['deliveryStatus'] = deliveryStatus;
     data['paymentStatus'] = paymentStatus;
+    data['createdAt'] = createdAt;
     if (users != null) {
       data['users'] = users!.toJson();
     }

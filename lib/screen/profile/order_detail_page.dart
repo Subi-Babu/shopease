@@ -285,8 +285,11 @@ class OrderDetailsPage extends StatelessWidget {
                                 Text(
                                   "Item Total (${order.orderViewModel?.data?.orderItems?.length ?? 0}item)",
                                 ),
+                                // Text(
+                                //   "₹${NumberFormat('#,##0.00').format(order.orderViewModel?.data?.grandTotal ?? 0)}",
+                                // ),
                                 Text(
-                                  "₹${NumberFormat('#,##0.00').format(order.orderViewModel?.data?.grandTotal ?? 0)}",
+                                  "₹${NumberFormat('#,##0.00').format((order.orderViewModel?.data?.grandTotal ?? 0) - (order.orderViewModel?.data?.totalGst ?? 0))}",
                                 ),
                               ],
                             ),
@@ -314,7 +317,7 @@ class OrderDetailsPage extends StatelessWidget {
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 Text(
-                                  "₹${NumberFormat('#,##0.00').format(order.orderViewModel?.data?.totalPrice ?? 0)}",
+                                  "₹${NumberFormat('#,##0.00').format(order.orderViewModel?.data?.grandTotal ?? 0)}",
 
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,

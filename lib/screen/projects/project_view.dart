@@ -12,11 +12,13 @@ import 'package:youbuilt/utils/constants.dart';
 
 class ProjectView extends StatefulWidget {
   final String? projectId;
+  final String? projectIdKey;
   final String? projectName;
   const ProjectView({
     super.key,
     required this.projectId,
     required this.projectName,
+    this.projectIdKey,
   });
 
   @override
@@ -30,6 +32,7 @@ class _ProjectViewState extends State<ProjectView> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = Provider.of<ProjectProvider>(context, listen: false);
       reg.fetchProjectListView(context: context, id: widget.projectId ?? "");
+      reg.fetchSingleProject(context: context, id: widget.projectId ?? "");
       reg.fetchProjectMember(context: context, id: widget.projectId ?? "");
     });
     super.initState();
@@ -47,14 +50,18 @@ class _ProjectViewState extends State<ProjectView> {
           backgroundColor: Colors.white,
           shadowColor: Colors.transparent,
           elevation: 0,
-          title: Text(
-            "${widget.projectName}",
-            style: TextStyle(
-              color: primaryClr,
-              fontFamily: "Manrope",
-              fontWeight: FontWeight.w500,
-              fontSize: 18.sp,
-            ),
+          title: Consumer<ProjectProvider>(
+            builder: (context, project, _) {
+              return Text(
+                "${widget.projectName} (${project.projectWithIdModel?.data?.projectId ?? ""})",
+                style: TextStyle(
+                  color: primaryClr,
+                  fontFamily: "Manrope",
+                  fontWeight: FontWeight.w500,
+                  fontSize: 18.sp,
+                ),
+              );
+            },
           ),
 
           centerTitle: false,

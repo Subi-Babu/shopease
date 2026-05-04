@@ -138,322 +138,324 @@ class _UserProfilePageState extends State<UserProfilePage> {
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark,
       ),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Consumer<ProjectProvider>(
-          builder: (context, profile, _) {
-            return Column(
-              children: [
-                /// HEADER
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Image.asset(
-                      "assets/Group 1000004378.png",
-                      width: double.infinity,
-                      height: 180.h,
-                      fit: BoxFit.cover,
-                    ),
-
-                    Positioned(
-                      top: 60.h,
-                      left: 16.w,
-                      right: 16.w,
-                      child: Row(
-                        children: [
-                          InkWell(
-                            onTap: () => Navigator.pop(context),
-                            child: const Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            "User Profile",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const Spacer(),
-                        ],
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          body: Consumer<ProjectProvider>(
+            builder: (context, profile, _) {
+              return Column(
+                children: [
+                  /// HEADER
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Image.asset(
+                        "assets/Group 1000004378.png",
+                        width: double.infinity,
+                        height: 180.h,
+                        fit: BoxFit.cover,
                       ),
-                    ),
 
-                    /// PROFILE IMAGE (Tap To Edit)
-                    Positioned(
-                      bottom: -60.h,
-                      left: 0,
-                      right: 0,
-                      child:
-                          /// HEADER
-                          Column(
-                            children: [
-                              Stack(
-                                children: [
-                                  Image.asset(
-                                    "assets/Group 1000004378.png",
-                                    width: double.infinity,
-                                    height: 180.h,
-                                    fit: BoxFit.cover,
-                                  ),
-                                  Positioned(
-                                    top: 50.h,
-                                    left: 16.w,
-                                    right: 16.w,
-                                    child: Row(
+                      Positioned(
+                        top: 15.h,
+                        left: 16.w,
+                        right: 16.w,
+                        child: Row(
+                          children: [
+                            InkWell(
+                              onTap: () => Navigator.pop(context),
+                              child: const Icon(
+                                Icons.arrow_back,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              "User Profile",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Spacer(),
+                          ],
+                        ),
+                      ),
+
+                      /// PROFILE IMAGE (Tap To Edit)
+                      Positioned(
+                        bottom: -50.h,
+                        left: 0,
+                        right: 0,
+                        child:
+                            /// HEADER
+                            Column(
+                              children: [
+                                Stack(
+                                  children: [
+                                    Image.asset(
+                                      "assets/Group 1000004378.png",
+                                      width: double.infinity,
+                                      height: 180.h,
+                                      fit: BoxFit.cover,
+                                    ),
+                                    Positioned(
+                                      top: 50.h,
+                                      left: 16.w,
+                                      right: 16.w,
+                                      child: Row(
+                                        children: [
+                                          InkWell(
+                                            onTap: () => Navigator.pop(context),
+                                            child: const Icon(
+                                              Icons.arrow_back,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Text(
+                                            "User Profile",
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18.sp,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                /// PROFILE IMAGE OUTSIDE THE STACK
+                                Transform.translate(
+                                  offset: Offset(0, -40.h),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      print("TAPPED"); // test this first
+                                      if (isEditing) {
+                                        _showImagePicker();
+                                      }
+                                    },
+                                    child: Stack(
+                                      alignment: Alignment.bottomRight,
                                       children: [
-                                        InkWell(
-                                          onTap: () => Navigator.pop(context),
-                                          child: const Icon(
-                                            Icons.arrow_back,
-                                            color: Colors.white,
+                                        CircleAvatar(
+                                          radius: 45,
+                                          backgroundColor: const Color(
+                                            0xffE0E0E0,
+                                          ),
+                                          child: ClipOval(
+                                            child: selectedImage != null
+                                                ? Image.file(
+                                                    selectedImage!,
+                                                    height: 90,
+                                                    width: 90,
+                                                    fit: BoxFit.cover,
+                                                  )
+                                                : CachedNetworkImage(
+                                                    imageUrl:
+                                                        profile
+                                                            .profileModel
+                                                            ?.data
+                                                            ?.profileImage ??
+                                                        '',
+                                                    height: 90,
+                                                    width: 90,
+                                                    fit: BoxFit.cover,
+                                                    placeholder: (context, url) =>
+                                                        const CircularProgressIndicator(),
+                                                    errorWidget:
+                                                        (
+                                                          context,
+                                                          url,
+                                                          error,
+                                                        ) => Center(
+                                                          child: Text(
+                                                            nameController
+                                                                    .text
+                                                                    .isNotEmpty
+                                                                ? nameController
+                                                                      .text[0]
+                                                                      .toUpperCase()
+                                                                : "",
+                                                            style: TextStyle(
+                                                              color: primaryClr,
+                                                              fontSize: 22,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                  ),
                                           ),
                                         ),
-                                        const Spacer(),
-                                        Text(
-                                          "User Profile",
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 18.sp,
-                                            fontWeight: FontWeight.w600,
+                                        if (isEditing)
+                                          Container(
+                                            padding: const EdgeInsets.all(6),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(
+                                              Icons.edit,
+                                              size: 18,
+                                              color: Colors.red,
+                                            ),
                                           ),
-                                        ),
-                                        const Spacer(),
                                       ],
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
+                            ),
+                      ),
+                    ],
+                  ),
 
-                              /// PROFILE IMAGE OUTSIDE THE STACK
-                              Transform.translate(
-                                offset: Offset(0, -40.h),
-                                child: GestureDetector(
-                                  onTap: () {
-                                    print("TAPPED"); // test this first
-                                    if (isEditing) {
-                                      _showImagePicker();
-                                    }
-                                  },
-                                  child: Stack(
-                                    alignment: Alignment.bottomRight,
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 45,
-                                        backgroundColor: const Color(
-                                          0xffE0E0E0,
-                                        ),
-                                        child: ClipOval(
-                                          child: selectedImage != null
-                                              ? Image.file(
-                                                  selectedImage!,
-                                                  height: 90,
-                                                  width: 90,
-                                                  fit: BoxFit.cover,
-                                                )
-                                              : CachedNetworkImage(
-                                                  imageUrl:
-                                                      profile
-                                                          .profileModel
-                                                          ?.data
-                                                          ?.profileImage ??
-                                                      '',
-                                                  height: 90,
-                                                  width: 90,
-                                                  fit: BoxFit.cover,
-                                                  placeholder: (context, url) =>
-                                                      const CircularProgressIndicator(),
-                                                  errorWidget:
-                                                      (
-                                                        context,
-                                                        url,
-                                                        error,
-                                                      ) => Center(
-                                                        child: Text(
-                                                          nameController
-                                                                  .text
-                                                                  .isNotEmpty
-                                                              ? nameController
-                                                                    .text[0]
-                                                                    .toUpperCase()
-                                                              : "",
-                                                          style: TextStyle(
-                                                            color: primaryClr,
-                                                            fontSize: 22,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                ),
-                                        ),
+                  SizedBox(height: 60.h),
+
+                  /// FORM
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            CustomTextField(
+                              hintText: "Name",
+                              readonly: !isEditing,
+                              controller: nameController,
+                            ),
+                            SizedBox(height: 12.h),
+
+                            Row(
+                              children: [
+                                /// COUNTRY CODE
+                                Container(
+                                  width: 80.w,
+                                  child: CustomTextField(
+                                    hintText: "+91",
+                                    readonly: true,
+                                    controller: phonecodeController,
+                                  ),
+                                ),
+
+                                SizedBox(width: 10.w),
+
+                                /// PHONE NUMBER
+                                Expanded(
+                                  child: CustomTextField(
+                                    hintText: "Phone Number",
+                                    readonly: true,
+                                    controller: phoneController,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            SizedBox(height: 12.h),
+
+                            CustomTextField(
+                              hintText: "Email",
+                              readonly: !isEditing,
+                              controller: emailController,
+                            ),
+                            SizedBox(height: 12.h),
+
+                            isEditing
+                                ? DropdownButtonFormField<String>(
+                                    value: selectedGender.isEmpty
+                                        ? null
+                                        : selectedGender,
+                                    decoration: InputDecoration(
+                                      hintText: "Gender",
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
-                                      if (isEditing)
-                                        Container(
-                                          padding: const EdgeInsets.all(6),
-                                          decoration: const BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.edit,
-                                            size: 18,
-                                            color: Colors.red,
-                                          ),
-                                        ),
+                                    ),
+                                    items: const [
+                                      DropdownMenuItem(
+                                        value: "MALE",
+                                        child: Text("Male"),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: "FEMALE",
+                                        child: Text("Female"),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: "OTHERS",
+                                        child: Text("Others"),
+                                      ),
                                     ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 60.h),
-
-                /// FORM
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          CustomTextField(
-                            hintText: "Name",
-                            readonly: !isEditing,
-                            controller: nameController,
-                          ),
-                          SizedBox(height: 12.h),
-
-                          Row(
-                            children: [
-                              /// COUNTRY CODE
-                              Container(
-                                width: 80.w,
-                                child: CustomTextField(
-                                  hintText: "+91",
-                                  readonly: true,
-                                  controller: phonecodeController,
-                                ),
-                              ),
-
-                              SizedBox(width: 10.w),
-
-                              /// PHONE NUMBER
-                              Expanded(
-                                child: CustomTextField(
-                                  hintText: "Phone Number",
-                                  readonly: true,
-                                  controller: phoneController,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          SizedBox(height: 12.h),
-
-                          CustomTextField(
-                            hintText: "Email",
-                            readonly: !isEditing,
-                            controller: emailController,
-                          ),
-                          SizedBox(height: 12.h),
-
-                          isEditing
-                              ? DropdownButtonFormField<String>(
-                                  value: selectedGender.isEmpty
-                                      ? null
-                                      : selectedGender,
-                                  decoration: InputDecoration(
+                                    onChanged: (value) {
+                                      setState(() {
+                                        selectedGender = value ?? "";
+                                        genderController.text = selectedGender;
+                                      });
+                                    },
+                                  )
+                                : CustomTextField(
                                     hintText: "Gender",
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
+                                    readonly: true,
+                                    controller: genderController,
                                   ),
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: "MALE",
-                                      child: Text("Male"),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: "FEMALE",
-                                      child: Text("Female"),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: "OTHERS",
-                                      child: Text("Others"),
-                                    ),
-                                  ],
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedGender = value ?? "";
-                                      genderController.text = selectedGender;
-                                    });
-                                  },
-                                )
-                              : CustomTextField(
-                                  hintText: "Gender",
-                                  readonly: true,
-                                  controller: genderController,
-                                ),
-                          SizedBox(height: 12),
-                          CustomTextField(
-                            hintText: "Gst Number",
-                            readonly: !isEditing,
-                            controller: gstController,
-                            // controller: genderController,
-                          ),
-                        ],
+                            SizedBox(height: 12),
+                            CustomTextField(
+                              hintText: "Gst Number",
+                              readonly: !isEditing,
+                              controller: gstController,
+                              // controller: genderController,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
 
-                /// BUTTON
-                Padding(
-                  padding: EdgeInsets.all(16.w),
-                  child: CustomButton(
-                    text: profile.expense
-                        ? "Updating..."
-                        : isEditing
-                        ? "Save"
-                        : "Edit",
-                    onPress: profile.expense
-                        ? null
-                        : () async {
-                            if (isEditing) {
-                              await profile.editProfile(
-                                context: context,
-                                name: nameController.text.trim(),
-                                email: emailController.text.trim(),
-                                gender: selectedGender,
-                                number: phoneController.text.trim(),
-                                file: selectedImage,
-                                gst: gstController.text.trim(),
-                              );
+                  /// BUTTON
+                  Padding(
+                    padding: EdgeInsets.all(16.w),
+                    child: CustomButton(
+                      text: profile.expense
+                          ? "Updating..."
+                          : isEditing
+                          ? "Save"
+                          : "Edit",
+                      onPress: profile.expense
+                          ? null
+                          : () async {
+                              if (isEditing) {
+                                await profile.editProfile(
+                                  context: context,
+                                  name: nameController.text.trim(),
+                                  email: emailController.text.trim(),
+                                  gender: selectedGender,
+                                  number: phoneController.text.trim(),
+                                  file: selectedImage,
+                                  gst: gstController.text.trim(),
+                                );
 
-                              await profile.fetchProfile(context: context);
+                                await profile.fetchProfile(context: context);
 
-                              if (mounted) {
+                                if (mounted) {
+                                  setState(() {
+                                    isEditing = false;
+                                    selectedImage = null;
+                                  });
+                                }
+                              } else {
                                 setState(() {
-                                  isEditing = false;
-                                  selectedImage = null;
+                                  isEditing = true;
                                 });
                               }
-                            } else {
-                              setState(() {
-                                isEditing = true;
-                              });
-                            }
-                          },
+                            },
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

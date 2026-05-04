@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1075623434407",
+    "project_id": "youbuiltcyber",
+    "storage_bucket": "youbuiltcyber.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1075623434407:android:3345c21ebc5854a5dbe382",
+        "android_client_info": {
+          "package_name": "com.youbuilt.youbuiltcustomer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAh1mHaXdZ94S1rAUaXK_-svNeoZ7g2ipA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

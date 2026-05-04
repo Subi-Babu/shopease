@@ -10,6 +10,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youbuilt/custom_widgets/custom_button.dart';
 import 'package:youbuilt/screen/profile/address.dart';
+import 'package:youbuilt/screen/sign_up.dart';
 import 'package:youbuilt/utils/encryptPagehlper.dart';
 import 'package:youbuilt/utils/toast_util.dart';
 
@@ -330,7 +331,7 @@ class _ProductViewPageState extends State<ProductViewPage> {
                               );
 
                               final url =
-                                  "https://www.youbuilt.biz/shop/purchase/product/$encrypted";
+                                  "https://www.youbuilt.in/shop/purchase/product/$encrypted";
 
                               await Share.share(
                                 url,
@@ -485,7 +486,7 @@ class _ProductViewPageState extends State<ProductViewPage> {
                               ),
                             ),
                             Text(
-                              " /Pcs.",
+                              " /${data?.units.toString() ?? ""}",
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
@@ -493,10 +494,38 @@ class _ProductViewPageState extends State<ProductViewPage> {
                                 color: Color(0xff737373),
                               ),
                             ),
+                            SizedBox(width: 5),
+                            SizedBox(
+                              width: 100.w,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  elevation: 0,
+                                  backgroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    side: BorderSide(color: primaryClr),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  _showEnquiryDialog(
+                                    context,
+                                    data?.itemId ?? "",
+                                  );
+                                },
+                                child: Text(
+                                  "Enquiry",
+                                  style: TextStyle(
+                                    fontFamily: "Manrope",
+                                    color: primaryClr,
+                                  ),
+                                ),
+                              ),
+                            ),
 
                             // const SizedBox(width: 10),
                           ],
                         ),
+
                   displayMrp == 0
                       ? SizedBox()
                       : Row(
@@ -736,6 +765,110 @@ class _ProductViewPageState extends State<ProductViewPage> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showEnquiryDialog(BuildContext context, String? id) {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+    final messageController = TextEditingController();
+
+    final _formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Add Enquiry",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontFamily: "Manrope",
+                          fontSize: 18,
+                          color: primaryClr,
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () => Navigator.pop(context),
+                        child: const Icon(Icons.close, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  Consumer<ProjectProvider>(
+                    builder: (context, project, _) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CustomTextField(
+                            hintText: "Name",
+                            fillColor: Colors.white,
+                            controller: nameController,
+                          ),
+                          const SizedBox(height: 10),
+                          CustomTextField(
+                            hintText: "Phone number",
+                            fillColor: Colors.white,
+                            controller: phoneController,
+                            keyboardType: TextInputType.number,
+                          ),
+                          const SizedBox(height: 10),
+                          CustomTextField(
+                            hintText: "Message",
+                            fillColor: Colors.white,
+                            maxLine: 4,
+                            controller: messageController,
+                            // keyboardType: TextInputType.numberCtrl,
+                          ),
+                          const SizedBox(height: 10),
+
+                          CustomButton(
+                            text: project.expense
+                                ? "Please wait..."
+                                : "Confirm",
+                            onPress: project.expense
+                                ? null
+                                : () async {
+                                    await project.addEnquiry(
+                                      context: context,
+                                      date: DateTime.now().toString(),
+                                      name: nameController.text ?? "",
+                                      mobile: phoneController.text ?? "",
+                                      message: messageController.text ?? "",
+                                      itemId: "$id",
+                                      itemType: "Item",
+                                    );
+                                  },
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
 import 'package:youbuilt/screen/profile/service_booking.dart';
@@ -10,6 +11,7 @@ import 'package:youbuilt/screen/profile/service_booking.dart';
 import '../../utils/colors.dart';
 import '../bottom_nav.dart';
 import '../profile/orders.dart';
+import '../rental/rental_detail.dart';
 
 class OrderTabPage extends StatefulWidget {
   const OrderTabPage({super.key});
@@ -251,7 +253,7 @@ class _OrderTabPageState extends State<OrderTabPage> {
                             const SizedBox(height: 12),
                             Text(
                               _searchKeyword.isEmpty
-                                  ? "No orders found"
+                                  ? "No products found"
                                   : "No results for \"$_searchKeyword\"",
                               style: TextStyle(
                                 color: Colors.grey.shade500,
@@ -280,8 +282,10 @@ class _OrderTabPageState extends State<OrderTabPage> {
                             ordertatus:
                                 item.orderStatus?.replaceAll("_", " ") ?? "",
                             orderId: item.orderId?.toString() ?? "",
-                            items: item.cCount?.orderItems ?? "0",
-                            total: item.totalPrice ?? "",
+                            items: DateFormat(
+                              'dd-MM-yyyy',
+                            ).format(DateTime.parse(item.createdAt)),
+                            total: item?.grandTotal ?? "",
                           );
                         },
                       ),
@@ -309,14 +313,13 @@ class _OrderTabPageState extends State<OrderTabPage> {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: const Color(0xffDFDFDF)),
                 ),
+
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: "Search Services",
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 10,
-                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+
                     hintStyle: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -341,57 +344,83 @@ class _OrderTabPageState extends State<OrderTabPage> {
               const SizedBox(height: 12),
 
               Expanded(
-                child: ListView.separated(
-                  itemCount: order.serviceBookingModel?.data?.length ?? 0,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final item = order.serviceBookingModel?.data?[index];
+                child: order.serviceBookingModel?.data?.length == 0
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 60,
+                              color: Colors.grey.shade300,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "No Service found",
+                              // : "No results for \"$_searchKeyword\"",
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontFamily: "Manrope",
+                                fontSize: 14.sp,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.separated(
+                        itemCount: order.serviceBookingModel?.data?.length ?? 0,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final item = order.serviceBookingModel?.data?[index];
 
-                    return OrderCard3(
-                      ordertatus:
-                          order.serviceBookingModel?.data?[index]?.status
-                              ?.replaceAll("_", " ")
-                              .toString() ??
-                          "",
-                      onTap: () async {
-                        await order.fetchServiceDetails(
-                          context: context,
-                          id:
-                              order.serviceBookingModel?.data?[index]?.id
-                                  .toString() ??
-                              "",
-                        );
-                        // await order.fetchOrderView(
-                        //   context: context,
-                        //   id:
-                        //       order.orderListModel?.data?[index].id
-                        //           .toString() ??
-                        //       "",
-                        // );
-                      },
-                      // imageUrl:
-                      //     order?.serviceBookingModel?.data?[index].file ?? "",
-                      orderId:
-                          order
-                              .serviceBookingModel
-                              ?.data?[index]
-                              ?.serviceBookingId
-                              .toString() ??
-                          "",
-                      // items:
-                      //     order.serviceBookingModel?.data?[index]?.name ?? "",
-                      total:
-                          order.serviceBookingModel?.data?[index]?.grandTotal ??
-                          "",
-                      items: formatDate(
-                        order.serviceBookingModel?.data?[index]?.date
-                                .toString() ??
-                            "",
+                          return OrderCard3(
+                            ordertatus:
+                                order.serviceBookingModel?.data?[index]?.status
+                                    ?.replaceAll("_", " ")
+                                    .toString() ??
+                                "",
+                            onTap: () async {
+                              await order.fetchServiceDetails(
+                                context: context,
+                                id:
+                                    order.serviceBookingModel?.data?[index]?.id
+                                        .toString() ??
+                                    "",
+                              );
+                              // await order.fetchOrderView(
+                              //   context: context,
+                              //   id:
+                              //       order.orderListModel?.data?[index].id
+                              //           .toString() ??
+                              //       "",
+                              // );
+                            },
+                            // imageUrl:
+                            //     order?.serviceBookingModel?.data?[index].file ?? "",
+                            orderId:
+                                order
+                                    .serviceBookingModel
+                                    ?.data?[index]
+                                    ?.serviceBookingId
+                                    .toString() ??
+                                "",
+                            // items:
+                            //     order.serviceBookingModel?.data?[index]?.name ?? "",
+                            total:
+                                order
+                                    .serviceBookingModel
+                                    ?.data?[index]
+                                    ?.grandTotal ??
+                                "",
+                            items: formatDate(
+                              order.serviceBookingModel?.data?[index]?.date
+                                      .toString() ??
+                                  "",
+                            ),
+                            // deliveredDate: orders[index]["date"] as String,
+                          );
+                        },
                       ),
-                      // deliveredDate: orders[index]["date"] as String,
-                    );
-                  },
-                ),
               ),
             ],
           );
@@ -419,10 +448,8 @@ class _OrderTabPageState extends State<OrderTabPage> {
                   decoration: InputDecoration(
                     hintText: "Search Rentals",
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 10,
-                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+
                     hintStyle: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -460,12 +487,23 @@ class _OrderTabPageState extends State<OrderTabPage> {
                               .toString() ??
                           "",
                       onTap: () async {
-                        await order.fetchServiceDetails(
+                        await order.fetchRentalDetails(
                           context: context,
                           id:
                               order.rentalBookListModel?.data?[index]?.id
                                   .toString() ??
                               "",
+                        );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RentalDetails(
+                              id:
+                                  order.rentalBookListModel?.data?[index]?.id
+                                      .toString() ??
+                                  "",
+                            ),
+                          ),
                         );
                         // await order.fetchOrderView(
                         //   context: context,

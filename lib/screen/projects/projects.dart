@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -7,13 +9,11 @@ import 'package:youbuilt/providers/signin/project_provider.dart';
 import 'package:youbuilt/screen/projects/inivitation.dart';
 import 'package:youbuilt/screen/projects/project_view.dart';
 import 'package:youbuilt/screen/sign_up.dart';
-// import 'package:youbuilt/projects/add_projects.dart';
 import 'package:youbuilt/utils/colors.dart';
 
 import '../../model/project_list_model.dart';
 import 'add_projects.dart';
 
-String selectedValue = "All";
 const Map<String, String> statusApiMap = {
   "All": "",
   "Completed": "Completed",
@@ -29,14 +29,25 @@ class ProjectScreen extends StatefulWidget {
 }
 
 class _ProjectScreenState extends State<ProjectScreen> {
+  // ✅ Moved inside State — no more global variables
+  final TextEditingController searchController = TextEditingController();
+  String selectedValue = "All";
+  Timer? _debounce;
+
   @override
   void initState() {
-    // TODO: implement initState
+    super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = Provider.of<ProjectProvider>(context, listen: false);
-      reg.fetchProjectList(context: context, status: "");
+      reg.fetchProjectList(context: context, status: "", keywrd: "");
     });
-    super.initState();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
   }
 
   @override
@@ -45,7 +56,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        // leading: SizedBox(),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
@@ -67,29 +77,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                 MaterialPageRoute(builder: (_) => InvitationsPage()),
               );
             },
-            // onTap: () {
-            //   showDialog(
-            //     context: context,
-            //     builder: (context) {
-            //       return AlertDialog(
-            //         shape: RoundedRectangleBorder(
-            //           borderRadius: BorderRadius.circular(12),
-            //         ),
-            //         title: const Text(
-            //           "Invitations",
-            //           style: TextStyle(fontWeight: FontWeight.w600),
-            //         ),
-            //         content: const Text("You have no new invitations."),
-            //         actions: [
-            //           TextButton(
-            //             onPressed: () => Navigator.pop(context),
-            //             child: const Text("Close"),
-            //           ),
-            //         ],
-            //       );
-            //     },
-            //   );
-            // },
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 5, vertical: 8),
               margin: EdgeInsets.only(right: 10),
@@ -116,9 +103,10 @@ class _ProjectScreenState extends State<ProjectScreen> {
           builder: (context, project, _) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-
               children: [
                 Divider(color: Color(0xffECECEC), height: 5),
+
+                // ✅ Search field
                 Container(
                   margin: const EdgeInsets.only(right: 16, left: 16, top: 5),
                   decoration: BoxDecoration(
@@ -127,6 +115,22 @@ class _ProjectScreenState extends State<ProjectScreen> {
                     color: Colors.white,
                   ),
                   child: TextField(
+                    controller: searchController,
+                    onChanged: (value) {
+                      if (_debounce?.isActive ?? false) _debounce!.cancel();
+                      _debounce = Timer(const Duration(milliseconds: 500), () {
+                        // ✅ Always pass the current selected status with the keyword
+                        final status = statusApiMap[selectedValue] ?? "";
+                        Provider.of<ProjectProvider>(
+                          context,
+                          listen: false,
+                        ).fetchProjectList(
+                          context: context,
+                          status: status,
+                          keywrd: value,
+                        );
+                      });
+                    },
                     decoration: InputDecoration(
                       hintText: "Search project",
                       border: InputBorder.none,
@@ -150,7 +154,8 @@ class _ProjectScreenState extends State<ProjectScreen> {
                     ),
                   ),
                 ),
-                // SizedBox(height: 10),
+
+                // Stats container
                 Container(
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.symmetric(
@@ -162,7 +167,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: IntrinsicHeight(
-                    // 🔥 IMPORTANT
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -193,8 +197,10 @@ class _ProjectScreenState extends State<ProjectScreen> {
                     ),
                   ),
                 ),
+
                 SizedBox(height: 10),
 
+                // Filter + Create button row
                 Padding(
                   padding: const EdgeInsets.only(left: 16, right: 16),
                   child: Row(
@@ -220,34 +226,28 @@ class _ProjectScreenState extends State<ProjectScreen> {
                               ),
                               child: const Icon(Icons.keyboard_arrow_down),
                             ),
-
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.black,
                               fontFamily: "Manrope",
                               fontWeight: FontWeight.w500,
                             ),
-
                             onChanged: (String? newValue) {
                               if (newValue == null) return;
-
                               setState(() {
                                 selectedValue = newValue;
                               });
-
-                              /// ✅ convert UI value → API value
                               final status = statusApiMap[newValue] ?? "";
-
-                              /// ✅ call API again
+                              // ✅ Keep current search keyword when filter changes
                               Provider.of<ProjectProvider>(
                                 context,
                                 listen: false,
                               ).fetchProjectList(
                                 context: context,
                                 status: status,
+                                keywrd: searchController.text,
                               );
                             },
-
                             items: [
                               DropdownMenuItem(
                                 value: "All",
@@ -275,7 +275,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                       "assets/progress.png",
                                       height: 12,
                                     ),
-
                                     SizedBox(width: 4),
                                     Text("In Progress"),
                                   ],
@@ -307,7 +306,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                           width: 180.h,
                           height: 45.h,
                           padding: EdgeInsets.all(8),
-                          // flex: 0,
                           decoration: BoxDecoration(
                             color: primaryClr,
                             borderRadius: BorderRadius.circular(8),
@@ -317,7 +315,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                             children: [
                               Icon(Icons.add, color: Colors.white, size: 18),
                               SizedBox(width: 5),
-
                               Text(
                                 "Create Project",
                                 style: TextStyle(
@@ -334,6 +331,8 @@ class _ProjectScreenState extends State<ProjectScreen> {
                     ],
                   ),
                 ),
+
+                // Project list / loading / empty state
                 project.load == true
                     ? Center(
                         child: Padding(
@@ -380,12 +379,11 @@ class _ProjectScreenState extends State<ProjectScreen> {
                     : Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: ListView.separated(
-                          // padding: const EdgeInsets.all(16),
                           shrinkWrap: true,
                           physics: NeverScrollableScrollPhysics(),
                           itemCount:
                               project.projectListModel?.projectList?.length ??
-                              0, // your list length
+                              0,
                           separatorBuilder: (context, index) {
                             return const SizedBox(height: 12);
                           },
@@ -400,6 +398,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                 : DateFormat(
                                     'dd MMM, yyyy',
                                   ).format(DateTime.parse(dueDate.toString()));
+
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -420,7 +419,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                   ?.projectList?[index]
                                                   .name ??
                                               "",
-                                        ),
+                                        )
                                       ),
                                     );
                                   },
@@ -437,9 +436,8 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        /// Title Row
+                                        // Title Row
                                         Row(
-                                          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             SizedBox(
                                               width: 200.w,
@@ -524,8 +522,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                             ),
                                             PopupMenuButton<String>(
                                               padding: EdgeInsets.zero,
-                                              color: Colors
-                                                  .white, // 👈 popup background color
+                                              color: Colors.white,
                                               shape: RoundedRectangleBorder(
                                                 borderRadius:
                                                     BorderRadius.circular(6),
@@ -546,16 +543,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                             .toString() ??
                                                         "",
                                                   );
-                                                  TextEditingController
-                                                  nameController =
-                                                      TextEditingController(
-                                                        text:
-                                                            project
-                                                                .projectListModel
-                                                                ?.projectList?[index]
-                                                                .name ??
-                                                            "",
-                                                      );
 
                                                   showDialog(
                                                     context: context,
@@ -597,8 +584,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                             ),
                                                           ],
                                                         ),
-                                                        // contentPadding:
-                                                        //     EdgeInsets.all(0),
                                                         content: Column(
                                                           mainAxisSize:
                                                               MainAxisSize.min,
@@ -614,7 +599,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                             const SizedBox(
                                                               height: 8,
                                                             ),
-
                                                             CustomTextField(
                                                               hintText:
                                                                   "Budget",
@@ -626,7 +610,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                             const SizedBox(
                                                               height: 8,
                                                             ),
-
                                                             GestureDetector(
                                                               onTap: () async {
                                                                 DateTime?
@@ -644,7 +627,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                                         2100,
                                                                       ),
                                                                 );
-
                                                                 if (picked !=
                                                                     null) {
                                                                   project
@@ -680,7 +662,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                             const SizedBox(
                                                               height: 8,
                                                             ),
-
                                                             CustomTextField(
                                                               hintText:
                                                                   "Description",
@@ -689,7 +670,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                               maxLine: 4,
                                                               controller: project
                                                                   .desPCntrl,
-                                                              // controller: projectProvider.desCntrl,
                                                             ),
                                                           ],
                                                         ),
@@ -708,11 +688,10 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                                     ),
                                                               ),
                                                             ),
-
                                                             onPressed: () {
                                                               Navigator.pop(
                                                                 context,
-                                                              ); // close dialog
+                                                              );
                                                             },
                                                             child: const Text(
                                                               "Cancel",
@@ -736,7 +715,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                                     ),
                                                               ),
                                                             ),
-
                                                             onPressed: () async {
                                                               await project.editProject(
                                                                 context:
@@ -768,10 +746,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                                   context,
                                                                 );
                                                             },
-                                                            // Navigator.pop(
-                                                            //   context,
-                                                            // );
-                                                            // },
                                                             child: const Text(
                                                               "Update",
                                                               style: TextStyle(
@@ -836,11 +810,10 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                                     ),
                                                               ),
                                                             ),
-
                                                             onPressed: () {
                                                               Navigator.pop(
                                                                 context,
-                                                              ); // close dialog
+                                                              );
                                                             },
                                                             child: const Text(
                                                               "Cancel",
@@ -908,7 +881,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                               0xff487FFF,
                                                             ),
                                                           ),
-
                                                           Text(
                                                             'Edit',
                                                             style: TextStyle(
@@ -944,8 +916,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                                               color: Color(
                                                                 0xffFF766A,
                                                               ),
-
-                                                              // color: Color(0xff8A8A8A),
                                                               fontWeight:
                                                                   FontWeight
                                                                       .w600,
@@ -962,30 +932,10 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                         ),
 
                                         const SizedBox(height: 4),
-
-                                        /// Address
-                                        // Text(
-                                        //   project
-                                        //           .projectListModel
-                                        //           ?.projectList?[index]
-                                        //           .description ??
-                                        //       "",
-                                        //   maxLines: 1,
-                                        //   overflow: TextOverflow.ellipsis,
-                                        //   style: TextStyle(
-                                        //     fontSize: 14,
-                                        //     color: Color(0xff8A8A8A),
-                                        //     fontWeight: FontWeight.w500,
-                                        //     fontFamily: "Manrope",
-                                        //   ),
-                                        // ),
-                                        //
-                                        // const SizedBox(height: 6),
                                         Divider(color: Color(0xffE0E0E0)),
-
                                         const SizedBox(height: 6),
 
-                                        /// Date + Avatars
+                                        // Date + Members row
                                         Row(
                                           children: [
                                             Icon(
@@ -995,7 +945,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                             ),
                                             const SizedBox(width: 5),
                                             Text(
-                                              formattedDate ?? "",
+                                              formattedDate,
                                               style: TextStyle(
                                                 fontSize: 12,
                                                 color: Color(0xff8A8A8A),
@@ -1004,59 +954,12 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                               ),
                                             ),
                                             const Spacer(),
-
-                                            /// Overlapping Avatars
-                                            // SizedBox(
-                                            //   width: 60,
-                                            //   height: 24,
-                                            //   child: Stack(
-                                            //     children: [
-                                            //       Positioned(
-                                            //         left: 0,
-                                            //         child: CircleAvatar(
-                                            //           radius: 12,
-                                            //           backgroundColor:
-                                            //               Colors.blue,
-                                            //         ),
-                                            //       ),
-                                            //       Positioned(
-                                            //         left: 14,
-                                            //         child: CircleAvatar(
-                                            //           radius: 12,
-                                            //           backgroundColor:
-                                            //               Colors.green,
-                                            //         ),
-                                            //       ),
-                                            //       Positioned(
-                                            //         left: 28,
-                                            //         child: CircleAvatar(
-                                            //           radius: 12,
-                                            //           backgroundColor: Color(
-                                            //             0xffE0E0E0,
-                                            //           ),
-                                            //           child: Text(
-                                            //             "2+",
-                                            //             style: TextStyle(
-                                            //               fontSize: 10,
-                                            //               color: Color(
-                                            //                 0xff727272,
-                                            //               ),
-                                            //               fontWeight:
-                                            //                   FontWeight.w500,
-                                            //             ),
-                                            //           ),
-                                            //         ),
-                                            //       ),
-                                            //     ],
-                                            //   ),
-                                            // ),
                                             projectMembersStack(
                                               project
                                                   .projectListModel
                                                   ?.projectList?[index]
                                                   .projectMembers,
                                             ),
-
                                             Icon(
                                               Icons
                                                   .keyboard_arrow_right_outlined,
@@ -1085,7 +988,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
     return VerticalDivider(
       width: 20,
       thickness: 1.2,
-      color: Colors.grey.shade400, // 👈 visible
+      color: Colors.grey.shade400,
     );
   }
 
@@ -1152,7 +1055,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                     : null,
               ),
             ),
-
           if (remainingCount > 0)
             Positioned(
               left: visibleMembers.length * 14.0,

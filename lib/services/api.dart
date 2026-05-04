@@ -28,7 +28,10 @@ import 'package:youbuilt/model/invoice_view_model.dart';
 import 'package:youbuilt/model/invoice_view_quatation_model.dart';
 import 'package:youbuilt/model/item_details.dart';
 import 'package:youbuilt/model/item_list_model.dart';
+import 'package:youbuilt/model/member_invite_model.dart';
+import 'package:youbuilt/model/notification_model.dart';
 import 'package:youbuilt/model/orderlist_model.dart';
+import 'package:youbuilt/model/price_model.dart';
 import 'package:youbuilt/model/profile_model.dart';
 import 'package:youbuilt/model/project_file_list_model.dart';
 import 'package:youbuilt/model/project_list_model.dart';
@@ -41,6 +44,7 @@ import 'package:youbuilt/model/quatation.dart';
 import 'package:youbuilt/model/rental.dart';
 import 'package:youbuilt/model/rental_book_model.dart';
 import 'package:youbuilt/model/rental_cat_model.dart';
+import 'package:youbuilt/model/rental_detail_model.dart';
 import 'package:youbuilt/model/rental_view_model.dart';
 import 'package:youbuilt/model/sanp_drop_model.dart';
 import 'package:youbuilt/model/search_model.dart';
@@ -318,12 +322,18 @@ class NetworkHelper {
     required String phonenumber,
     required String pwd,
     required String code,
+    required String fcmToken,
   }) async {
     try {
       final response = await _postRequest(
         context: context,
         url: Urls.loginUrl,
-        body: {"phoneNumber": phonenumber, "password": pwd, "code": code},
+        body: {
+          "phoneNumber": phonenumber,
+          "password": pwd,
+          "code": code,
+          "fcmToken": fcmToken,
+        },
       );
 
       if (response == null) {
@@ -530,6 +540,7 @@ class NetworkHelper {
     required String? pwd,
     required String? code,
     required String? name,
+    required String? fcmToken,
   }) async {
     http.Response? response;
     response = await _postRequest(
@@ -540,6 +551,7 @@ class NetworkHelper {
         "name": name,
         "code": code,
         "password": pwd,
+        "fcmToken": fcmToken,
       },
     );
 
@@ -564,11 +576,12 @@ class NetworkHelper {
   Future<ProjectListModel?> getProjectList(
     BuildContext context,
     String? status,
+    String? keyword,
   ) async {
     http.Response? response;
     response = await _getRequest(
       context: context,
-      url: "${Urls.projectListUrl}?status=$status",
+      url: "${Urls.projectListUrl}?keyword=$keyword&status=$status",
     );
     if (response != null) {
       log("$response");
@@ -857,6 +870,25 @@ class NetworkHelper {
     }
   }
 
+  Future<Map<String, dynamic>> cartAllDelete({
+    required BuildContext context,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _deleteRequest(
+        context: context,
+        url: "${Urls.deleteCartAllUrl}",
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
   // Future<Map<String, dynamic>> addExpenses({
   //   required BuildContext context,
   //   required String amount,
@@ -1382,6 +1414,24 @@ class NetworkHelper {
     }
   }
 
+  Future<RentalDetailsModel?> getRentalDetails(
+    BuildContext context,
+    String? id,
+  ) async {
+    http.Response? response;
+    response = await _getRequest(
+      context: context,
+      url: "${Urls.rentalDetailsUrl}/$id",
+    );
+    if (response != null) {
+      log("$response");
+      return RentalDetailsModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
   Future<RentalViewModel?> getRentalView(
     BuildContext context,
     String? id,
@@ -1750,73 +1800,210 @@ class NetworkHelper {
     }
   }
 
+  //
+  // Future<Map<String, dynamic>> addEstimation({
+  //   required BuildContext context,
+  //   required String amount,
+  //   required String email,
+  //   required String phoneNo,
+  //   required String pinCode,
+  //   required String address,
+  //   required String buildarea,
+  //   required String clientName,
+  //   required File? file,
+  //   required String projectTypeNAme,
+  //   required String description,
+  //   required String date,
+  // }) async {
+  //   try {
+  //     final uri = Uri.parse("${Urls.estimationnRequestUrl}");
+  //     final request = http.MultipartRequest('POST', uri);
+  //
+  //     // 🔐 Headers
+  //     request.headers.addAll({'Authorization': "Bearer ${accessToken ?? ""}"});
+  //
+  //     // 🧾 Fields
+  //     request.fields['email'] = email;
+  //     request.fields['name'] = clientName;
+  //     request.fields['code'] = "+91";
+  //     request.fields['location'] = address;
+  //     request.fields['projectType'] = projectTypeNAme;
+  //     request.fields['phoneNumber'] = phoneNo;
+  //     request.fields['date'] = date;
+  //     request.fields['budget'] = amount;
+  //     request.fields['pinCode'] = pinCode;
+  //     request.fields['message'] = description;
+  //     request.fields['builtUpArea'] = buildarea;
+  //
+  //     // 📎 Optional file
+  //     // if (file != null) {
+  //     //   final mimeType =
+  //     //       lookupMimeType(file.path) ?? 'application/octet-stream';
+  //     //   final mimeParts = mimeType.split('/');
+  //     //
+  //     //   request.files.add(
+  //     //     await http.MultipartFile.fromPath(
+  //     //       'file',
+  //     //       file.path,
+  //     //       filename: file.path.split('/').last,
+  //     //       contentType: MediaType(mimeParts[0], mimeParts[1]),
+  //     //     ),
+  //     //   );
+  //     // // }\
+  //     // if (file != null) {
+  //     //   final mimeType =
+  //     //       lookupMimeType(file.path) ?? 'application/octet-stream';
+  //     //
+  //     //   final mimeParts = mimeType.split('/');
+  //     //   final type = mimeParts.isNotEmpty ? mimeParts[0] : 'application';
+  //     //   final subType = mimeParts.length > 1 ? mimeParts[1] : 'octet-stream';
+  //     //
+  //     //   request.files.add(
+  //     //     await http.MultipartFile.fromPath(
+  //     //       'file',
+  //     //       file.path,
+  //     //       filename: file.path.split('/').last,
+  //     //       contentType: MediaType(type, subType),
+  //     //     ),
+  //     //   );
+  //     // }
+  //     if (file != null) {
+  //       final mimeType =
+  //           lookupMimeType(file.path) ?? 'application/octet-stream';
+  //
+  //       final mimeParts = mimeType.split('/');
+  //       final type = mimeParts.isNotEmpty ? mimeParts[0] : 'application';
+  //       final subType = mimeParts.length > 1 ? mimeParts[1] : 'octet-stream';
+  //
+  //       request.files.add(
+  //         await http.MultipartFile.fromPath(
+  //           'file',
+  //           file.path,
+  //           filename: file.path.split('/').last,
+  //           contentType: MediaType(type, subType),
+  //         ),
+  //       );
+  //
+  //       // ✅ Safe debug logs
+  //       debugPrint("FILE PATH: ${file.path}");
+  //       debugPrint("FILE EXISTS: ${await File(file.path).exists()}");
+  //       debugPrint("FILE SIZE: ${await File(file.path).length()}");
+  //     } else {
+  //       debugPrint("No file selected, skipping file upload.");
+  //     }
+  //     print("FIELDS: ${request.fields}");
+  //     print("FILES: ${request.files.length}");
+  //     debugPrint("FILE PATH: ${file?.path}");
+  //     debugPrint("FILE EXISTS: ${await File(file!.path).exists()}");
+  //     debugPrint("FILE SIZE: ${await File(file.path).length()}");
+  //     // final response = await request.send();
+  //     // final respStr = await response.stream.bytesToString();
+  //
+  //     final streamedResponse = await request.send();
+  //     final response = await http.Response.fromStream(streamedResponse);
+  //
+  //     print("STATUS: ${response.statusCode}");
+  //     // print("BODY: $respStr");
+  //     debugPrint(
+  //       "url - $uri \n header  \n---tokenn00---$accessToken body - $request \n response Status - ${response.statusCode} \n response - ${response.body}",
+  //     );
+  //     debugPrint("FIELDS:");
+  //     request.fields.forEach((k, v) => debugPrint("$k : $v"));
+  //
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       return jsonDecode(response.body);
+  //     } else {
+  //       return {"status": false, "error": response.body};
+  //     }
+  //   } catch (e) {
+  //     return {"status": false, "error": e.toString()};
+  //   }
+  // }
   Future<Map<String, dynamic>> addEstimation({
     required BuildContext context,
-    required String amount,
+    required String? amount,
     required String email,
     required String phoneNo,
     required String pinCode,
     required String address,
-    required String buildarea,
+    required String? buildarea,
     required String clientName,
     required File? file,
-    required String projectTypeNAme,
+    required String? projectTypeNAme,
     required String description,
     required String date,
   }) async {
     try {
-      final uri = Uri.parse("${Urls.estimationnRequestUrl}");
+      final uri = Uri.parse(Urls.estimationnRequestUrl);
       final request = http.MultipartRequest('POST', uri);
 
       // 🔐 Headers
       request.headers.addAll({'Authorization': "Bearer ${accessToken ?? ""}"});
 
-      // 🧾 Fields
-      request.fields['email'] = email;
-      request.fields['name'] = clientName;
-      request.fields['code'] = "+91";
-      request.fields['location'] = address;
-      request.fields['projectType'] = projectTypeNAme;
-      request.fields['phoneNumber'] = phoneNo;
-      request.fields['date'] = date;
-      request.fields['budget'] = amount;
-      request.fields['pinCode'] = pinCode;
-      request.fields['message'] = description;
-      request.fields['builtUpArea'] = buildarea;
-
-      // 📎 Optional file
-      if (file != null) {
-        final mimeType =
-            lookupMimeType(file.path) ?? 'application/octet-stream';
-        final mimeParts = mimeType.split('/');
-
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            'file',
-            file.path,
-            filename: file.path.split('/').last,
-            contentType: MediaType(mimeParts[0], mimeParts[1]),
-          ),
-        );
+      // 🧾 Helper to add only valid fields
+      void addField(String key, String? value) {
+        if (value != null &&
+            value.trim().isNotEmpty &&
+            value != "null" &&
+            value != "undefined") {
+          request.fields[key] = value;
+        }
       }
-      print("FIELDS: ${request.fields}");
-      print("FILES: ${request.files.length}");
-      debugPrint("FILE PATH: ${file?.path}");
-      debugPrint("FILE EXISTS: ${await File(file!.path).exists()}");
-      debugPrint("FILE SIZE: ${await File(file.path).length()}");
-      // final response = await request.send();
-      // final respStr = await response.stream.bytesToString();
 
+      // 🧾 Fields (only valid ones will be added)
+      addField('email', email);
+      addField('name', clientName);
+      addField('code', "+91");
+      addField('location', address);
+      addField('projectType', projectTypeNAme);
+      addField('phoneNumber', phoneNo);
+      addField('date', date);
+      addField('budget', amount);
+      addField('pinCode', pinCode);
+      addField('message', description);
+      addField('builtUpArea', buildarea);
+
+      // 📎 File upload (safe)
+      if (file != null) {
+        final exists = await File(file.path).exists();
+
+        if (exists) {
+          final mimeType =
+              lookupMimeType(file.path) ?? 'application/octet-stream';
+
+          final mimeParts = mimeType.split('/');
+          final type = mimeParts.isNotEmpty ? mimeParts[0] : 'application';
+          final subType = mimeParts.length > 1 ? mimeParts[1] : 'octet-stream';
+
+          request.files.add(
+            await http.MultipartFile.fromPath(
+              'file',
+              file.path,
+              filename: file.path.split('/').last,
+              contentType: MediaType(type, subType),
+            ),
+          );
+
+          debugPrint("✅ FILE PATH: ${file.path}");
+          debugPrint("✅ FILE SIZE: ${await File(file.path).length()}");
+        } else {
+          debugPrint("❌ File does not exist at path: ${file.path}");
+        }
+      } else {
+        debugPrint("ℹ️ No file selected");
+      }
+
+      // 🔍 Debug logs
+      debugPrint("📤 FIELDS:");
+      request.fields.forEach((k, v) => debugPrint("$k : $v"));
+      debugPrint("📎 FILE COUNT: ${request.files.length}");
+
+      // 🚀 Send request
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
-      print("STATUS: ${response.statusCode}");
-      // print("BODY: $respStr");
-      debugPrint(
-        "url - $uri \n header  \n---tokenn00---$accessToken body - $request \n response Status - ${response.statusCode} \n response - ${response.body}",
-      );
-      debugPrint("FIELDS:");
-      request.fields.forEach((k, v) => debugPrint("$k : $v"));
+      debugPrint("STATUS: ${response.statusCode}");
+      debugPrint("RESPONSE: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return jsonDecode(response.body);
@@ -2456,6 +2643,69 @@ class NetworkHelper {
     }
   }
 
+  Future<Map<String, dynamic>> addEnquiry({
+    required BuildContext context,
+    required String? name,
+    required String? mobile,
+    required String? itemId,
+    required String? date,
+    required String? itemType,
+    required String? message,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _postRequest(
+        context: context,
+        url: Urls.enquiryUrl,
+        body: {
+          "code": "+91",
+          "itemId": itemId,
+          "message": message,
+          "name": name,
+          "date": date,
+          "phoneNumber": mobile,
+          "type": itemType,
+        },
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }  Future<Map<String, dynamic>> paymentOrder({
+    required BuildContext context,
+
+    required String? oId,
+    required String? itemType,
+    required String? amount,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _postRequest(
+        context: context,
+        url: Urls.paymentRazopayUrl,
+        body: {
+          "orderId": "+91",
+          "amount": amount,
+          "type": itemType,
+
+        },
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
   Future<Map<String, dynamic>> editProjecct({
     required BuildContext context,
     required String? name,
@@ -2918,6 +3168,61 @@ class NetworkHelper {
     }
   }
 
+  Future<MemberInviteModelModel?> getInviteList({
+    required BuildContext context,
+  }) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.inviteListUrl}",
+    );
+
+    if (response != null) {
+      // log("URL: $uri");
+      log("Response: ${response.body}");
+      return MemberInviteModelModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
+  Future<PriceModel?> getPriceList({
+    required BuildContext context,
+    required String? id,
+  }) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: "${Urls.priceUrl}/$id",
+    );
+
+    if (response != null) {
+      // log("URL: $uri");
+      log("Response: ${response.body}");
+      return PriceModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+  Future<NotificationModel?> getNotificationList({
+    required BuildContext context,
+    // required String? id,
+  }) async {
+    http.Response? response = await _getRequest(
+      context: context,
+      url: Urls.notificationUrl,
+    );
+
+    if (response != null) {
+      // log("URL: $uri");
+      log("Response: ${response.body}");
+      return NotificationModel.fromJson(jsonDecode(response.body));
+    } else {
+      ToastUtil.show("Error in fetching details");
+      return null;
+    }
+  }
+
   Future<InvoiceModel?> getEstimationInvoice(
     BuildContext context,
     String? id,
@@ -3100,6 +3405,64 @@ class NetworkHelper {
     } catch (e) {
       print("Error: $e");
       return null;
+    }
+  }
+
+  Future<String?> downloadServiceInvoicePdf(int serviceId, int hubid) async {
+    try {
+      final url = Uri.parse(
+        "${Urls.downloadServiceInvoiceUrl}/$serviceId/$hubid",
+      );
+
+      final response = await http.get(
+        url,
+        headers: {"Authorization": "Bearer $accessToken"},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Directory? dir;
+
+        if (Platform.isAndroid) {
+          dir = Directory('/storage/emulated/0/Download'); // public Downloads
+        } else {
+          dir = await getApplicationDocumentsDirectory();
+        }
+
+        final file = File(
+          "${dir.path}/youbuilt_service_invoice_$serviceId.pdf",
+        );
+
+        await file.writeAsBytes(response.bodyBytes);
+
+        print("Downloaded: ${file.path}");
+        return file.path;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("Error: $e");
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteAccount({
+    required BuildContext context,
+  }) async {
+    try {
+      http.Response? response;
+      response = await _postRequest(
+        context: context,
+        url: "${Urls.deleteUrl}",
+        body: {},
+      );
+
+      if (response == null) {
+        return {"status": false, "error": "No response from server"};
+      }
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
     }
   }
 

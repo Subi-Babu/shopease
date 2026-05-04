@@ -4,10 +4,11 @@ import 'package:new_version_plus/new_version_plus.dart';
 import 'colors.dart';
 
 /*-----------Url Constants---------------*/
-const kBaseUrl = "https://youbuiltlive-lhph6.ondigitalocean.app/api";
-// "https://youbuilt-jrqd6.ondigitalocean.app/api";
+const kBaseUrl = //"https://youbuiltlive-lhph6.ondigitalocean.app/api";
+    "https://youbuilt-jrqd6.ondigitalocean.app/api";
 
 /*-----------TextStyle Constants---------------*/
+String? tokenfcm;
 const f16B = TextStyle(
   color: primaryClr,
   fontSize: 16,
@@ -24,7 +25,7 @@ const kLoading = Center(child: CircularProgressIndicator(color: primaryClr));
 const String kKeyLocationDb = "location_db";
 // String? token;
 String? userid;
-
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 const accesstokenKey = "accessToken";
 const idKey = "Id";
 String? accessToken;
@@ -36,7 +37,7 @@ Future<void> checkForUpdate(BuildContext context) async {
   final newVersion = NewVersionPlus(
     androidId:
         "com.youbuilt.youbuiltcustomer", // replace with your package name
-    iOSId: "1234567890", // your App Store ID
+    iOSId: "6760012359", // your App Store ID
   );
 
   final status = await newVersion.getVersionStatus();

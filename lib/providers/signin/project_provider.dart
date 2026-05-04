@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:youbuilt/model/activity_model.dart';
@@ -20,8 +21,11 @@ import 'package:youbuilt/model/estimaton.dart' hide Datum;
 import 'package:youbuilt/model/expense_model.dart';
 import 'package:youbuilt/model/invoice_view_model.dart';
 import 'package:youbuilt/model/item_list_model.dart';
+import 'package:youbuilt/model/member_invite_model.dart';
+import 'package:youbuilt/model/notification_model.dart';
 import 'package:youbuilt/model/oder_details.dart';
 import 'package:youbuilt/model/orderlist_model.dart';
+import 'package:youbuilt/model/price_model.dart';
 import 'package:youbuilt/model/profile_model.dart';
 import 'package:youbuilt/model/project_file_list_model.dart';
 import 'package:youbuilt/model/project_list_model.dart';
@@ -33,6 +37,7 @@ import 'package:youbuilt/model/quatation.dart' hide Datum;
 import 'package:youbuilt/model/rental.dart' hide Datum;
 import 'package:youbuilt/model/rental_book_model.dart' as book;
 import 'package:youbuilt/model/rental_cat_model.dart' as rent;
+import 'package:youbuilt/model/rental_detail_model.dart';
 import 'package:youbuilt/model/rental_view_model.dart';
 import 'package:youbuilt/model/sanp_drop_model.dart';
 import 'package:youbuilt/model/search_model.dart';
@@ -54,6 +59,7 @@ import 'package:youbuilt/screen/cart/payementPage.dart';
 import 'package:youbuilt/screen/cart/view_cart.dart';
 import 'package:youbuilt/screen/otp.dart';
 import 'package:youbuilt/screen/profile/order_detail_page.dart';
+import 'package:youbuilt/screen/rental/rental_detail.dart';
 import 'package:youbuilt/screen/rental/rental_view.dart';
 import 'package:youbuilt/screen/service/service_view.dart';
 import 'package:youbuilt/utils/constants.dart';
@@ -131,7 +137,7 @@ class ProjectProvider extends ChangeNotifier {
         log("Navigating to LoginSuccessfulScreen...");
 
         Navigator.pop(context);
-        fetchProjectList(context: context, status: "");
+        fetchProjectList(context: context, status: "", keywrd: "");
       } else {
         String errorMessage =
             responseData["message"] ??
@@ -213,12 +219,17 @@ class ProjectProvider extends ChangeNotifier {
   Future fetchProjectList({
     required BuildContext context,
     required String status,
+    required String keywrd,
   }) async {
     load = true;
     notifyListeners();
 
     try {
-      final response = await NetworkHelper().getProjectList(context, status);
+      final response = await NetworkHelper().getProjectList(
+        context,
+        status,
+        keywrd,
+      );
 
       if (response != null) {
         projectListModel = response; // Store fetched subcategories
@@ -581,6 +592,39 @@ class ProjectProvider extends ChangeNotifier {
       if (responseData["status"] == true) {
         ToastUtil.show(responseData["message"]);
         fetchSnagList(context: context, id: pid ?? "", pge: "1", limit: "10");
+      } else {
+        String errorMessage =
+            responseData["message"] ??
+            responseData["error"] ??
+            "Please try again.";
+        log("Sign$errorMessage");
+
+        if (!context.mounted) return;
+        ToastUtil.show("An error occurred. Please try again.");
+      }
+    } catch (e, stack) {
+      log("❌ exception: $e\n$stack");
+      log("Error: $e");
+      // ToastUtil.show("An error occurred. Please try again.");
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteallcart({required BuildContext context}) async {
+    loading = true;
+    notifyListeners();
+
+    try {
+      var responseData = await NetworkHelper().cartAllDelete(context: context);
+
+      log("LOG MESSAGE222222:");
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(responseData["message"]);
+        fetchCartList(context: context);
       } else {
         String errorMessage =
             responseData["message"] ??
@@ -1435,7 +1479,7 @@ class ProjectProvider extends ChangeNotifier {
     required String address,
     required String buildarea,
     required String clientName,
-    required File? file,
+    File? file,
     required String projectTypeNAme,
     required String description,
     required String date,
@@ -1489,6 +1533,93 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> deleteAccount({required BuildContext context}) async {
+    addToCartLoading = true;
+    notifyListeners();
+
+    try {
+      var responseData = await NetworkHelper().deleteAccount(context: context);
+
+      log("LOG MESSAGE222222:");
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(responseData["message"]);
+        SystemNavigator.pop();
+        SharedPrefUtil.clear();
+        // fetchProjectMember(context: context, id: );
+      } else {
+        String errorMessage =
+            responseData["message"] ??
+            responseData["error"] ??
+            "Please try again.";
+        log("SignIn failed: $errorMessage");
+
+        if (!context.mounted) return;
+        ToastUtil.show("An error occurred. Please try again.");
+      }
+    } catch (e, stack) {
+      log("❌ exception: $e\n$stack");
+      log("Error: $e");
+      // ToastUtil.show("An error occurred. Please try again.");
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      addToCartLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> addEnquiry({
+    required BuildContext context,
+    required String? name,
+    required String? mobile,
+    required String? itemId,
+    required String? date,
+    required String? itemType,
+    required String? message,
+  }) async {
+    expense = true;
+    notifyListeners();
+
+    try {
+      final responseData = await NetworkHelper().addEnquiry(
+        context: context,
+        name: name,
+        itemType: itemType,
+        mobile: mobile,
+        itemId: itemId,
+        date: date,
+        message: message,
+        // ✅ pass File
+      );
+
+      log("${responseData["status"]}");
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(
+          responseData["message"] ?? "Enquiry submitted successfully",
+        );
+
+        Navigator.pop(context);
+      } else {
+        final errorMessage =
+            responseData["message"] ??
+            responseData["error"] ??
+            "Please try again.";
+
+        log("❌ API error: $errorMessage");
+
+        if (!context.mounted) return;
+        ToastUtil.show(errorMessage);
+      }
+    } catch (e, stack) {
+      log("❌ Exception: $e\n$stack");
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      expense = false;
+      notifyListeners();
+    }
+  }
+
   File? estimationFile;
   Future<void> pickEstimationFileSection() async {
     final result = await FilePicker.platform.pickFiles(
@@ -1496,11 +1627,28 @@ class ProjectProvider extends ChangeNotifier {
       allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
     );
 
-    if (result != null && result.files.single.path != null) {
+    if (result != null &&
+        result.files.single.path != null &&
+        result.files.single.path!.isNotEmpty) {
       estimationFile = File(result.files.single.path!);
-      notifyListeners();
+    } else {
+      estimationFile = null; // 👈 important safety reset
     }
+
+    notifyListeners();
   }
+  // estimationFile Future<void> pickEstimationFileSection() async {
+  //    final result = await FilePicker.platform.pickFiles(
+  //      type: FileType.custom,
+  //      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+  //    );
+  //
+  //    if (result != null && result.files.single.path != null) {
+  //      estimationFile = File(result.files.single.path!);
+  //      notifyListeners();
+  //    }
+  //
+  //  }
 
   TextEditingController qnameClientCntrl = TextEditingController();
   TextEditingController qemailCntrl = TextEditingController();
@@ -1601,7 +1749,8 @@ class ProjectProvider extends ChangeNotifier {
     sitePlan = null;
     boqFile = null;
     govtPaper = null;
-
+    selectedqProjectType = null;
+    selectedProjectType = null;
     qprojectTypeName = null;
     // selectedCategoryType = null;
 
@@ -1987,7 +2136,7 @@ class ProjectProvider extends ChangeNotifier {
 
       if (responseData["status"] == true) {
         ToastUtil.show(responseData["message"] ?? "Cart added");
-        fetchProjectList(context: context, status: "");
+        fetchProjectList(context: context, status: "", keywrd: "");
         fetchCartList(context: context);
         if (!context.mounted) return;
 
@@ -2045,7 +2194,7 @@ class ProjectProvider extends ChangeNotifier {
         ToastUtil.show(
           responseData["message"] ?? "Buy now created successfully",
         );
-        fetchProjectList(context: context, status: "");
+        fetchProjectList(context: context, status: "", keywrd: "");
         // fetchCartList(context: context);
         Navigator.push(
           context,
@@ -2075,6 +2224,7 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  bool? check = false;
   Future<void> checkOut({
     required BuildContext context,
     required String projectId,
@@ -2084,7 +2234,7 @@ class ProjectProvider extends ChangeNotifier {
     required String calPrice,
     required List<Map<String, dynamic>> cart,
   }) async {
-    memberLoads = true;
+    check = true;
     notifyListeners();
 
     try {
@@ -2120,7 +2270,7 @@ class ProjectProvider extends ChangeNotifier {
     } catch (e) {
       ToastUtil.show("An error occurred. Please try again.");
     } finally {
-      memberLoads = false; // ✅ FIXED
+      check = false; // ✅ FIXED
       notifyListeners();
     }
   }
@@ -2338,6 +2488,83 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  MemberInviteModelModel? memberInviteModelModel;
+  Future fetchInviteList({required BuildContext context}) async {
+    load = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getInviteList(context: context);
+
+      if (response != null) {
+        memberInviteModelModel = response; // Store fetched subcategories
+
+        log("Fetched details successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      load = false;
+      notifyListeners();
+    }
+  }
+
+  PriceModel? priceModel;
+  Future fetchPriceList({
+    required BuildContext context,
+    required String? id,
+  }) async {
+    load = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getPriceList(
+        context: context,
+        id: id,
+      );
+
+      if (response != null) {
+        priceModel = response; // Store fetched subcategories
+
+        log("Fetched details successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      load = false;
+      notifyListeners();
+    }
+  }
+
+  NotificationModel? notificationModel;
+  Future fetchNotificationList({required BuildContext context}) async {
+    load = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getNotificationList(
+        context: context,
+      );
+
+      if (response != null) {
+        notificationModel = response; // Store fetched subcategories
+
+        log("Fetched details successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      load = false;
+      notifyListeners();
+    }
+  }
+
   AssignProjectModel? assignProjectModel;
 
   Future fetchAssignProjectList({required BuildContext context}) async {
@@ -2412,6 +2639,33 @@ class ProjectProvider extends ChangeNotifier {
       if (response != null) {
         rentalModel = response; // Store fetched subcategories
 
+        log("Fetched items successfully.");
+      } else {
+        log("Failed to fetch.");
+      }
+    } catch (e) {
+      log("Error fetching : $e");
+    } finally {
+      itemLoading = false;
+      notifyListeners();
+    }
+  }
+
+  RentalDetailsModel? rentalDetailsModel;
+  Future fetchRentalDetails({
+    required BuildContext context,
+    required String? id,
+  }) async {
+    itemLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await NetworkHelper().getRentalDetails(context, id);
+
+      if (response != null) {
+        rentalDetailsModel = response; // Store fetched subcategories
+
+        notifyListeners();
         log("Fetched items successfully.");
       } else {
         log("Failed to fetch.");
@@ -3012,7 +3266,7 @@ class ProjectProvider extends ChangeNotifier {
 
       if (responseData["status"] == true) {
         ToastUtil.show(responseData["message"]);
-        fetchProjectList(context: context, status: "");
+        fetchProjectList(context: context, status: "", keywrd: "");
       } else {
         String errorMessage =
             responseData["message"] ??
@@ -3176,6 +3430,7 @@ class ProjectProvider extends ChangeNotifier {
         fetchProjectList(
           context: context,
           status: "",
+          keywrd: "",
         ); // log("Navigating to LoginSuccessfulScreen...");
         //
 
@@ -3488,6 +3743,45 @@ class ProjectProvider extends ChangeNotifier {
       notifyListeners();
 
       final path = await NetworkHelper().downloadInvoicePdf(Orderid, storeId);
+
+      isLoading = false;
+      notifyListeners();
+
+      if (path != null) {
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(content: Text("Report downloaded successfully")),
+        ToastUtil.show("Invoice downloaded successfully");
+        // );
+      } else {
+        ToastUtil.show("Failed to download report");
+
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(content: Text("Failed to download report")),
+        // );
+      }
+    } catch (e) {
+      isLoading = false;
+      notifyListeners();
+
+      // ScaffoldMessenger.of(
+      //   context,
+      // ).showSnackBar(const SnackBar(content: Text("Something went wrong")));
+    }
+  }
+
+  Future<void> downloadServiceInvoicePdf({
+    required BuildContext context,
+    required int serviceId,
+    required int hubId,
+  }) async {
+    try {
+      isLoading = true;
+      notifyListeners();
+
+      final path = await NetworkHelper().downloadServiceInvoicePdf(
+        serviceId,
+        hubId,
+      );
 
       isLoading = false;
       notifyListeners();

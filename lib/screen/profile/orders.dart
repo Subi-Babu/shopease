@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/signin/project_provider.dart';
@@ -236,7 +237,9 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
                               },
                               ordertatus: item.orderStatus ?? "",
                               orderId: item.orderId?.toString() ?? "",
-                              items: item.cCount?.orderItems ?? "0",
+                              items: DateFormat(
+                                'dd-MM-yyyy',
+                              ).format(DateTime.parse(item.createdAt)),
                               total: item.totalPrice ?? "",
                             );
                           },

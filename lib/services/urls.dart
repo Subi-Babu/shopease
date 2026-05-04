@@ -87,7 +87,19 @@ class Urls {
   static String statusEstimationUrl = "$kBaseUrl/users/estimationStatus";
   static String statusServiceUrl = "$kBaseUrl/users/servieBookingStatus";
   static String downloadInvoiceUrl = "$kBaseUrl/users/storeInvoice";
+  static String downloadServiceInvoiceUrl = "$kBaseUrl/users/serviceInvoice";
+
   static String approvalsUrl = "$kBaseUrl/users/ApprovalOrderList";
   static String bannersUrl = "$kBaseUrl/users/shopBanners";
   static String rentalLidtUrl = "$kBaseUrl/users/rentalServieBookingList";
+  static String rentalDetailsUrl = "$kBaseUrl/users/rentalServieBooking";
+  static String deleteUrl = "$kBaseUrl/users/deleteAccount";
+  static String deleteCartAllUrl = "$kBaseUrl/users/deleteAllCart";
+  static String inviteListUrl = "$kBaseUrl/users/projectInvitation";
+  static String priceUrl = "$kBaseUrl/users/servieBookingPrices";
+  static String enquiryUrl = "$kBaseUrl/users/enquiries";
+  static String notificationUrl = "$kBaseUrl/users/notifications";
+  static String paymentRazopayUrl = "$kBaseUrl/users/paymentOrder";
+
+  // https://youbuilt-jrqd6.ondigitalocean.app/api/users/placeServieBooking/77
 }

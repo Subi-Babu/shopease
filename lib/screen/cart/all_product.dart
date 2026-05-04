@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:youbuilt/screen/cart/addcart.dart';
 import 'package:youbuilt/screen/cart/view_cart.dart';
 import 'package:youbuilt/screen/service/filter.dart';
@@ -198,29 +199,23 @@ class _AllProductsPageState extends State<AllProductsPage> {
                             decoration: InputDecoration(
                               hintText: "Search products",
                               border: InputBorder.none,
+                              isDense: true, // important
                               contentPadding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 10,
-                              ),
+                                vertical: 2,
+                              ), // controls vertical alignment
                               hintStyle: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                                 fontFamily: "Manrope",
                               ),
-                              prefixIcon: Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 8,
-                                  bottom: 2,
-                                ),
-                                child: Image.asset(
-                                  "assets/search.png",
-                                  height: 20,
-                                  width: 20,
-                                ),
+                              prefixIcon: Image.asset(
+                                "assets/search.png",
+                                height: 20,
+                                width: 20,
                               ),
                               prefixIconConstraints: BoxConstraints(
                                 minHeight: 20,
-                                minWidth: 30,
+                                minWidth: 40,
                               ),
                             ),
                           ),
@@ -328,9 +323,25 @@ class _AllProductsPageState extends State<AllProductsPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: items.itemLoading == true
-                      ? const Center(
-                          child: CircularProgressIndicator(color: primaryClr),
+                      ? GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: 6, // number of shimmer cards
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 0.63,
+                              ),
+                          itemBuilder: (context, index) {
+                            return const ProductCardShimmer();
+                          },
                         )
+                      // items.itemLoading == true
+                      //     ? const Center(
+                      //         child: CircularProgressIndicator(color: primaryClr),
+                      //       )
                       : items.itemListModel?.itemList?.length == 0
                       ? Center(child: Text("No data"))
                       : GridView.builder(
@@ -343,7 +354,7 @@ class _AllProductsPageState extends State<AllProductsPage> {
                                 crossAxisCount: 2,
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 12,
-                                childAspectRatio: 0.63,
+                                childAspectRatio: 0.68,
                               ),
                           itemBuilder: (context, index) {
                             final item = items.itemListModel?.itemList?[index];
@@ -751,4 +762,68 @@ Widget filterSortRow(BuildContext context) {
       ],
     ),
   );
+}
+// import 'package:shimmer/shimmer.dart';
+
+class ProductCardShimmer extends StatelessWidget {
+  const ProductCardShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xffDFDFDF)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            /// Image placeholder
+            Container(height: 100, width: double.infinity, color: Colors.white),
+            const SizedBox(height: 8),
+
+            /// Title
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Container(
+                height: 12,
+                width: double.infinity,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 6),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Container(height: 12, width: 100, color: Colors.white),
+            ),
+
+            const SizedBox(height: 6),
+
+            /// Price
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Container(height: 14, width: 60, color: Colors.white),
+            ),
+
+            const Spacer(),
+
+            /// Button
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Container(
+                height: 36,
+                width: double.infinity,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

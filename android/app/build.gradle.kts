@@ -5,6 +5,7 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 /* ------------------- KEYSTORE LOADER ------------------- */
@@ -19,7 +20,9 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.youbuilt.youbuiltcustomer"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "26.1.10909125"
+    ndkVersion = "25.1.8937393"
+
+
 
     lint {
         checkReleaseBuilds = false

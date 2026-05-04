@@ -197,7 +197,25 @@ class _RentalPageState extends State<RentalPage> {
                 const SizedBox(height: 10),
 
                 /// Grid
-                service.rentalModel?.data?.length == 0
+                service.itemLoading == true
+                    ? GridView.builder(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        // padding: ,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 6, // number of shimmer cards
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 0.63,
+                            ),
+                        itemBuilder: (context, index) {
+                          return const ProductCardShimmer();
+                        },
+                      )
+                    : service.rentalModel?.data?.length == 0
                     ? Text("No Rentals Available")
                     : GridView.builder(
                         physics: NeverScrollableScrollPhysics(),

@@ -24,7 +24,7 @@ class _MyCartPage2State extends State {
       final reg = context.read<ProjectProvider>();
 
       reg.selectedProjectId = null;
-
+      reg.check == false;
       await reg.fetchCartList(context: context);
       await reg.fetchAddressList(context: context);
       await reg.fetchAssignProjectList(context: context);
@@ -75,6 +75,44 @@ class _MyCartPage2State extends State {
           ),
         ),
         centerTitle: false,
+        actions: [
+          Consumer<ProjectProvider>(
+            builder: (context, project, _) {
+              final cartList = project.cartListModel?.data ?? [];
+              if (cartList.isEmpty) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: SizedBox(
+                  height: 35,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(
+                          color: primaryClr, // 👈 your border color
+                          width: 1, // 👈 thickness
+                        ),
+                      ),
+                    ),
+
+                    onPressed: () async {
+                      await project.deleteallcart(context: context);
+                    },
+                    child: const Text(
+                      "Clear",
+                      style: TextStyle(
+                        fontFamily: "Manrope",
+                        color: primaryClr,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
 
       // ✅ FIX: Checkout bar is now fixed at the bottom via bottomNavigationBar
@@ -231,6 +269,41 @@ class _MyCartPage2State extends State {
               ),
 
               /// CHECKOUT BUTTON
+              // ElevatedButton(
+              //   style: ElevatedButton.styleFrom(
+              //     backgroundColor: Colors.black,
+              //     padding: const EdgeInsets.symmetric(
+              //       horizontal: 40,
+              //       vertical: 14,
+              //     ),
+              //     shape: RoundedRectangleBorder(
+              //       borderRadius: BorderRadius.circular(8),
+              //     ),
+              //   ),
+              //   onPressed: cartList.isEmpty
+              //       ? null
+              //       : () async {
+              //           final cartItems = cartList
+              //               .map((e) => {"id": e.id})
+              //               .toList();
+              //           await project.checkOut(
+              //             context: context,
+              //             grandTotal: grandTotal.toString(),
+              //             projectId: project.selectedProjectId.toString(),
+              //             addressId:
+              //                 project.addressListModel?.data?.first?.id
+              //                     .toString() ??
+              //                 "",
+              //             totalprice: itemTotal.toString(),
+              //             calPrice: itemTotal.toString(),
+              //             cart: cartItems,
+              //           );
+              //         },
+              //   child: const Text(
+              //     "Check Out",
+              //     style: TextStyle(color: Colors.white),
+              //   ),
+              // ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
@@ -242,12 +315,14 @@ class _MyCartPage2State extends State {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                onPressed: cartList.isEmpty
-                    ? null
+
+                onPressed: (cartList.isEmpty || project.check == true)
+                    ? null // ✅ disables button while loading
                     : () async {
                         final cartItems = cartList
                             .map((e) => {"id": e.id})
                             .toList();
+
                         await project.checkOut(
                           context: context,
                           grandTotal: grandTotal.toString(),
@@ -261,10 +336,20 @@ class _MyCartPage2State extends State {
                           cart: cartItems,
                         );
                       },
-                child: const Text(
-                  "Check Out",
-                  style: TextStyle(color: Colors.white),
-                ),
+
+                child: project.check == true
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        "Check Out",
+                        style: TextStyle(color: Colors.white),
+                      ),
               ),
             ],
           ),
@@ -492,50 +577,117 @@ class _MyCartPage2State extends State {
                   ),
                   const SizedBox(height: 10),
 
-                  /// QTY CONTROLS
+                  /// QTY CONTROL
                   Row(
                     children: [
                       GestureDetector(
                         onTap: () async {
                           HapticFeedback.heavyImpact();
                           project.decrementQty(item.id!);
+
                           await project.editQty(
                             context: context,
-
-                            pid: item.id.toString() ?? "",
-                            qty: item.qty.toString() ?? "",
-                            price: item.mrp.toString() ?? "",
-                            calPrice: item.calculatorPrice.toString() ?? "",
+                            pid: item.id.toString(),
+                            qty: item.qty.toString(),
+                            price: item.mrp.toString(),
+                            calPrice: item.calculatorPrice.toString(),
                           );
                         },
                         child: const Icon(Icons.remove_circle_outline),
                       ),
+
                       const SizedBox(width: 8),
-                      Text("${item.qty ?? 1}"),
+
+                      SizedBox(
+                        width: 50,
+                        child: TextField(
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          controller: TextEditingController(
+                            text: (item.qty ?? 1).toString(),
+                          ),
+                          onSubmitted: (value) async {
+                            int newQty = int.tryParse(value) ?? 1;
+
+                            // project.updateQty(item.id!, newQty);
+
+                            await project.editQty(
+                              context: context,
+                              pid: item.id.toString(),
+                              qty: newQty.toString(),
+                              price: item.mrp.toString(),
+                              calPrice: item.calculatorPrice.toString(),
+                            );
+                          },
+                          decoration: const InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(vertical: 4),
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+
                       const SizedBox(width: 8),
+
                       GestureDetector(
                         onTap: () async {
                           HapticFeedback.heavyImpact();
                           project.incrementQty(item.id!);
-                          print("INCREMENT____${item.id}");
-                          print("INCREMENT____${item.id}");
-                          print("INCREMENT____${item.qty}");
-                          print("INCREMENT____${item.mrp}");
-                          print("INCREMENT____${item.calculatorPrice}");
 
                           await project.editQty(
                             context: context,
-
-                            pid: item.id.toString() ?? "",
-                            qty: item.qty.toString() ?? "",
-                            price: item.mrp.toString() ?? "",
-                            calPrice: item.calculatorPrice.toString() ?? "",
+                            pid: item.id.toString(),
+                            qty: item.qty.toString(),
+                            price: item.mrp.toString(),
+                            calPrice: item.calculatorPrice.toString(),
                           );
                         },
                         child: const Icon(Icons.add_circle_outline),
                       ),
                     ],
                   ),
+                  // Row(
+                  //   children: [
+                  //     GestureDetector(
+                  //       onTap: () async {
+                  //         HapticFeedback.heavyImpact();
+                  //         project.decrementQty(item.id!);
+                  //         await project.editQty(
+                  //           context: context,
+                  //
+                  //           pid: item.id.toString() ?? "",
+                  //           qty: item.qty.toString() ?? "",
+                  //           price: item.mrp.toString() ?? "",
+                  //           calPrice: item.calculatorPrice.toString() ?? "",
+                  //         );
+                  //       },
+                  //       child: const Icon(Icons.remove_circle_outline),
+                  //     ),
+                  //     const SizedBox(width: 8),
+                  //     Text("${item.qty ?? 1}"),
+                  //     const SizedBox(width: 8),
+                  //     GestureDetector(
+                  //       onTap: () async {
+                  //         HapticFeedback.heavyImpact();
+                  //         project.incrementQty(item.id!);
+                  //         print("INCREMENT____${item.id}");
+                  //         print("INCREMENT____${item.id}");
+                  //         print("INCREMENT____${item.qty}");
+                  //         print("INCREMENT____${item.mrp}");
+                  //         print("INCREMENT____${item.calculatorPrice}");
+                  //
+                  //         await project.editQty(
+                  //           context: context,
+                  //
+                  //           pid: item.id.toString() ?? "",
+                  //           qty: item.qty.toString() ?? "",
+                  //           price: item.mrp.toString() ?? "",
+                  //           calPrice: item.calculatorPrice.toString() ?? "",
+                  //         );
+                  //       },
+                  //       child: const Icon(Icons.add_circle_outline),
+                  //     ),
+                  //   ],
+                  // ),
                 ],
               );
             },

@@ -1,10 +1,15 @@
+import 'dart:developer';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:youbuilt/custom_widgets/custom_button.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
+import 'package:youbuilt/screen/cart/payementPage.dart';
+import 'package:youbuilt/screen/order/payement.dart';
 
 import '../../model/service.dart';
 import '../../utils/colors.dart';
@@ -63,6 +68,81 @@ class _ServiceBookDetailsState extends State<ServiceBookDetails> {
             materialsList(),
             // actionButtons(context),
             priceSummary(),
+            Consumer<ProjectProvider>(
+              builder: (context, service, _) {
+                return service?.serviceDetailsModel?.data?.paymentStatus ==
+                                "Paid" &&
+                            service?.serviceDetailsModel?.data?.status ==
+                                "Pricing_Created" ||
+                        service?.serviceDetailsModel?.data?.status ==
+                            "Customer_Accepted" ||
+                        service?.serviceDetailsModel?.data?.status ==
+                            "Customer_Rejected"
+                    ? SizedBox()
+                    : priceSummary2();
+              },
+            ),
+            Consumer<ProjectProvider>(
+              builder: (context, service, _) {
+                return service?.serviceDetailsModel?.data?.paymentStatus ==
+                                "Paid" &&
+                            service?.serviceDetailsModel?.data?.status ==
+                                "Pricing_Created" ||
+                        service?.serviceDetailsModel?.data?.status ==
+                            "Customer_Accepted" ||
+                        service?.serviceDetailsModel?.data?.status ==
+                            "Customer_Rejected"
+                    ? SizedBox()
+                    : priceSummary3();
+              },
+            ),
+            Consumer<ProjectProvider>(
+              builder: (context, service, _) {
+                return Container(
+                  height: 50,
+                  margin: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(8),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: InkWell(
+                    onTap: () async {
+                      log("message---------------");
+                      HapticFeedback.heavyImpact();
+                      await Provider.of<ProjectProvider>(
+                        context,
+                        listen: false,
+                      ).downloadServiceInvoicePdf(
+                        context: context,
+                        serviceId: int.parse(
+                          service?.serviceDetailsModel?.data?.id.toString() ??
+                              "",
+                        ),
+
+                        hubId: int.parse(
+                          service?.serviceDetailsModel?.data?.serviceHubId
+                                  .toString() ??
+                              "",
+                        ),
+                      );
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Download"),
+                        Icon(
+                          Icons.file_download_outlined,
+                          color: primaryClr,
+                          size: 14,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -197,6 +277,23 @@ Widget bookingInfo() {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            Container(
+              padding: EdgeInsets.all(5),
+              margin: EdgeInsets.only(top: 5),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(6)),
+                border: Border.all(color: Color(0xffF4F4F4)),
+              ),
+              child: Text(
+                "Work to be done : ${service.serviceDetailsModel?.data?.workTobeDone ?? ""}",
+                style: TextStyle(
+                  color: primaryClr,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
           ],
         );
       },
@@ -248,7 +345,143 @@ Widget priceSummary() {
                     padding: const EdgeInsets.all(12.0),
                     child: Divider(height: 5),
                   ),
-                  rowItem("Grand Total", "₹${formatter.format(grandTotal)}"),
+                  rowItem("Total", "₹${formatter.format(grandTotal)}"),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Widget priceSummary2() {
+  return Consumer<ProjectProvider>(
+    builder: (context, service, _) {
+      final carts = service?.serviceDetailsModel?.data?.serviceCarts ?? [];
+
+      num serviceCharge = 0;
+      num totalTax = 0;
+
+      for (var item in carts) {
+        final price = (item.calculatorPrice ?? 0) as num;
+        final qty = (item.qty ?? 0) as num;
+
+        final igst = (item.igst ?? 0) as num;
+        final cgst = (item.cgst ?? 0) as num;
+        final sgst = (item.sgst ?? 0) as num;
+
+        serviceCharge += price * qty;
+        totalTax += igst + cgst + sgst;
+      }
+
+      final itemTotal = serviceCharge - totalTax;
+      final grandTotal = serviceCharge;
+
+      return Container(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                "Materials Cost Details",
+                style: TextStyle(
+                  color: Color(0xff737373),
+                  fontSize: 16,
+                  fontFamily: "Manrope",
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Container(
+              margin: EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Color(0xffF4F4F4),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Color(0xffD1D5DB)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  rowItem("Item Total", "₹${formatter.format(itemTotal)}"),
+                  rowItem("Tax", "₹${formatter.format(totalTax)}"),
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Divider(height: 5),
+                  ),
+                  rowItem("Total", "₹${formatter.format(grandTotal)}"),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Widget priceSummary3() {
+  return Consumer<ProjectProvider>(
+    builder: (context, service, _) {
+      final grandTotal1 = service?.serviceDetailsModel?.data?.grandTotal ?? 0;
+
+      final carts = service?.serviceDetailsModel?.data?.serviceCarts ?? [];
+
+      num serviceCharge = 0;
+      num totalTax = 0;
+
+      for (var item in carts) {
+        final price = (item.calculatorPrice ?? 0) as num;
+        final qty = (item.qty ?? 0) as num;
+
+        final igst = (item.igst ?? 0) as num;
+        final cgst = (item.cgst ?? 0) as num;
+        final sgst = (item.sgst ?? 0) as num;
+
+        serviceCharge += price * qty;
+        totalTax += igst + cgst + sgst;
+      }
+
+      final itemTotal = serviceCharge - totalTax;
+      final grandTotal2 = serviceCharge;
+      final summ = grandTotal1 + grandTotal2;
+      return Container(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                "Grand Total",
+                style: TextStyle(
+                  color: Color(0xff737373),
+                  fontSize: 16,
+                  fontFamily: "Manrope",
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Container(
+              margin: EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Color(0xffF4F4F4),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Color(0xffD1D5DB)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  rowItem("Grand Total", "₹${formatter.format(summ)}"),
+                  // rowItem("Tax", "₹${formatter.format(totalTax)}"),
+                  // Padding(
+                  //   padding: const EdgeInsets.all(12.0),
+                  //   child: Divider(height: 5),
+                  // ),
+                  // rowItem("Total", "₹${formatter.format(grandTotal)}"),
                 ],
               ),
             ),
@@ -415,7 +648,7 @@ Widget materialsList() {
                           backgroundColor: const Color(0xffC1C1C1),
                           child: Text(
                             service
-                                    ?.serviceDetailsModel
+                                    .serviceDetailsModel
                                     ?.data
                                     ?.serviceCarts?[index]
                                     .item
@@ -427,7 +660,7 @@ Widget materialsList() {
                       ),
                       title: Text(
                         service
-                                ?.serviceDetailsModel
+                                .serviceDetailsModel
                                 ?.data
                                 ?.serviceCarts?[index]
                                 .item
@@ -456,6 +689,15 @@ Widget materialsList() {
                   },
                 ),
                 service?.serviceDetailsModel?.data?.serviceCarts?.length == 0
+                    ? SizedBox()
+                    : service?.serviceDetailsModel?.data?.paymentStatus ==
+                                  "Paid" &&
+                              service?.serviceDetailsModel?.data?.status ==
+                                  "Pricing_Created" ||
+                          service?.serviceDetailsModel?.data?.status ==
+                              "Customer_Accepted" ||
+                          service?.serviceDetailsModel?.data?.status ==
+                              "Customer_Rejected"
                     ? SizedBox()
                     : Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -527,7 +769,7 @@ String getAttributesText(ServiceCart? cart) {
               .where((e) => e.isNotEmpty)
               .toList() ??
           [])
-      .join("|");
+      .join(" | ");
 }
 
 void showRejectDialog(BuildContext context) {
@@ -619,15 +861,32 @@ Widget bottomButton() {
       }
 
       // ✅ Show button only when valid
-      return Padding(
-        padding: EdgeInsets.all(12),
-        child: CustomButton(
-          text: "Accept Proposal",
-          onPress: () {
-            showAcceptRejectDialog(context);
-          },
-        ),
-      );
+      return service.serviceDetailsModel?.data?.paymentStatus == "Paid" &&
+                  service.serviceDetailsModel?.data?.status ==
+                      "Pricing_Created" ||
+              service.serviceDetailsModel?.data?.status ==
+                  "Customer_Accepted" ||
+              service.serviceDetailsModel?.data?.status == "Customer_Rejected"
+          ? SizedBox()
+          : Padding(
+              padding: EdgeInsets.all(12),
+              child: CustomButton(
+                text: "Accept Proposal",
+                onPress: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PaymentMethodPage2(
+                        pid:
+                            service?.serviceDetailsModel?.data?.id.toString() ??
+                            "",
+                      ),
+                    ),
+                  );
+                  // showAcceptRejectDialog(context);
+                },
+              ),
+            );
     },
   );
 }

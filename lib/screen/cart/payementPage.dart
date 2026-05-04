@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+// import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:youbuilt/custom_widgets/custom_button.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
 
@@ -26,16 +27,34 @@ class PaymentMethodPage extends StatefulWidget {
 
 class _PaymentMethodPageState extends State<PaymentMethodPage> {
   @override
+  // late Razorpay _razorpay;
+  @override
   void initState() {
+    super.initState();
+
+    // _razorpay = Razorpay();
+    //
+    // _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    // _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    // _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = context.read<ProjectProvider>();
-
       await reg.fetchCartList(context: context);
       await reg.fetchAddressList(context: context);
       await reg.fetchAssignProjectList(context: context);
     });
-    super.initState();
   }
+  // void initState() {
+  //   WidgetsBinding.instance.addPostFrameCallback((_) async {
+  //     final reg = context.read<ProjectProvider>();
+  //
+  //     await reg.fetchCartList(context: context);
+  //     await reg.fetchAddressList(context: context);
+  //     await reg.fetchAssignProjectList(context: context);
+  //   });
+  //   super.initState();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +153,10 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                 }
                 log("----6----${balance}");
                 log("----7----${widget.pid}");
-
+                if (selectedPayment == "RazorPay") {
+                  // openRazorpay();
+                  return;
+                }
                 // ✅ pid exists + balance sufficient → place order
                 await pay.placeOrdeer(
                   context: context,
@@ -251,12 +273,12 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                _paymentOption("Pay Later", "cod"),
+                _paymentOption("Pay Later", "cod", "assets/wallet.png"),
 
                 const SizedBox(height: 10),
-                _paymentOption("Razor Pay", "RazorPay"),
+                _paymentOption("Razor Pay", "RazorPay", "assets/images.jpeg"),
                 const SizedBox(height: 10),
-                _paymentOption("Paytm", "Paytm"),
+                _paymentOption("Paytm", "paytm", "assets/download.png"),
               ],
             );
           },
@@ -266,7 +288,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
   }
 
   String selectedPayment = "YBCash"; // default selected
-  Widget _paymentOption(String title, String value) {
+  Widget _paymentOption(String title, String value, String imagePath) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -275,7 +297,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.payment),
+          Image.asset(imagePath, width: 24, height: 24),
           const SizedBox(width: 10),
           Text(
             title,
@@ -301,4 +323,38 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
       ),
     );
   }
+
+  //   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+  //     print("SUCCESS: ${response.paymentId}");
+  //
+  //     // Call your backend to verify payment
+  //     // await context.read<ProjectProvider>().verifyPayment(
+  //     //   paymentId: response.paymentId!,
+  //     //   orderId: response.orderId!,
+  //     // );
+  //   }
+  //
+  //   void _handlePaymentError(PaymentFailureResponse response) {
+  //     print("ERROR: ${response.message}");
+  //   }
+  //
+  //   void _handleExternalWallet(ExternalWalletResponse response) {
+  //     print("WALLET: ${response.walletName}");
+  //   }
+  //
+  //   void openRazorpay() {
+  //     var options = {
+  //       'key': 'YOUR_RAZORPAY_KEY',
+  //       'amount': (double.parse(widget.total ?? "0") * 100).toInt(), // in paise
+  //       'name': 'Youbuilt',
+  //       'description': 'Order Payment',
+  //       'prefill': {'contact': '', 'email': 'test@example.com'},
+  //     };
+  //
+  //     try {
+  //       _razorpay.open(options);
+  //     } catch (e) {
+  //       print("Error: $e");
+  //     }
+  //   }
 }

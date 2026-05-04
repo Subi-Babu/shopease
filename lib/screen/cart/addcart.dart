@@ -25,6 +25,7 @@ class _MyCartPageState extends State {
       final reg = context.read<ProjectProvider>();
 
       reg.selectedProjectId = null;
+      reg.check == false;
 
       await reg.fetchCartList(context: context);
       await reg.fetchAddressList(context: context);
@@ -59,6 +60,7 @@ class _MyCartPageState extends State {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       // backgroundColor: Color(0xffF4F4F4),
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -88,20 +90,77 @@ class _MyCartPageState extends State {
           ),
         ),
         centerTitle: false,
+        actions: [
+          Consumer<ProjectProvider>(
+            builder: (context, project, _) {
+              final cartList = project.cartListModel?.data ?? [];
+              if (cartList.isEmpty) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: SizedBox(
+                  height: 35,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(
+                          color: primaryClr, // 👈 your border color
+                          width: 1, // 👈 thickness
+                        ),
+                      ),
+                    ),
+
+                    onPressed: () async {
+                      await project.deleteallcart(context: context);
+                    },
+                    child: const Text(
+                      "Clear",
+                      style: TextStyle(
+                        fontFamily: "Manrope",
+                        color: primaryClr,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
 
       // ✅ FIX: Checkout bar is now fixed at the bottom via bottomNavigationBar
+      // bottomNavigationBar: Consumer<ProjectProvider>(
+      //   builder: (context, project, _) {
+      //     final cartList = project.cartListModel?.data ?? [];
+      //     if (cartList.isEmpty) return const SizedBox.shrink();
+      //     return Padding(
+      //       padding: const EdgeInsets.only(bottom: 90),
+      //       child: _bottomCheckout(context),
+      //     );
+      //   },
+      // ),
       bottomNavigationBar: Consumer<ProjectProvider>(
         builder: (context, project, _) {
           final cartList = project.cartListModel?.data ?? [];
           if (cartList.isEmpty) return const SizedBox.shrink();
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 90),
-            child: _bottomCheckout(context),
+
+          final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+          return AnimatedPadding(
+            duration: const Duration(milliseconds: 200),
+            padding: EdgeInsets.only(
+              bottom: bottomInset, // ✅ only keyboard height
+            ),
+            child: SafeArea(
+              top: false,
+              bottom: true,
+              child: _bottomCheckout(context),
+            ),
           );
         },
       ),
-
       body: Consumer<ProjectProvider>(
         builder: (context, project, _) {
           final cartList = project.cartListModel?.data ?? [];
@@ -255,8 +314,8 @@ class _MyCartPageState extends State {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                onPressed: cartList.isEmpty
-                    ? null
+                onPressed: (cartList.isEmpty || project.check == true)
+                    ? null // ✅ disables button while loading
                     : () async {
                         final cartItems = cartList
                             .map((e) => {"id": e.id})
@@ -274,10 +333,19 @@ class _MyCartPageState extends State {
                           cart: cartItems,
                         );
                       },
-                child: const Text(
-                  "Check Out",
-                  style: TextStyle(color: Colors.white),
-                ),
+                child: project.check == true
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        "Check Out",
+                        style: TextStyle(color: Colors.white),
+                      ),
               ),
             ],
           ),
@@ -512,43 +580,111 @@ class _MyCartPageState extends State {
                         onTap: () async {
                           HapticFeedback.heavyImpact();
                           project.decrementQty(item.id!);
+
                           await project.editQty(
                             context: context,
-
-                            pid: item.id.toString() ?? "",
-                            qty: item.qty.toString() ?? "",
-                            price: item.mrp.toString() ?? "",
-                            calPrice: item.calculatorPrice.toString() ?? "",
+                            pid: item.id.toString(),
+                            qty: item.qty.toString(),
+                            price: item.mrp.toString(),
+                            calPrice: item.calculatorPrice.toString(),
                           );
                         },
                         child: const Icon(Icons.remove_circle_outline),
                       ),
+
                       const SizedBox(width: 8),
-                      Text("${item.qty ?? 1}"),
+
+                      SizedBox(
+                        width: 50,
+                        child: TextField(
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          controller: TextEditingController(
+                            text: (item.qty ?? 1).toString(),
+                          ),
+                          onSubmitted: (value) async {
+                            int newQty = int.tryParse(value) ?? 1;
+
+                            // project.updateQty(item.id!, newQty);
+
+                            await project.editQty(
+                              context: context,
+                              pid: item.id.toString(),
+                              qty: newQty.toString(),
+                              price: item.mrp.toString(),
+                              calPrice: item.calculatorPrice.toString(),
+                            );
+                          },
+                          decoration: const InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(vertical: 4),
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+
                       const SizedBox(width: 8),
+
                       GestureDetector(
                         onTap: () async {
                           HapticFeedback.heavyImpact();
                           project.incrementQty(item.id!);
-                          print("INCREMENT____${item.id}");
-                          print("INCREMENT____${item.id}");
-                          print("INCREMENT____${item.qty}");
-                          print("INCREMENT____${item.mrp}");
-                          print("INCREMENT____${item.calculatorPrice}");
 
                           await project.editQty(
                             context: context,
-
-                            pid: item.id.toString() ?? "",
-                            qty: item.qty.toString() ?? "",
-                            price: item.mrp.toString() ?? "",
-                            calPrice: item.calculatorPrice.toString() ?? "",
+                            pid: item.id.toString(),
+                            qty: item.qty.toString(),
+                            price: item.mrp.toString(),
+                            calPrice: item.calculatorPrice.toString(),
                           );
                         },
                         child: const Icon(Icons.add_circle_outline),
                       ),
                     ],
                   ),
+
+                  // Row(
+                  //   children: [
+                  //     GestureDetector(
+                  //       onTap: () async {
+                  //         HapticFeedback.heavyImpact();
+                  //         project.decrementQty(item.id!);
+                  //         await project.editQty(
+                  //           context: context,
+                  //
+                  //           pid: item.id.toString() ?? "",
+                  //           qty: item.qty.toString() ?? "",
+                  //           price: item.mrp.toString() ?? "",
+                  //           calPrice: item.calculatorPrice.toString() ?? "",
+                  //         );
+                  //       },
+                  //       child: const Icon(Icons.remove_circle_outline),
+                  //     ),
+                  //     const SizedBox(width: 8),
+                  //     Text("${item.qty ?? 1}"),
+                  //     const SizedBox(width: 8),
+                  //     GestureDetector(
+                  //       onTap: () async {
+                  //         HapticFeedback.heavyImpact();
+                  //         project.incrementQty(item.id!);
+                  //         print("INCREMENT____${item.id}");
+                  //         print("INCREMENT____${item.id}");
+                  //         print("INCREMENT____${item.qty}");
+                  //         print("INCREMENT____${item.mrp}");
+                  //         print("INCREMENT____${item.calculatorPrice}");
+                  //
+                  //         await project.editQty(
+                  //           context: context,
+                  //
+                  //           pid: item.id.toString() ?? "",
+                  //           qty: item.qty.toString() ?? "",
+                  //           price: item.mrp.toString() ?? "",
+                  //           calPrice: item.calculatorPrice.toString() ?? "",
+                  //         );
+                  //       },
+                  //       child: const Icon(Icons.add_circle_outline),
+                  //     ),
+                  //   ],
+                  // ),
                 ],
               );
             },

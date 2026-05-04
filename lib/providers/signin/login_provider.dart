@@ -27,7 +27,7 @@ class LoginProvider with ChangeNotifier {
   Future<void> loginForm({
     required BuildContext context,
     String? phone,
-    // required String pwd,
+    required String fcmToken,
     String? password,
     String? code,
   }) async {
@@ -41,6 +41,7 @@ class LoginProvider with ChangeNotifier {
         phonenumber: phone ?? "",
         pwd: password ?? "",
         code: code ?? "+91",
+        fcmToken: fcmToken ?? "",
       );
 
       if (response == null) {
@@ -92,6 +93,7 @@ class LoginProvider with ChangeNotifier {
     String? code,
     String? phone,
     String? name,
+    required String? fcmToken,
     String? password,
   }) async {
     signUpLoading = true;
@@ -104,6 +106,7 @@ class LoginProvider with ChangeNotifier {
         pwd: password ?? "",
         code: code ?? "",
         name: name ?? "",
+        fcmToken: fcmToken ?? "",
       );
 
       log("LOG MESSAGE222222:");
@@ -310,6 +313,7 @@ class LoginProvider with ChangeNotifier {
           code: selectedCountryCode ?? "+91",
           name: nameCntrl.text,
           password: passwdCntrl.text,
+          fcmToken: tokenfcm ?? "",
         );
 
         if (!context.mounted) return;

@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:youbuilt/screen/login.dart';
 import 'package:youbuilt/screen/onborading.dart';
 import 'package:youbuilt/screen/profile/address.dart';
 import 'package:youbuilt/screen/profile/edit_profile.dart';
@@ -30,7 +31,7 @@ class _ProfileMenuPageState extends State<ProfileMenuPage> {
       final reg = Provider.of<ProjectProvider>(context, listen: false);
       await reg.fetchProfile(context: context);
       await reg.fetchOrderList(context: context, keyword: "");
-          await reg.fetchServiceBooking(context: context);
+      await reg.fetchServiceBooking(context: context);
     });
     // TODO: implement initState
     super.initState();
@@ -189,35 +190,35 @@ class _ProfileMenuPageState extends State<ProfileMenuPage> {
                           assetPath: "assets/tdesign_location.png",
                           title: "Addresses",
                         ),
-                        _divider(),
-                        _menuTile(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MyOrdersPage(btn: false),
-                              ),
-                            );
-                          },
-                          assetPath: "assets/10768855_4503794 1.png",
-                          title: "My Orders",
-                        ),
-                        _divider(),
-                        _menuTile(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MyServicePage(),
-                              ),
-                            );
-                          },
-                          assetPath:
-                              "assets/fluent_clipboard-task-24-regular.png",
-                          title:
-                              // Icons.calendar_today_outlined,
-                              "Service Bookings",
-                        ),
+                        // _divider(),
+                        // _divider  _menuTile(
+                        //     onTap: () {
+                        //       Navigator.push(
+                        //         context,
+                        //         MaterialPageRoute(
+                        //           builder: (context) => MyOrdersPage(btn: false),
+                        //         ),
+                        //       );
+                        //     },
+                        //     assetPath: "assets/10768855_4503794 1.png",
+                        //     title: "My Orders",
+                        //   ),
+                        // _divider(),
+                        // _menuTile(
+                        //   onTap: () {
+                        //     Navigator.push(
+                        //       context,
+                        //       MaterialPageRoute(
+                        //         builder: (context) => MyServicePage(),
+                        //       ),
+                        //     );
+                        //   },
+                        //   assetPath:
+                        //       "assets/fluent_clipboard-task-24-regular.png",
+                        //   title:
+                        //       // Icons.calendar_today_outlined,
+                        //       "Service Bookings",
+                        // ),
                         // _divider(),
                         // _menuTile(
                         //   assetPath: "assets/proicons_info.png",
@@ -284,6 +285,39 @@ class _ProfileMenuPageState extends State<ProfileMenuPage> {
                       ),
                     ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    child: Container(
+                      width: ScreenUtil().screenWidth,
+                      decoration: BoxDecoration(color: Color(0xffF4F4F4)),
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          _showDeleteDialog(context);
+                        },
+
+                        icon: const Icon(Icons.delete),
+                        label: const Text("Account Deletion"),
+                        style: OutlinedButton.styleFrom(
+                          textStyle: TextStyle(
+                            fontSize: 14,
+                            fontFamily: "Manrope",
+                            fontWeight: FontWeight.w600,
+                            color: primaryClr,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          foregroundColor: Colors.black,
+                          side: const BorderSide(color: Color(0xffA3A3A3)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 50.h),
                 ],
               );
             },
@@ -374,8 +408,11 @@ void _showLogoutDialog(BuildContext context) {
               ),
             ),
             onPressed: () {
-              Navigator.pop(context); // close dialog
-
+              // Navigator.pop(context); // close dialog
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+              );
               // 🔥 CLEAR SHARED PREFERENCES HERE
               _logoutUser(context);
             },
@@ -390,14 +427,88 @@ void _showLogoutDialog(BuildContext context) {
   );
 }
 
+void _showDeleteDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return Consumer<ProjectProvider>(
+        builder: (context, project, _) {
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            title: const Text(
+              "Delete",
+              style: TextStyle(
+                fontFamily: "Manrope",
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            content: const Text(
+              "Are you sure you want to delete account?",
+              style: TextStyle(
+                fontFamily: "Manrope",
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: Color(0xffF4F4F4),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+
+                onPressed: () {
+                  Navigator.pop(context); // close dialog
+                },
+                child: const Text(
+                  "Cancel",
+                  style: TextStyle(fontFamily: "Manrope", color: primaryClr),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.pop(context); // close dialog
+
+                  // 🔥 CLEAR SHARED PREFERENCES HERE
+                  // HERE _logoutUser(context);
+                  project.deleteAccount(context: context);
+                },
+                child: const Text(
+                  "Delete",
+                  style: TextStyle(fontFamily: "Manrope", color: Colors.white),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
 Future<void> _logoutUser(BuildContext context) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.clear(); // 🔥 clears everything
   SharedPrefUtil.clear();
   accessToken = null;
-  Future.delayed(Duration(milliseconds: 10), () {
-    SystemChannels.platform.invokeMethod('SystemNavigator.pop');
-  });
+  // Future.delayed(Duration(milliseconds: 10), () {
+  //   SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+  // });
   // Navigate to login screen
   // Navigator.pushAndRemoveUntil(
   //   context,
@@ -407,7 +518,7 @@ Future<void> _logoutUser(BuildContext context) async {
 }
 
 Future<void> launchPrivacyPolicy() async {
-  final Uri url = Uri.parse("https://www.youbuilt.biz/privacy-policy");
+  final Uri url = Uri.parse("https://www.youbuilt.in/policies");
 
   if (!await launchUrl(
     url,
