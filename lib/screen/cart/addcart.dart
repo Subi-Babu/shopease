@@ -41,7 +41,7 @@ class _MyCartPageState extends State {
           final projectList = reg.assignProjectModel?.projectDropDown ?? [];
 
           final matchedProject = projectList.firstWhere(
-            (e) => e?.value == cartProjectId,
+            (e) => e.value == cartProjectId,
           );
 
           if (matchedProject != null) {

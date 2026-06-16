@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+// import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:youbuilt/model/activity_model.dart';
 import 'package:youbuilt/model/addressListModel.dart' hide Datum;
 import 'package:youbuilt/model/approval_model.dart';
@@ -1618,6 +1620,81 @@ class ProjectProvider extends ChangeNotifier {
       expense = false;
       notifyListeners();
     }
+  }
+
+  Razorpay razorpay = Razorpay();
+
+  Future<void> payementRazopay({
+    required BuildContext context,
+
+    required String? oId,
+    required String? itemType,
+    required String? amount,
+  }) async {
+    expense = true;
+    notifyListeners();
+
+    try {
+      final responseData = await NetworkHelper().paymentOrder(
+        context: context,
+        oId: oId,
+        itemType: itemType,
+        amount: amount,
+      );
+
+      log("${responseData["status"]}");
+
+      if (responseData["status"] == true) {
+        ToastUtil.show(responseData["message"] ?? "");
+        final int amountInPaise = ((double.tryParse(amount ?? "0") ?? 0) * 100)
+            .round();
+        var options = {
+          'key': responseData["razorpayKey"],
+          'amount': amountInPaise, // in paise
+
+          'order_id': oId, // IMPORTANT
+          'name': 'Youbuilt',
+          'description': 'Order Payment',
+          'prefill': {'contact': '', 'email': 'customer@example.com'},
+        };
+
+        try {
+          razorpay.open(options);
+        } catch (e) {
+          log("Razorpay open error: $e");
+        }
+      } else {
+        final errorMessage =
+            responseData["message"] ??
+            responseData["error"] ??
+            "Please try again.";
+
+        log("❌ API error: $errorMessage");
+
+        if (!context.mounted) return;
+        ToastUtil.show(errorMessage);
+      }
+    } catch (e, stack) {
+      log("❌ Exception: $e\n$stack");
+      ToastUtil.show("An error occurred. Please try again.");
+    } finally {
+      expense = false;
+      notifyListeners();
+    }
+  }
+
+  void handlePaymentSuccess(PaymentSuccessResponse response) {
+    log("✅ SUCCESS: ${response.paymentId}");
+
+    // Call verify API here if needed
+  }
+
+  void handlePaymentError(PaymentFailureResponse response) {
+    log("❌ ERROR: ${response.message}");
+  }
+
+  void handleExternalWallet(ExternalWalletResponse response) {
+    log("💼 WALLET: ${response.walletName}");
   }
 
   File? estimationFile;

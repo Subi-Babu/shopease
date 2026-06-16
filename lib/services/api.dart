@@ -564,11 +564,17 @@ class NetworkHelper {
   Future<CountryCodeModel?> getCountyCode(BuildContext context) async {
     http.Response? response;
     response = await _getRequest(context: context, url: Urls.countryCodeUrl);
+    log("-------${response?.statusCode}");
+    log("-------${Urls.countryCodeUrl}");
+    log("-------${response?.body}");
+
     if (response != null) {
       log("$response");
+      log("-------${response.statusCode}");
       return CountryCodeModel.fromJson(jsonDecode(response.body));
     } else {
       ToastUtil.show("Error in fetching countrty code");
+
       return null;
     }
   }
@@ -2676,24 +2682,24 @@ class NetworkHelper {
     } catch (e) {
       return {"status": false, "error": e.toString()};
     }
-  }  Future<Map<String, dynamic>> paymentOrder({
-    required BuildContext context,
+  }
 
+  Future<Map<String, dynamic>> paymentOrder({
+    required BuildContext context,
     required String? oId,
     required String? itemType,
     required String? amount,
   }) async {
     try {
+      final body = {"orderId": oId, "amount": amount, "type": itemType};
+
+      print("Request Body: $body"); // 👈 print here
+
       http.Response? response;
       response = await _postRequest(
         context: context,
         url: Urls.paymentRazopayUrl,
-        body: {
-          "orderId": "+91",
-          "amount": amount,
-          "type": itemType,
-
-        },
+        body: body,
       );
 
       if (response == null) {
@@ -2702,6 +2708,7 @@ class NetworkHelper {
 
       return jsonDecode(response.body);
     } catch (e) {
+      print("Error: $e"); // optional debug
       return {"status": false, "error": e.toString()};
     }
   }
@@ -3204,6 +3211,7 @@ class NetworkHelper {
       return null;
     }
   }
+
   Future<NotificationModel?> getNotificationList({
     required BuildContext context,
     // required String? id,

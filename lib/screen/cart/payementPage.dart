@@ -1,9 +1,7 @@
-import 'dart:developer';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 // import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:youbuilt/custom_widgets/custom_button.dart';
 import 'package:youbuilt/providers/signin/project_provider.dart';
@@ -27,23 +25,29 @@ class PaymentMethodPage extends StatefulWidget {
 
 class _PaymentMethodPageState extends State<PaymentMethodPage> {
   @override
-  // late Razorpay _razorpay;
   @override
   void initState() {
     super.initState();
 
-    // _razorpay = Razorpay();
-    //
-    // _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-    // _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
-    // _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
-
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reg = context.read<ProjectProvider>();
+
+      reg.razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, reg.handlePaymentSuccess);
+      reg.razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, reg.handlePaymentError);
+      reg.razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, reg.handleExternalWallet);
+
       await reg.fetchCartList(context: context);
       await reg.fetchAddressList(context: context);
       await reg.fetchAssignProjectList(context: context);
     });
+  }
+
+  @override
+  void dispose() {
+    final reg = context.read<ProjectProvider>();
+
+    // reg.razorpay.clear();
+    super.dispose();
   }
   // void initState() {
   //   WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -85,88 +89,151 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
             return CustomButton(
               text: "Proceed to Pay ${widget.total ?? ""}",
               onPress: () async {
+                final pay = context.read<ProjectProvider>();
+
+                final addressId =
+                    pay.addressListModel?.data?.first?.id.toString() ?? "";
+
                 final pidValue =
                     (widget.pid == null ||
                         widget.pid == "null" ||
                         widget.pid!.isEmpty)
-                    ? null
-                    : widget.pid;
-                log("----1----${widget.pid}");
+                    ? ""
+                    : widget.pid!;
+                final double parsedAmount =
+                    double.tryParse(widget.total ?? "0") ?? 0;
+                final int cleanAmount = parsedAmount.toInt(); // removes .0
 
-                // ✅ If pid is NULL → place order directly
-                if (pidValue == null) {
-                  log("----3----${widget.pid}");
-                  final addressId =
-                      pay.addressListModel?.data?.first?.id.toString() ?? "";
-                  log("----5---- addressId: $addressId");
-                  await pay.placeOrdeer(
+                // If sending to API as string
+
+                /// ✅ RAZORPAY FLOW
+                if (selectedPayment == "RazorPay") {
+                  await pay.payementRazopay(
                     context: context,
-                    pid: "",
-                    orderId: widget.orderId ?? "",
-                    adddressId: addressId,
-                    methodPay: selectedPayment,
+                    oId: widget.orderId ?? "",
+                    itemType: "productOrder",
+                    amount: cleanAmount.toString(),
                   );
-                  return;
+
+                  return; // ❗ stop here (DO NOT call placeOrder)
                 }
 
-                // ✅ pid exists — check if balance has loaded yet
-                final balance =
-                    pay.selectedProjectBalance; // Keep as nullable double?
-
-                // ✅ Only check wallet balance if YB Wallet is selected
+                /// ✅ WALLET CHECK
                 if (selectedPayment == "YBCash") {
                   final balance = pay.selectedProjectBalance;
 
-                  if (balance == null) {
-                    return;
-                  }
-
-                  if (balance <= 0.0) {
+                  if (balance == null || balance <= 0) {
                     showDialog(
                       context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          content: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Image.asset(
-                                "assets/suff.jpg",
-                                height: 50,
-                                width: 50,
-                              ),
-                              const SizedBox(height: 10),
-                              const Text("Insufficient Wallet Amount"),
-                            ],
-                          ),
-                          actions: [
-                            CustomButton(
-                              text: "Close",
-                              onPress: () => Navigator.pop(context),
-                            ),
-                          ],
-                        );
-                      },
+                      builder: (_) => AlertDialog(
+                        content: const Text("Insufficient Wallet Amount"),
+                      ),
                     );
                     return;
                   }
                 }
-                log("----6----${balance}");
-                log("----7----${widget.pid}");
-                if (selectedPayment == "RazorPay") {
-                  // openRazorpay();
-                  return;
-                }
-                // ✅ pid exists + balance sufficient → place order
+
+                /// ✅ COD / WALLET → DIRECT ORDER
                 await pay.placeOrdeer(
                   context: context,
-                  pid: widget.pid ?? "",
+                  pid: pidValue,
                   orderId: widget.orderId ?? "",
-                  adddressId:
-                      pay.addressListModel?.data?.first?.id.toString() ?? "",
+                  adddressId: addressId,
                   methodPay: selectedPayment,
                 );
               },
+              // onPress: () async {
+              //   final pidValue =
+              //       (widget.pid == null ||
+              //           widget.pid == "null" ||
+              //           widget.pid!.isEmpty)
+              //       ? null
+              //       : widget.pid;
+              //   log("----1----${widget.pid}");
+              //
+              //   // ✅ If pid is NULL → place order directly
+              //   if (pidValue == null) {
+              //     log("----3----${widget.pid}");
+              //     final addressId =
+              //         pay.addressListModel?.data?.first?.id.toString() ?? "";
+              //     log("----5---- addressId: $addressId");
+              //     await pay.placeOrdeer(
+              //       context: context,
+              //       pid: "",
+              //       orderId: widget.orderId ?? "",
+              //       adddressId: addressId,
+              //       methodPay: selectedPayment,
+              //     );
+              //     return;
+              //   }
+              //
+              //   // ✅ pid exists — check if balance has loaded yet
+              //   final balance =
+              //       pay.selectedProjectBalance; // Keep as nullable double?
+              //
+              //   // ✅ Only check wallet balance if YB Wallet is selected
+              //   if (selectedPayment == "YBCash") {
+              //     final balance = pay.selectedProjectBalance;
+              //
+              //     if (balance == null) {
+              //       return;
+              //     }
+              //
+              //     if (balance <= 0.0) {
+              //       showDialog(
+              //         context: context,
+              //         builder: (context) {
+              //           return AlertDialog(
+              //             content: Column(
+              //               crossAxisAlignment: CrossAxisAlignment.center,
+              //               mainAxisSize: MainAxisSize.min,
+              //               children: [
+              //                 Image.asset(
+              //                   "assets/suff.jpg",
+              //                   height: 50,
+              //                   width: 50,
+              //                 ),
+              //                 const SizedBox(height: 10),
+              //                 const Text("Insufficient Wallet Amount"),
+              //               ],
+              //             ),
+              //             actions: [
+              //               CustomButton(
+              //                 text: "Close",
+              //                 onPress: () => Navigator.pop(context),
+              //               ),
+              //             ],
+              //           );
+              //         },
+              //       );
+              //       return;
+              //     }
+              //   }
+              //   log("----6----${balance}");
+              //   log("----7----${widget.pid}");
+              //   if (selectedPayment == "RazorPay") {
+              //     bool success = await pay.payementRazopay(
+              //       context: context,
+              //       oId: widget.orderId ?? "",
+              //       itemType: "productOrder",
+              //       amount: widget.total ?? "",
+              //     );
+              //
+              //     if (success) {
+              //       openRazorpay(); // ✅ only opens on success
+              //     }
+              //
+              //     return;
+              //   } // ✅ pid exists + balance sufficient → place order
+              //   // await pay.placeOrdeer(
+              //   //   context: context,
+              //   //   pid: widget.pid ?? "",
+              //   //   orderId: widget.orderId ?? "",
+              //   //   adddressId:
+              //   //       pay.addressListModel?.data?.first?.id.toString() ?? "",
+              //   //   methodPay: selectedPayment,
+              //   // );
+              // },
             );
           },
         ),
@@ -324,37 +391,37 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
     );
   }
 
-  //   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
-  //     print("SUCCESS: ${response.paymentId}");
+  // void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+  //   print("SUCCESS: ${response.paymentId}");
   //
-  //     // Call your backend to verify payment
-  //     // await context.read<ProjectProvider>().verifyPayment(
-  //     //   paymentId: response.paymentId!,
-  //     //   orderId: response.orderId!,
-  //     // );
+  //   // Call your backend to verify payment
+  //   // await context.read<ProjectProvider>().verifyPayment(
+  //   //   paymentId: response.paymentId!,
+  //   //   orderId: response.orderId!,
+  //   // );
+  // }
+  //
+  // void _handlePaymentError(PaymentFailureResponse response) {
+  //   print("ERROR: ${response.message}");
+  // }
+  //
+  // void _handleExternalWallet(ExternalWalletResponse response) {
+  //   print("WALLET: ${response.walletName}");
+  // }
+  //
+  // void openRazorpay() {
+  //   var options = {
+  //     'key': 'YOUR_RAZORPAY_KEY',
+  //     'amount': (double.parse(widget.total ?? "0") * 100).toInt(), // in paise
+  //     'name': 'Youbuilt',
+  //     'description': 'Order Payment',
+  //     'prefill': {'contact': '', 'email': 'customer@example.com'},
+  //   };
+  //
+  //   try {
+  //     _razorpay.open(options);
+  //   } catch (e) {
+  //     print("Error: $e");
   //   }
-  //
-  //   void _handlePaymentError(PaymentFailureResponse response) {
-  //     print("ERROR: ${response.message}");
-  //   }
-  //
-  //   void _handleExternalWallet(ExternalWalletResponse response) {
-  //     print("WALLET: ${response.walletName}");
-  //   }
-  //
-  //   void openRazorpay() {
-  //     var options = {
-  //       'key': 'YOUR_RAZORPAY_KEY',
-  //       'amount': (double.parse(widget.total ?? "0") * 100).toInt(), // in paise
-  //       'name': 'Youbuilt',
-  //       'description': 'Order Payment',
-  //       'prefill': {'contact': '', 'email': 'test@example.com'},
-  //     };
-  //
-  //     try {
-  //       _razorpay.open(options);
-  //     } catch (e) {
-  //       print("Error: $e");
-  //     }
-  //   }
+  // }
 }
