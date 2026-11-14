@@ -18,7 +18,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.youbuilt.youbuiltcustomer"
+    namespace = "com.shopease.shopeasecustomer"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "25.1.8937393"
 
@@ -42,7 +42,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.youbuilt.youbuiltcustomer"
+        applicationId = "com.shopease.shopeasecustomer"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

@@ -1,4 +1,4 @@
-name: youbuilt
+name: shopease
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -17,7 +17,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
 #version: 1.0.0+19
-version: 1.0.4+14
+version: 1.0.10+21
 
 environment:
   sdk: ^3.10.1
@@ -47,32 +47,15 @@ dependencies:
   shimmer: ^3.0.0
   fluttertoast: ^8.2.2
   intl: ^0.20.2
-  liquid_glass_bottom_bar: ^0.0.6
-  fl_chart: ^0.66.2
-  dotted_border: ^3.1.0
-  file_picker: ^10.3.10
+
   http_parser: ^4.1.2
   path: ^1.9.1
   url_launcher: ^6.3.2
-  geolocator: ^14.0.2
-  geocoding: ^4.0.0
-  google_maps_flutter: ^2.14.2
+  
   cached_network_image: ^3.4.1
   image_picker: ^1.2.1
-  crypto: ^3.0.3
-  encrypt: ^5.0.3
-  pointycastle: ^3.7.3
-  share_plus: ^12.0.1
-  open_filex: ^4.7.0
+
   permission_handler: ^12.0.1
-  path_provider: ^2.1.5
-  mime: ^2.0.0
-  external_path: ^2.2.0
-  flutter_downloader: ^1.12.0
-  new_version_plus: ^1.0.1
-  firebase_core:
-  firebase_messaging:
-  razorpay_flutter: ^1.4.5
 
 
 
@@ -81,12 +64,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
+  flutter_launcher_icons: ^0.14.1
   flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
@@ -104,6 +82,7 @@ flutter:
   assets:
     - assets/
     - assets/fonts/
+    - assets/products/
 
 
   # assets:
@@ -134,9 +113,12 @@ flutter:
           weight: 300
 
 flutter_launcher_icons:
-    android: true
-    ios: true
-    image_path: "assets/ic_launcher.jpeg"# fonts:
+  android: true
+  ios: true
+  image_path: "assets/ic_launcher_shopease.jpg"
+  min_sdk_android: 21
+  adaptive_icon_background: "#5429A6"
+  adaptive_icon_foreground: "assets/ic_launcher_shopease.jpg"
   #   - family: Schyler
   #     fonts:
   #       - asset: fonts/Schyler-Regular.ttf
