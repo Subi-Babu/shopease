@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.youbuiltcustomer" "\0"
-            VALUE "FileDescription", "youbuilt" "\0"
+            VALUE "CompanyName", "com.shopeasecustomer" "\0"
+            VALUE "FileDescription", "shopease" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "youbuilt" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 com.youbuiltcustomer. All rights reserved." "\0"
-            VALUE "OriginalFilename", "youbuilt.exe" "\0"
-            VALUE "ProductName", "youbuilt" "\0"
+            VALUE "InternalName", "shopease" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 com.shopeasecustomer. All rights reserved." "\0"
+            VALUE "OriginalFilename", "shopease.exe" "\0"
+            VALUE "ProductName", "shopease" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
